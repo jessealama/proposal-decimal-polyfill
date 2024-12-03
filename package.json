@@ -1,0 +1,48 @@
+{
+  "name": "proposal-decimal",
+  "version": "20241203.0.0",
+  "description": "Champion-maintained polyfill for the TC39 decimal proposal",
+  "main": "index.mjs",
+  "scripts": {
+    "build": "esbuild ./src/Decimal128.mjs --bundle --outfile=./index.mjs",
+    "test": "jest",
+    "format": "prettier . --write",
+    "lint": "prettier . --check",
+    "coverage": "npx c8 npx jest"
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "tabWidth": 4,
+    "semi": true,
+    "singleQuote": false
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jessealama/proposal-decimal-polyfill.git"
+  },
+  "type": "module",
+  "keywords": [
+    "decimal",
+    "number",
+    "math",
+    "floating-point"
+  ],
+  "author": "Jesse Alama <jesse@igalia.com>",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/jessealama/proposal-decimal-polyfill/issues"
+  },
+  "homepage": "https://github.com/jessealama/proposal-decimal-polyfill#readme",
+  "dependencies": {
+    "jest-light-runner": "^0.6.0",
+    "jsbi": "^4.3.0",
+    "ts-jest": "^29.2.5"
+  },
+  "devDependencies": {
+    "c8": "^10.1.2",
+    "esbuild": "^0.24.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.1",
+    "typescript": "^5.7.2"
+  }
+}
