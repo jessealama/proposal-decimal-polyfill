@@ -1,15 +1,20 @@
-# decimal128.js—A userland approximation to IEEE 754 Decimal128 in JavaScript
+# proposal-decimal—A polyfill for the decimal proposal (exact decimal numbers for JavaScript)
 
 This library is a prototype for the [decimal proposal](https://github.com/tc39/proposal-decimal). There should be no
 observable difference between what this library does and what the proposal
 is [supposed to do](http://tc39.es/proposal-decimal/). If you find a mismatch between what this code does and what the
-decimal proposal says it should do, please file [an issue](https://github.com/jessealama/decimal128/issues) in
-this repo.
+decimal proposal says it should do, please file [an issue](https://github.com/jessealama/proposal-decimal-polyfill/issues)
+in this repo.
+
+This package is a prototype and is not intended for production use. (The decimal proposal is currently
+at [Stage 1](https://tc39.es/process-document/) in the Ecma TC39 process.) Speed is important, but it is less important
+than making sure we follow the spec exactly. However, if you notice that this package is significantly slower than
+other decimal implementations, please file [an issue](https://github.com/jessealama/proposal-decimal-polyfill/issues).
 
 ## Operations
 
 - absolute value (`abs`)
-- negation (`negate`)
+- negation (`negate`))
 - addition (`add`)
 - subtraction (`subtract`)
 - multiplication (`multiply`)
@@ -25,17 +30,18 @@ this repo.
 - equality (`equals`) to compare for mathematical equality
 - less than (`lessThan`) to compare mathematical order
 
+## Installation
+
+After installing this NPM package, there should be a file `proposal-decimal.mjs` available. Just include that in a
+`script` tag and you're good to go. Example:
+
+```html
+<script src="path-to-this-package/proposal-decimal.mjs" type="module"></script>
+```
+
 ## Implementation
 
 This package is written in TypeScript. Unit tests are in Jest. There are other external dependencies.
-
-## Data model
-
-This package aims to reproduce the IEEE 754 [Decimal128](https://en.wikipedia.org/wiki/Decimal128_floating-point_format)
-128-bit decimal floating-point numbers in JavaScript. See the [decimal proposal](https://github.com/tc39/proposal-decimal/).
-These **decimal** (not binary!) numbers take up 128 bits per number. This format allows for an exact representation of
-decimal numbers with 34 (decimal) significant digits and an exponent between -6143 and 6144. That's a _vast_ amount of
-range and precision!
 
 ## Issues
 
