@@ -14,7 +14,7 @@ other decimal implementations, please file [an issue](https://github.com/jesseal
 ## Operations
 
 - absolute value (`abs`)
-- negation (`negate`))
+- negation (`negate`)
 - addition (`add`)
 - subtraction (`subtract`)
 - multiplication (`multiply`)
