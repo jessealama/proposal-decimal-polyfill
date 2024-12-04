@@ -32,7 +32,13 @@ other decimal implementations, please file [an issue](https://github.com/jesseal
 
 ## Installation
 
-After installing this NPM package, there should be a file `proposal-decimal.mjs` available. Just include that in a
+After installing this NPM package, take a look at the `dist` subdirectory. There are three directories there:
+
+- `web`
+- `esm`
+- `cjs`
+
+For the web variant, a single file `index.mjs`, should be available. Just include that in a
 `script` tag and you're good to go. Example:
 
 ```html
