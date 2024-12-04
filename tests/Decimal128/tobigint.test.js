@@ -1,4 +1,3 @@
-import JSBI from "jsbi";
 import { Decimal128 } from "../../src/Decimal128.mjs";
 
 describe("NaN", () => {
@@ -9,10 +8,10 @@ describe("NaN", () => {
 
 describe("zero", () => {
     test("positive zero", () => {
-        expect(new Decimal128("0").toBigInt()).toStrictEqual(JSBI.BigInt(0));
+        expect(new Decimal128("0").toBigInt()).toStrictEqual(0n);
     });
     test("negative zero", () => {
-        expect(new Decimal128("-0").toBigInt()).toStrictEqual(JSBI.BigInt(0));
+        expect(new Decimal128("-0").toBigInt()).toStrictEqual(0n);
     });
 });
 
@@ -32,17 +31,15 @@ describe("non-integer", () => {
         expect(() => new Decimal128("1.2").toBigInt()).toThrow(RangeError);
     });
     test("work with mathematical value (ignore trailing zeroes)", () => {
-        expect(new Decimal128("1.00").toBigInt()).toStrictEqual(JSBI.BigInt(1));
+        expect(new Decimal128("1.00").toBigInt()).toStrictEqual(1n);
     });
 });
 
 describe("simple examples", () => {
     test("42", () => {
-        expect(new Decimal128("42").toBigInt()).toStrictEqual(JSBI.BigInt(42));
+        expect(new Decimal128("42").toBigInt()).toStrictEqual(42n);
     });
     test("-123", () => {
-        expect(new Decimal128("-123").toBigInt()).toStrictEqual(
-            JSBI.BigInt(-123)
-        );
+        expect(new Decimal128("-123").toBigInt()).toStrictEqual(-123n);
     });
 });

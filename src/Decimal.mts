@@ -1,4 +1,3 @@
-import JSBI from "jsbi";
 import { Rational } from "./Rational.mjs";
 
 function _cohort(s: string): "0" | "-0" | Rational {
@@ -89,7 +88,7 @@ export class Decimal {
         });
     }
 
-    public coefficient(): JSBI {
+    public coefficient(): bigint {
         let v = this.cohort as Rational;
         let q = this.quantum;
         let c = v.scale10(0 - q);
