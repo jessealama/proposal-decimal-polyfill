@@ -13,8 +13,6 @@
  * @author Jesse Alama <jesse@igalia.com>
  */
 
-import JSBI from "jsbi";
-
 import {
     RoundingMode,
     ROUNDING_MODES,
@@ -30,7 +28,7 @@ const EXPONENT_MAX = 6111;
 const NORMAL_EXPONENT_MAX = 6144;
 const MAX_SIGNIFICANT_DIGITS = 34;
 
-const bigTen = JSBI.BigInt(10);
+const bigTen = 10n;
 
 type NaNValue = "NaN";
 type InfiniteValue = "Infinity" | "-Infinity";
@@ -41,10 +39,7 @@ type Decimal128Value = NaNValue | InfiniteValue | FiniteValue;
 const NAN = "NaN";
 const POSITIVE_INFINITY = "Infinity";
 const NEGATIVE_INFINITY = "-Infinity";
-const TEN_MAX_EXPONENT = JSBI.exponentiate(
-    bigTen,
-    JSBI.BigInt(MAX_SIGNIFICANT_DIGITS)
-);
+const TEN_MAX_EXPONENT = bigTen ** BigInt(MAX_SIGNIFICANT_DIGITS);
 
 function pickQuantum(
     d: "0" | "-0" | Rational,
@@ -85,11 +80,7 @@ function adjustDecimal128(d: Decimal): Decimal128Value {
 
     let coef = d.coefficient();
 
-    if (
-        JSBI.LE(coef, TEN_MAX_EXPONENT) &&
-        JSBI.LE(EXPONENT_MIN, q) &&
-        JSBI.LE(q, EXPONENT_MAX)
-    ) {
+    if (coef <= TEN_MAX_EXPONENT && EXPONENT_MIN <= q && q <= EXPONENT_MAX) {
         return d;
     }
 
@@ -175,18 +166,10 @@ export class Decimal128 {
     private readonly _isFinite: boolean = true;
     private readonly _isNegative: boolean = false;
 
-    constructor(n: string | number | bigint | JSBI | Decimal) {
+    constructor(n: string | number | bigint | Decimal) {
         let data;
         if ("object" === typeof n) {
-            if (n instanceof JSBI) {
-                // Note: when using babel-plugin-transform-jsbi-to-bigint,
-                // the condition above may get transpiled into "typeof n === 'bigint'",
-                // causing the condition above to always be false.
-                // This is fine as we will be hanlding bigint below.
-                data = handleDecimalNotation(n.toString());
-            } else {
-                data = n;
-            }
+            data = n;
         } else {
             let s: string;
 
@@ -279,7 +262,7 @@ export class Decimal128 {
         let decimalOne = new Decimal128("1");
         let decimalTen = new Decimal128("10");
 
-        while (JSBI.LE(0, x.cmp(decimalTen))) {
+        while (0 <= x.cmp(decimalTen)) {
             x = x.scale10(-1);
         }
 
@@ -320,7 +303,7 @@ export class Decimal128 {
         );
     }
 
-    private coefficient(): JSBI {
+    private coefficient(): bigint {
         let d = this.d as Decimal;
         return d.coefficient();
     }
@@ -480,7 +463,7 @@ export class Decimal128 {
 
         let n = opts.digits;
 
-        if (JSBI.LE(n, 0)) {
+        if (n <= 0) {
             throw new RangeError("Argument must be positive");
         }
 
@@ -501,7 +484,7 @@ export class Decimal128 {
         let [lhs, rhs] = s.split(/[.]/);
         let p = this.isNegative() ? "-" : "";
 
-        if (JSBI.LE(n, lhs.length)) {
+        if (n < lhs.length) {
             if (lhs.length === n) {
                 return p + lhs;
             }
@@ -509,7 +492,7 @@ export class Decimal128 {
             return p + s.substring(0, n) + "e+" + `${lhs.length - n + 1}`;
         }
 
-        if (JSBI.LE(n, lhs.length + rhs.length)) {
+        if (n <= lhs.length + rhs.length) {
             let rounded = this.round(n - lhs.length);
             return rounded.emitDecimal();
         }
@@ -540,7 +523,7 @@ export class Decimal128 {
 
         let n = opts.digits;
 
-        if (JSBI.LE(n, 0)) {
+        if (n <= 0) {
             throw new RangeError("Argument must be positive");
         }
 
@@ -556,7 +539,7 @@ export class Decimal128 {
 
         let p = this.isNegative() ? "-" : "";
 
-        if (JSBI.LE(rhs.length, n)) {
+        if (rhs.length <= n) {
             return p + lhs + "." + rhs + "0".repeat(n - rhs.length) + "e" + exp;
         }
 
@@ -575,7 +558,7 @@ export class Decimal128 {
         return !!rhs.match(/^0+$/);
     }
 
-    toBigInt(): JSBI {
+    toBigInt(): bigint {
         if (this.isNaN()) {
             throw new RangeError("NaN cannot be converted to a BigInt");
         }
@@ -590,7 +573,7 @@ export class Decimal128 {
             );
         }
 
-        return JSBI.BigInt(this.toString());
+        return BigInt(this.toString());
     }
 
     toNumber(): number {
@@ -948,55 +931,34 @@ export class Decimal128 {
         let dividendCoefficient = this.coefficient();
         let divisorCoefficient = x.coefficient();
 
-        if (JSBI.notEqual(dividendCoefficient, JSBI.BigInt(0))) {
-            while (JSBI.LT(dividendCoefficient, divisorCoefficient)) {
-                dividendCoefficient = JSBI.multiply(
-                    dividendCoefficient,
-                    JSBI.BigInt(10)
-                );
+        if (dividendCoefficient !== 0n) {
+            while (dividendCoefficient < divisorCoefficient) {
+                dividendCoefficient = dividendCoefficient * 10n;
                 adjust++;
             }
         }
 
-        while (
-            JSBI.GT(
-                dividendCoefficient,
-                JSBI.multiply(divisorCoefficient, JSBI.BigInt(10))
-            )
-        ) {
-            divisorCoefficient = JSBI.multiply(
-                divisorCoefficient,
-                JSBI.BigInt(10)
-            );
+        while (dividendCoefficient > divisorCoefficient * 10n) {
+            divisorCoefficient = divisorCoefficient * 10n;
             adjust--;
         }
 
-        let resultCoefficient = JSBI.BigInt(0);
+        let resultCoefficient = 0n;
         let done = false;
 
         while (!done) {
-            while (JSBI.LE(divisorCoefficient, dividendCoefficient)) {
-                dividendCoefficient = JSBI.subtract(
-                    dividendCoefficient,
-                    divisorCoefficient
-                );
-                resultCoefficient = JSBI.add(resultCoefficient, JSBI.BigInt(1));
+            while (divisorCoefficient < dividendCoefficient) {
+                dividendCoefficient = dividendCoefficient - divisorCoefficient;
+                resultCoefficient = resultCoefficient + 1n;
             }
             if (
-                (JSBI.equal(dividendCoefficient, JSBI.BigInt(0)) &&
-                    adjust >= 0) ||
+                (dividendCoefficient === 0n && adjust >= 0) ||
                 resultCoefficient.toString().length > MAX_SIGNIFICANT_DIGITS
             ) {
                 done = true;
             } else {
-                resultCoefficient = JSBI.multiply(
-                    resultCoefficient,
-                    JSBI.BigInt(10)
-                );
-                dividendCoefficient = JSBI.multiply(
-                    dividendCoefficient,
-                    JSBI.BigInt(10)
-                );
+                resultCoefficient = resultCoefficient * 10n;
+                dividendCoefficient = dividendCoefficient * 10n;
                 adjust++;
             }
         }
@@ -1161,7 +1123,7 @@ export class Decimal128 {
         return this.exponent();
     }
 
-    scaledSignificand(): JSBI {
+    scaledSignificand(): bigint {
         if (this.isNaN()) {
             throw new RangeError("NaN does not have a scaled significand");
         }
@@ -1171,7 +1133,7 @@ export class Decimal128 {
         }
 
         if (this.isZero()) {
-            return JSBI.BigInt(0);
+            return 0n;
         }
 
         let v = this.cohort() as Rational;

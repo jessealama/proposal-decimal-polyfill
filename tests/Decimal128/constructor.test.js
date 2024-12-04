@@ -1,4 +1,3 @@
-import JSBI from "jsbi";
 import { Decimal128 } from "../../src/Decimal128.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
@@ -373,19 +372,6 @@ describe("bigint", () => {
     test("too big", () => {
         expect(
             new Decimal128(123456789012345678901234567890123456789n).toString()
-        ).toStrictEqual("Infinity");
-    });
-});
-
-describe("JSBI", () => {
-    test("simple", () => {
-        expect(new Decimal128(JSBI.BigInt(42)).toString()).toStrictEqual("42");
-    });
-    test("too big", () => {
-        expect(
-            new Decimal128(
-                JSBI.BigInt("123456789012345678901234567890123456789")
-            ).toString()
         ).toStrictEqual("Infinity");
     });
 });

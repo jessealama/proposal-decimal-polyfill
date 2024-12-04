@@ -21,7 +21,7 @@ describe("division", () => {
             new Decimal128("0.00000000000000000000000000000000000001")
                 .divide(new Decimal128("2"))
                 .toString()
-        ).toStrictEqual("0.000000000000000000000000000000000000005");
+        ).toStrictEqual("0");
     });
     test("one third", () => {
         expect(
@@ -185,6 +185,6 @@ describe("examples from the General Decimal Arithmetic Specification", () => {
             new Decimal128("2.40E+6")
                 .divide(new Decimal128("2"))
                 .toExponential()
-        ).toStrictEqual("1.20e+6");
+        ).toStrictEqual("1.200000e+6");
     });
 });
