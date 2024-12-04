@@ -5,7 +5,7 @@
     "main": "src/Decimal128.mjs",
     "scripts": {
         "dist": "rollup -c",
-        "build": "mkdir -p dist/web && esbuild ./src/Decimal128.mjs --bundle --outfile=dist/web/index.mjs",
+        "build": "mkdir -p dist/web && esbuild ./src/Decimal128.mjs --bundle --outfile=./dist/web/index.mjs",
         "test": "jest",
         "format": "prettier . --write",
         "lint": "prettier . --check",
