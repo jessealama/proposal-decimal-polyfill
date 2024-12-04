@@ -1,4 +1,3 @@
-import JSBI from "jsbi";
 import { Decimal128 } from "../../src/Decimal128.mjs";
 
 describe("NaN", () => {
@@ -20,38 +19,24 @@ describe("infinities", () => {
 
 describe("finite values", () => {
     test("0", () => {
-        expect(new Decimal128("0").scaledSignificand()).toStrictEqual(
-            JSBI.BigInt(0)
-        );
+        expect(new Decimal128("0").scaledSignificand()).toStrictEqual(0n);
     });
     test("-0", () => {
-        expect(new Decimal128("-0").scaledSignificand()).toStrictEqual(
-            JSBI.BigInt(0)
-        );
+        expect(new Decimal128("-0").scaledSignificand()).toStrictEqual(0n);
     });
-    let solution = JSBI.BigInt("420000000000000000000000000");
     test("simple number, greater than 10, with exponent apparently at limit", () => {
         expect(new Decimal128("42E-6143").scaledSignificand()).toStrictEqual(
-            JSBI.multiply(
-                JSBI.BigInt(42),
-                JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(32))
-            )
+            42n * 10n ** 32n
         );
     });
     test("simple number between 1 and 10 with exponent apparently at limit", () => {
         expect(new Decimal128("4.2E-6143").scaledSignificand()).toStrictEqual(
-            JSBI.multiply(
-                JSBI.BigInt(42),
-                JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(32))
-            )
+            42n * 10n ** 32n
         );
     });
     test("simple number with exponent beyond limit", () => {
         expect(new Decimal128("4.2E-6150").scaledSignificand()).toStrictEqual(
-            JSBI.multiply(
-                JSBI.BigInt(42),
-                JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(25))
-            )
+            42n * 10n ** 25n
         );
     });
 });

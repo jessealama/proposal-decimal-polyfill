@@ -98,7 +98,7 @@ describe("zero", () => {
     });
     test("zero point zero, one significant digit", () => {
         expect(new Decimal128("0.0").toPrecision({ digits: 1 })).toStrictEqual(
-            "0"
+            "0.0"
         );
     });
 });

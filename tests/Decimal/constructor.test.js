@@ -1,4 +1,3 @@
-import JSBI from "jsbi";
 import { Decimal } from "../../src/Decimal.mjs";
 import { Rational } from "../../src/Rational.mjs";
 
@@ -7,7 +6,7 @@ describe("Decimal constructor", () => {
         expect(
             () =>
                 new Decimal({
-                    cohort: new Rational(JSBI.BigInt(0), JSBI.BigInt(1)),
+                    cohort: new Rational(0n, 1n),
                     quantum: 0,
                 })
         ).toThrow(RangeError);
@@ -16,7 +15,7 @@ describe("Decimal constructor", () => {
         expect(
             () =>
                 new Decimal({
-                    cohort: new Rational(JSBI.BigInt(1), JSBI.BigInt(1)),
+                    cohort: new Rational(1n, 1n),
                     quantum: 1.5,
                 })
         ).toThrow(RangeError);
@@ -25,7 +24,7 @@ describe("Decimal constructor", () => {
         expect(
             () =>
                 new Decimal({
-                    cohort: new Rational(JSBI.BigInt(1), JSBI.BigInt(1)),
+                    cohort: new Rational(1n, 1n),
                     quantum: -0,
                 })
         ).toThrow(RangeError);

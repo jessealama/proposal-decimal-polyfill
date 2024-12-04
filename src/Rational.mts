@@ -1,5 +1,3 @@
-import JSBI from "jsbi";
-
 import {
     countFractionalDigits,
     Digit,
@@ -11,32 +9,36 @@ import {
     RoundingMode,
 } from "./common.mjs";
 
-const zero = JSBI.BigInt(0);
-const one = JSBI.BigInt(1);
-const minusOne = JSBI.BigInt(-1);
-const ten = JSBI.BigInt(10);
+const zero = 0n;
+const one = 1n;
+const minusOne = -1n;
+const ten = 10n;
 
-function gcd(a: JSBI, b: JSBI): JSBI {
-    while (JSBI.notEqual(b, zero)) {
+function gcd(a: bigint, b: bigint): bigint {
+    while (b !== zero) {
         let t = b;
-        b = JSBI.remainder(a, b);
+        b = a % b;
         a = t;
     }
     return a;
 }
 
-function* nextDigitForDivision(x: JSBI, y: JSBI, n: number): Generator<Digit> {
+function* nextDigitForDivision(
+    x: bigint,
+    y: bigint,
+    n: number
+): Generator<Digit> {
     let result = "";
     let emittedDecimalPoint = false;
     let done = false;
 
     while (!done && countFractionalDigits(result) < n) {
-        if (JSBI.equal(x, zero)) {
+        if (x === zero) {
             done = true;
-        } else if (JSBI.LT(x, y)) {
+        } else if (x < y) {
             if (emittedDecimalPoint) {
-                x = JSBI.multiply(x, ten);
-                if (JSBI.LT(x, y)) {
+                x = x * ten;
+                if (x < y) {
                     // look ahead: are we still a power of 10 behind?
                     result = result + "0";
                     yield 0;
@@ -44,17 +46,17 @@ function* nextDigitForDivision(x: JSBI, y: JSBI, n: number): Generator<Digit> {
             } else {
                 emittedDecimalPoint = true;
                 result = (result === "" ? "0" : result) + ".";
-                x = JSBI.multiply(x, ten);
+                x = x * ten;
                 yield -1;
-                if (JSBI.LT(x, y)) {
+                if (x < y) {
                     // look ahead: are we still a power of 10 behind?
                     result = result + "0";
                     yield 0;
                 }
             }
         } else {
-            let q = JSBI.divide(x, y);
-            x = JSBI.remainder(x, y);
+            let q = x / y;
+            x = x % y;
             let qString = q.toString();
             result = result + qString;
             for (let i = 0; i < qString.length; i++) {
@@ -67,12 +69,12 @@ function* nextDigitForDivision(x: JSBI, y: JSBI, n: number): Generator<Digit> {
 }
 
 export class Rational {
-    readonly numerator: JSBI;
-    readonly denominator: JSBI;
+    readonly numerator: bigint;
+    readonly denominator: bigint;
     readonly isNegative: boolean;
 
-    constructor(p: JSBI, q: JSBI) {
-        if (JSBI.equal(q, zero)) {
+    constructor(p: bigint, q: bigint) {
+        if (q === zero) {
             throw new RangeError(
                 "Cannot construct rational whose denominator is zero"
             );
@@ -82,22 +84,22 @@ export class Rational {
         let den = q;
         let neg = false;
 
-        if (JSBI.LT(p, zero)) {
-            if (JSBI.LT(q, zero)) {
-                num = JSBI.unaryMinus(p);
-                den = JSBI.unaryMinus(q);
+        if (p < zero) {
+            if (q < zero) {
+                num = -p;
+                den = -q;
             } else {
-                num = JSBI.unaryMinus(p);
+                num = -p;
                 neg = true;
             }
-        } else if (JSBI.LT(q, zero)) {
-            den = JSBI.unaryMinus(q);
+        } else if (q < zero) {
+            den = -q;
             neg = true;
         }
 
         let g = gcd(num, den);
-        this.numerator = JSBI.divide(num, g);
-        this.denominator = JSBI.divide(den, g);
+        this.numerator = num / g;
+        this.denominator = den / g;
         this.isNegative = neg;
     }
 
@@ -113,12 +115,12 @@ export class Rational {
         }
 
         if (s.match(/^[0-9]+$/)) {
-            return new Rational(JSBI.BigInt(s), JSBI.BigInt(1));
+            return new Rational(BigInt(s), 1n);
         }
 
         if (s.match(/^[0-9]+[eE][+-]?[0-9]+$/)) {
             let [num, exp] = s.split(/[eE]/);
-            let originalRat = new Rational(JSBI.BigInt(num), JSBI.BigInt(1));
+            let originalRat = new Rational(BigInt(num), 1n);
             return originalRat.scale10(Number(exp));
         }
 
@@ -131,11 +133,8 @@ export class Rational {
                 return originalRat.scale10(Number(exp));
             }
 
-            let numerator = JSBI.BigInt(whole + decimal);
-            let denominator = JSBI.exponentiate(
-                ten,
-                JSBI.BigInt(decimal.length)
-            );
+            let numerator = BigInt(whole + decimal);
+            let denominator = ten ** BigInt(decimal.length);
             return new Rational(numerator, denominator);
         }
 
@@ -154,18 +153,12 @@ export class Rational {
         if (n < 0) {
             return new Rational(
                 this.numerator,
-                JSBI.multiply(
-                    this.denominator,
-                    JSBI.exponentiate(ten, JSBI.BigInt(0 - n))
-                )
+                this.denominator * ten ** BigInt(0 - n)
             );
         }
 
         return new Rational(
-            JSBI.multiply(
-                this.numerator,
-                JSBI.exponentiate(ten, JSBI.BigInt(n))
-            ),
+            this.numerator * ten ** BigInt(n),
             this.denominator
         );
     }
@@ -175,10 +168,7 @@ export class Rational {
             return new Rational(this.numerator, this.denominator);
         }
 
-        return new Rational(
-            JSBI.multiply(this.numerator, minusOne),
-            this.denominator
-        );
+        return new Rational(this.numerator * minusOne, this.denominator);
     }
 
     private static _add(x: Rational, y: Rational): Rational {
@@ -191,11 +181,8 @@ export class Rational {
         }
 
         return new Rational(
-            JSBI.add(
-                JSBI.multiply(x.numerator, y.denominator),
-                JSBI.multiply(y.numerator, x.denominator)
-            ),
-            JSBI.multiply(x.denominator, y.denominator)
+            x.numerator * y.denominator + y.numerator * x.denominator,
+            x.denominator * y.denominator
         );
     }
 
@@ -205,18 +192,15 @@ export class Rational {
         }
 
         return new Rational(
-            JSBI.subtract(
-                JSBI.multiply(x.numerator, y.denominator),
-                JSBI.multiply(y.numerator, x.denominator)
-            ),
-            JSBI.multiply(x.denominator, y.denominator)
+            x.numerator * y.denominator - y.numerator * x.denominator,
+            x.denominator * y.denominator
         );
     }
 
     private static _multiply(x: Rational, y: Rational): Rational {
         return new Rational(
-            JSBI.multiply(x.numerator, y.numerator),
-            JSBI.multiply(x.denominator, y.denominator)
+            x.numerator * y.numerator,
+            x.denominator * y.denominator
         );
     }
 
@@ -255,7 +239,7 @@ export class Rational {
             return "-" + this.negate().toFixed(n);
         }
 
-        if (JSBI.equal(this.numerator, zero)) {
+        if (this.numerator === zero) {
             if (Infinity === n) {
                 throw new RangeError(
                     "Cannot enumerate infinite decimal places of zero"
@@ -447,20 +431,16 @@ export class Rational {
     }
 
     cmp(x: Rational): -1 | 0 | 1 {
-        let a = JSBI.multiply(
-            JSBI.multiply(this.isNegative ? minusOne : one, this.numerator),
-            x.denominator
-        );
-        let b = JSBI.multiply(
-            JSBI.multiply(x.isNegative ? minusOne : one, x.numerator),
-            this.denominator
-        );
+        let a =
+            (this.isNegative ? minusOne : one) * this.numerator * x.denominator;
+        let b =
+            (x.isNegative ? minusOne : one) * x.numerator * this.denominator;
 
-        if (JSBI.LT(a, b)) {
+        if (a < b) {
             return -1;
         }
 
-        if (JSBI.LT(b, a)) {
+        if (b < a) {
             return 1;
         }
 
@@ -468,6 +448,6 @@ export class Rational {
     }
 
     isZero(): boolean {
-        return JSBI.equal(this.numerator, zero);
+        return this.numerator === zero;
     }
 }
