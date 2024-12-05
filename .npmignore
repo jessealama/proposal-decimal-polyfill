@@ -11,5 +11,4 @@ examples/*.d.mts
 .prettierignore
 jest.config.cjs
 tsconfig.json
-rollup.config.mjs
-tsconfig.build.json
+src/*.mts
