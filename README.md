@@ -32,22 +32,40 @@ other decimal implementations, please file [an issue](https://github.com/jesseal
 
 ## Installation
 
-After installing this NPM package, take a look at the `dist` subdirectory. There are three directories there:
+After installing this NPM package (`npm install proposal-decimal`), the `dist` subdirectory contains a single ESM
+module, `Decimal128.mjs`. It exports a single class, `Decimal128`.
 
-- `web`
-- `esm`
-- `cjs`
+To use this package in Node.js, you can import the module as follows:
 
-For the web variant, a single file `index.mjs`, should be available. Just include that in a
-`script` tag and you're good to go. Example:
+```javascript
+import { Decimal128 } from "proposal-decimal";
+// your code goes here
+// for example:
+const x = new Decimal128("0.1");
+const y = new Decimal128("0.2");
+console.log(x.add(y).toString());
+```
+
+To use this package in a browser, try something like this:
 
 ```html
-<script src="path-to-this-package/proposal-decimal.mjs" type="module"></script>
+<script type="module">
+    import { Decimal128 } from "/path/to/dist/Decimal128.mjs";
+    // your code goes here
+    // for example:
+    const x = new Decimal128("0.1");
+    const y = new Decimal128("0.2");
+    console.log(x.add(y).toString());
+</script>
 ```
 
 ## Implementation
 
 This package is written in TypeScript. Unit tests are in Jest. There are other external dependencies.
+
+## Examples
+
+The `examples` subdirectory contains some example code for your inspection.
 
 ## Issues
 

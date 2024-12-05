@@ -4,11 +4,11 @@
     "description": "Champion-maintained polyfill for the TC39 decimal proposal",
     "main": "src/Decimal128.mjs",
     "scripts": {
-        "build": "rollup -c",
         "test": "jest",
         "format": "prettier . --write",
         "lint": "prettier . --check",
-        "coverage": "npx c8 npx jest"
+        "coverage": "npx c8 npx jest",
+        "build": "mkdir dist && esbuild src/Decimal128.mjs --bundle --esm --outfile=dist/Decimal128.mjs"
     },
     "prettier": {
         "trailingComma": "es5",
@@ -34,13 +34,12 @@
     },
     "homepage": "https://github.com/jessealama/proposal-decimal-polyfill#readme",
     "devDependencies": {
-        "@rollup/plugin-typescript": "^12.1.1",
         "c8": "^10.1.2",
         "esbuild": "^0.24.0",
+        "http-server": "^14.1.1",
         "jest": "^29.7.0",
         "jest-light-runner": "^0.6.0",
         "prettier": "^3.4.1",
-        "rollup": "^4.28.0",
         "ts-jest": "^29.2.5",
         "tsx": "^4.19.2",
         "typescript": "^5.7.2"
