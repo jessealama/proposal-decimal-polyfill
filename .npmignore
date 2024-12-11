@@ -11,4 +11,3 @@ examples/*.d.mts
 .prettierignore
 jest.config.cjs
 tsconfig.json
-src/*.mts
