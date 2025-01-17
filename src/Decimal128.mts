@@ -489,7 +489,7 @@ export class Decimal128 {
                 return p + lhs;
             }
 
-            return p + s.substring(0, n) + "e+" + `${lhs.length - n + 1}`;
+            return p + s.substring(0, n) + "e+" + `${lhs.length - n}`;
         }
 
         if (n <= lhs.length + rhs.length) {
