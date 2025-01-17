@@ -19,8 +19,8 @@ describe("toPrecision", () => {
                 ${"argument less than number of significant digits, rounded needed"}                     | ${{ digits: 5 }}  | ${"123.46"}
                 ${"argument less than number of significant digits, rounded does not change last digit"} | ${{ digits: 4 }}  | ${"123.4"}
                 ${"argument equals number of integer digits"}                                            | ${{ digits: 3 }}  | ${"123"}
-                ${"argument less than number of integer digits"}                                         | ${{ digits: 2 }}  | ${"12e+2"}
-                ${"single digit requested"}                                                              | ${{ digits: 1 }}  | ${"1e+3"}
+                ${"argument less than number of integer digits"}                                         | ${{ digits: 2 }}  | ${"12e+1"}
+                ${"single digit requested"}                                                              | ${{ digits: 1 }}  | ${"1e+2"}
             `("$name", ({ arg, output }) => {
                 const d = input;
                 const s = arg === NoArgument ? d.toPrecision() : d.toPrecision(arg);
