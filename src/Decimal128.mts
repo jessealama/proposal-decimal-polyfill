@@ -461,13 +461,13 @@ export class Decimal128 {
             return this.toString();
         }
 
-        let n = opts.digits;
+        let precision = opts.digits;
 
-        if (n <= 0) {
+        if (precision <= 0) {
             throw new RangeError("Argument must be positive");
         }
 
-        if (!Number.isInteger(n)) {
+        if (!Number.isInteger(precision)) {
             throw new RangeError("Argument must be an integer");
         }
 
@@ -481,23 +481,48 @@ export class Decimal128 {
 
         let s = this.abs().emitDecimal();
 
-        let [lhs, rhs] = s.split(/[.]/);
         let p = this.isNegative() ? "-" : "";
 
-        if (n < lhs.length) {
-            if (lhs.length === n) {
-                return p + lhs;
+        if (this.isZero()) {
+            if (precision === 1) {
+                return p + "0";
             }
-
-            return p + s.substring(0, n) + "e+" + `${lhs.length - n + 1}`;
+            return p + "0." + "0".repeat(precision - 1)
         }
 
-        if (n <= lhs.length + rhs.length) {
-            let rounded = this.round(n - lhs.length);
-            return rounded.emitDecimal();
+        const { q, n } = findLargestQ(s);
+        const coefficient = n.replace(/^0+/, "");
+        const numDigits = coefficient.length;
+
+        if (numDigits < precision) {
+            const additionalZeroes = "0".repeat(precision - numDigits);
+
+            // if d is an integer
+            if (q >= 0) {
+                return coefficient + "." + additionalZeroes;
+            } else {
+                return p + s + additionalZeroes;
+            }
         }
 
-        return p + lhs + "." + rhs + "0".repeat(n - lhs.length - rhs.length);
+        if (numDigits === precision) {
+            return this.clone().toString();
+        }
+
+        const exp = q + numDigits;
+
+        const roundedAndScaled = new Decimal128(`${p}0.${coefficient}`).round(precision).scale10(exp);
+
+        if (roundedAndScaled.quantum() < 0) { 
+            return roundedAndScaled.emitDecimal();
+        }
+
+        const str = roundedAndScaled.abs().toString();
+        if (str.length === precision) {
+            return p + str;
+        }
+
+        return p + str.substring(0, precision) + `e+${str.length - precision}`;
     }
 
     toExponential(opts?: { digits?: number }): string {
@@ -1147,3 +1172,27 @@ export class Decimal128 {
 Decimal128.prototype.valueOf = function () {
     throw TypeError("Decimal128.prototype.valueOf throws unconditionally");
 };
+
+const trimZeroR = (s: string) => s.replace(/0+$/, "");
+const trimZeroL = (s: string) => s.replace(/^0+/, "");
+function findLargestQ(d: string) {
+    const [lhs = "", rhs = ""] = d.split(".");
+    const lhsLen = trimZeroL(lhs).length;
+
+    const rhsRTrimmed = trimZeroR(rhs);
+    const rhsLen = rhsRTrimmed.length;
+
+    if (rhsLen === 0) {
+      const lhsRTrimmed = trimZeroR(lhs);
+      const q = lhsLen - lhsRTrimmed.length;
+      return {
+        q,
+        n: lhsRTrimmed,
+      };
+    }
+    
+    return {
+        q: -rhsLen,
+        n: lhs + rhs,
+    };
+}
