@@ -151,6 +151,18 @@ describe("zero", () => {
     test("compare zero to negative", () => {
         expect(zero.cmp(one.negate())).toStrictEqual(1);
     });
+    test("compare positive to zero", () => {
+        expect(one.cmp(zero)).toStrictEqual(1);
+    });
+    test("compare negative to zero", () => {
+        expect(one.negate().cmp(zero)).toStrictEqual(-1);
+    });
+    test("compare positive to negative zero", () => {
+        expect(one.cmp(zero)).toStrictEqual(1);
+    });
+    test("compare negative to negative zero", () => {
+        expect(one.negate().cmp(zero)).toStrictEqual(-1);
+    });
 });
 
 describe("normalization", () => {

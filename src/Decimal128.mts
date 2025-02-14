@@ -659,6 +659,13 @@ export class Decimal128 {
 
             return x.isNegative() ? 1 : -1;
         }
+        if (x.isZero()) {
+            if (this.isZero()) {
+                return 0;
+            }
+
+            return this.isNegative() ? -1 : 1;
+        }
 
         let ourCohort = this.cohort() as Rational;
         let theirCohort = x.cohort() as Rational;
