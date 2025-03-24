@@ -487,7 +487,7 @@ export class Decimal128 {
             if (precision === 1) {
                 return p + "0";
             }
-            return p + "0." + "0".repeat(precision - 1)
+            return p + "0." + "0".repeat(precision - 1);
         }
 
         const { q, n } = findLargestQ(s);
@@ -496,13 +496,7 @@ export class Decimal128 {
 
         if (numDigits < precision) {
             const additionalZeroes = "0".repeat(precision - numDigits);
-
-            // if d is an integer
-            if (q >= 0) {
-                return coefficient + "." + additionalZeroes;
-            } else {
-                return p + s + additionalZeroes;
-            }
+            return p + s + additionalZeroes;
         }
 
         if (numDigits === precision) {
@@ -511,9 +505,11 @@ export class Decimal128 {
 
         const exp = q + numDigits;
 
-        const roundedAndScaled = new Decimal128(`${p}0.${coefficient}`).round(precision).scale10(exp);
+        const roundedAndScaled = new Decimal128(`${p}0.${coefficient}`)
+            .round(precision)
+            .scale10(exp);
 
-        if (roundedAndScaled.quantum() < 0) { 
+        if (roundedAndScaled.quantum() < 0) {
             return roundedAndScaled.emitDecimal();
         }
 
@@ -660,10 +656,6 @@ export class Decimal128 {
             return x.isNegative() ? 1 : -1;
         }
         if (x.isZero()) {
-            if (this.isZero()) {
-                return 0;
-            }
-
             return this.isNegative() ? -1 : 1;
         }
 
@@ -671,6 +663,62 @@ export class Decimal128 {
         let theirCohort = x.cohort() as Rational;
 
         return ourCohort.cmp(theirCohort);
+    }
+
+    equals(other: Decimal128): boolean {
+        if (this.isNaN() || other.isNaN()) {
+            return false;
+        }
+
+        if (!this.isFinite()) {
+            if (other.isFinite()) {
+                return false;
+            }
+
+            return this.isNegative() === other.isNegative();
+        }
+
+        if (this.isZero()) {
+            return other.isZero();
+        }
+
+        return 0 === this.cmp(other);
+    }
+
+    notEquals(other: Decimal128): boolean {
+        if (this.isNaN() || other.isNaN()) {
+            return false;
+        }
+
+        return 0 !== this.cmp(other);
+    }
+
+    lessThan(x: Decimal128): boolean {
+        return this.cmp(x) === -1;
+    }
+
+    lessThanOrEqual(x: Decimal128): boolean {
+        if (this.isNaN() || x.isNaN()) {
+            return false;
+        }
+
+        let c = this.cmp(x);
+
+        return c === -1 || c === 0;
+    }
+
+    greaterThan(x: Decimal128): boolean {
+        return this.cmp(x) === 1;
+    }
+
+    greaterThanOrEqual(x: Decimal128): boolean {
+        if (this.isNaN() || x.isNaN()) {
+            return false;
+        }
+
+        let c = this.cmp(x);
+
+        return c === 1 || c === 0;
     }
 
     abs(): Decimal128 {
@@ -1190,14 +1238,14 @@ function findLargestQ(d: string) {
     const rhsLen = rhsRTrimmed.length;
 
     if (rhsLen === 0) {
-      const lhsRTrimmed = trimZeroR(lhs);
-      const q = lhsLen - lhsRTrimmed.length;
-      return {
-        q,
-        n: lhsRTrimmed,
-      };
+        const lhsRTrimmed = trimZeroR(lhs);
+        const q = lhsLen - lhsRTrimmed.length;
+        return {
+            q,
+            n: lhsRTrimmed,
+        };
     }
-    
+
     return {
         q: -rhsLen,
         n: lhs + rhs,
