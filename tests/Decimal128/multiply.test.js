@@ -191,6 +191,18 @@ describe("multiply", () => {
                     .toString()
             ).toStrictEqual("-Infinity");
         });
+        let negInf = new Decimal128("-Infinity");
+        let posInf = new Decimal128("Infinity");
+        test("negative infinity times itself", () => {
+            expect(negInf.multiply(negInf).toString()).toStrictEqual(
+                "Infinity"
+            );
+        });
+        test("positive infinity times itself", () => {
+            expect(posInf.multiply(posInf).toString()).toStrictEqual(
+                "Infinity"
+            );
+        });
     });
 });
 

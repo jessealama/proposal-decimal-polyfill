@@ -6,7 +6,7 @@ const zero = new Decimal128("0");
 const negZero = new Decimal128("-0");
 const one = new Decimal128("1");
 
-describe("equals", () => {
+describe("cmp", () => {
     let d1 = new Decimal128("987.123");
     let d2 = new Decimal128("123.456789");
     test("simple example", () => {
