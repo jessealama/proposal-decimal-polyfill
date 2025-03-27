@@ -262,11 +262,11 @@ export class Decimal128 {
         let decimalOne = new Decimal128("1");
         let decimalTen = new Decimal128("10");
 
-        while (0 <= x.cmp(decimalTen)) {
+        while (0 <= x.compare(decimalTen)) {
             x = x.scale10(-1);
         }
 
-        while (x.cmp(decimalOne) === -1) {
+        while (x.compare(decimalOne) === -1) {
             x = x.scale10(1);
         }
 
@@ -623,7 +623,7 @@ export class Decimal128 {
      *
      * @param x
      */
-    cmp(x: Decimal128): number {
+    compare(x: Decimal128): number {
         if (this.isNaN() || x.isNaN()) {
             return NaN;
         }
@@ -682,7 +682,7 @@ export class Decimal128 {
             return other.isZero();
         }
 
-        return 0 === this.cmp(other);
+        return 0 === this.compare(other);
     }
 
     notEquals(other: Decimal128): boolean {
@@ -690,11 +690,11 @@ export class Decimal128 {
             return false;
         }
 
-        return 0 !== this.cmp(other);
+        return 0 !== this.compare(other);
     }
 
     lessThan(x: Decimal128): boolean {
-        return this.cmp(x) === -1;
+        return this.compare(x) === -1;
     }
 
     lessThanOrEqual(x: Decimal128): boolean {
@@ -702,13 +702,13 @@ export class Decimal128 {
             return false;
         }
 
-        let c = this.cmp(x);
+        let c = this.compare(x);
 
         return c === -1 || c === 0;
     }
 
     greaterThan(x: Decimal128): boolean {
-        return this.cmp(x) === 1;
+        return this.compare(x) === 1;
     }
 
     greaterThanOrEqual(x: Decimal128): boolean {
@@ -716,7 +716,7 @@ export class Decimal128 {
             return false;
         }
 
-        let c = this.cmp(x);
+        let c = this.compare(x);
 
         return c === 1 || c === 0;
     }
@@ -1151,7 +1151,7 @@ export class Decimal128 {
             return new Decimal128(NAN);
         }
 
-        if (this.cmp(d) === -1) {
+        if (this.compare(d) === -1) {
             return this.clone();
         }
 
