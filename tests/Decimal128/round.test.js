@@ -98,7 +98,7 @@ describe("rounding non-decimal", () => {
             ${1}      |  ${"Infinity"}  |  ${"Infinity"}
             ${10}     | ${"-Infinity"}  | ${"-Infinity"}
             ${10}     |  ${"Infinity"}  |  ${"Infinity"}
-        `("$input round($decimals) to be $output", ({ decimals, input, output }) => {
+        `("$input round($decimals) to is $output", ({ decimals, input, output }) => {
             const a = new Decimal128(input.trim());
             const o = output.trim();
 
