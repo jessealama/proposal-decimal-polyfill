@@ -167,6 +167,10 @@ export class Decimal128 {
     private readonly _isNegative: boolean = false;
     static Amount: any;
 
+    // will be defined later
+    withSignificantDigits: any;
+    withFractionalDigits: any;
+
     constructor(n: string | number | bigint | Decimal) {
         let data;
         if ("object" === typeof n) {
@@ -1328,6 +1332,13 @@ Decimal128.Amount = class Amount {
     }
 }
 
+Decimal128.prototype.withSignificantDigits = function (precision: number) {
+    return new Decimal128.Amount(this.toString(), precision, PRECISION_MODE_SIGNIFICANT_DIGITS);
+}
+
+Decimal128.prototype.withFractionalDigits = function (precision: number) {
+    return new Decimal128.Amount(this.toString(), precision, PRECISION_MODE_FRACTIONAL_DIGITS);
+}
 
 Decimal128.prototype.valueOf = function () {
     throw TypeError("Decimal128.prototype.valueOf throws unconditionally");
