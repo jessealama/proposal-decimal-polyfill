@@ -4,7 +4,10 @@ const PRECISION_MODE_FRACTIONAL_DIGITS = "fractionalDigits";
 const PRECISION_MODE_SIGNIFICANT_DIGITS = "significantDigits";
 type PrecisionMode = "fractionalDigits" | "significantDigits";
 
-const PRECISION_MODES: PrecisionMode[] = [PRECISION_MODE_FRACTIONAL_DIGITS, PRECISION_MODE_SIGNIFICANT_DIGITS];
+const PRECISION_MODES: PrecisionMode[] = [
+    PRECISION_MODE_FRACTIONAL_DIGITS,
+    PRECISION_MODE_SIGNIFICANT_DIGITS,
+];
 const DEFAULT_PRECISION_MODE = "fractionalDigits";
 
 class Amount {
@@ -24,7 +27,9 @@ class Amount {
         }
 
         if (PRECISION_MODES.indexOf(mode) === -1) {
-            throw new RangeError(`Precision mode must be one of '${PRECISION_MODES.join("', '")}'`);
+            throw new RangeError(
+                `Precision mode must be one of '${PRECISION_MODES.join("', '")}'`
+            );
         }
 
         this.val = v;
@@ -38,10 +43,10 @@ class Amount {
 
     toString(): string {
         if (this.mode === PRECISION_MODE_FRACTIONAL_DIGITS) {
-            return this.val.toFixed({digits: this.precision});
+            return this.val.toFixed({ digits: this.precision });
         }
 
-        return this.val.toPrecision({digits: this.precision});
+        return this.val.toPrecision({ digits: this.precision });
     }
 
     toLocaleString(locale: string, options: Intl.NumberFormatOptions): string {
