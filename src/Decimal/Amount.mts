@@ -49,3 +49,5 @@ class Amount {
         return v.toLocaleString(locale, options);
     }
 }
+
+export { Amount };
