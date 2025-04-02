@@ -371,6 +371,11 @@ export class Decimal128 {
         return p + integerPart + "." + fractionalPart;
     }
 
+    toLocaleString(locale: string, options: object): string {
+        let formatter = new Intl.NumberFormat(locale, options);
+        return formatter.format(Number(this.toString()));
+    }
+
     /**
      * Returns a digit string representing this Decimal128.
      */
