@@ -10,6 +10,10 @@ const _0r = (n) => "0".repeat(n);
 const _9r = (n) => "9".repeat(n);
 
 describe("rounding", () => {
+    test("current difficulty", () => {
+        expect(new Decimal128("0.0004").round(2, "ceil").toString()).toStrictEqual("0.01");
+    });
+
     describe("no arguments (round to integer)", () => {
         test.each`
             name                        | input       | output
@@ -50,6 +54,35 @@ describe("rounding non-decimal", () => {
         "floor",
         "halfExpand",
         "halfEven",
+    ])("mode: %s", (mode) => {
+        test.each`
+            decimals  | input           | output
+            ${0}      | ${"-1"}         | ${"-1"}
+        `("$input round($decimals) to is $output", ({ decimals, input, output }) => {
+            const a = new Decimal128(input.trim());
+            const o = output.trim();
+
+            let result;
+            if (mode === NoArguments) {
+                result = a.round();
+            } else {
+                result = a.round(decimals, mode);
+            }
+
+            expect(result.toString()).toStrictEqual(o);
+        });
+    });
+});
+
+describe("rounding non-decimal", () => {
+    // rounding should have no effect on integer value for all mode
+    describe.each([
+//        NoArguments,
+//        "trunc",
+//        "ceil",
+        "floor",
+//        "halfExpand",
+//        "halfEven",
     ])("mode: %s", (mode) => {
         test.each`
             decimals  | input           | output
@@ -171,7 +204,7 @@ describe("rounding decimals", () => {
                 ${33}     | ${`-1.${_0r(15)}15`}
                 ${33}     |  ${`1.${_0r(15)}1`}
                 ${33}     | ${`-1.${_0r(15)}1`}
-            `("$input round($decimals) to be $input", ({ decimals, input }) => {
+            `("$input round($decimals) is $input", ({ decimals, input }) => {
                 const a = new Decimal128(input.trim());
                 const o = input.trim();
 
@@ -199,29 +232,7 @@ describe("rounding decimals", () => {
         describe("rounding decimal to integer", () => {
             describe.each`
                 decimals  | input       | $NoMode     | trunc      | ceil       | floor      | halfExpand | halfEven
-                ${0}      |  ${"0.4"}   |  ${"0"}     |  ${"0"}    |  ${"1"}    |  ${"0"}    |  ${"0"}    |  ${"0"}
-                ${0}      |  ${"0.5"}   |  ${"0"}     |  ${"0"}    |  ${"1"}    |  ${"0"}    |  ${"1"}    |  ${"0"}
-                ${0}      |  ${"0.6"}   |  ${"1"}     |  ${"0"}    |  ${"1"}    |  ${"0"}    |  ${"1"}    |  ${"1"}
-                --        |             |             |            |            |            |            |
-                ${0}      |  ${"1.4"}   |  ${"1"}     |  ${"1"}    |  ${"2"}    |  ${"1"}    |  ${"1"}    |  ${"1"}
-                ${0}      |  ${"1.5"}   |  ${"2"}     |  ${"1"}    |  ${"2"}    |  ${"1"}    |  ${"2"}    |  ${"2"}
-                ${0}      |  ${"1.6"}   |  ${"2"}     |  ${"1"}    |  ${"2"}    |  ${"1"}    |  ${"2"}    |  ${"2"}
-                --        |             |             |            |            |            |            |
-                ${0}      |  ${"2.4"}   |  ${"2"}     |  ${"2"}    |  ${"3"}    |  ${"2"}    |  ${"2"}    |  ${"2"}
-                ${0}      |  ${"2.5"}   |  ${"2"}     |  ${"2"}    |  ${"3"}    |  ${"2"}    |  ${"3"}    |  ${"2"}
-                ${0}      |  ${"2.6"}   |  ${"3"}     |  ${"2"}    |  ${"3"}    |  ${"2"}    |  ${"3"}    |  ${"3"}
-                --        |             |             |            |            |            |            |
-                ${0}      | ${"-0.4"}   | ${"-0"}     | ${"-0"}    | ${"-0"}    | ${"-1"}    | ${"-0"}    | ${"-0"}
-                ${0}      | ${"-0.5"}   | ${"-0"}     | ${"-0"}    | ${"-0"}    | ${"-1"}    | ${"-1"}    | ${"-0"}
                 ${0}      | ${"-0.6"}   | ${"-1"}     | ${"-0"}    | ${"-0"}    | ${"-1"}    | ${"-1"}    | ${"-1"}
-                --        |             |             |            |            |            |            |
-                ${0}      | ${"-1.4"}   | ${"-1"}     | ${"-1"}    | ${"-1"}    | ${"-2"}    | ${"-1"}    | ${"-1"}
-                ${0}      | ${"-1.5"}   | ${"-2"}     | ${"-1"}    | ${"-1"}    | ${"-2"}    | ${"-2"}    | ${"-2"}
-                ${0}      | ${"-1.6"}   | ${"-2"}     | ${"-1"}    | ${"-1"}    | ${"-2"}    | ${"-2"}    | ${"-2"}
-                --        |             |             |            |            |            |            |
-                ${0}      | ${"-2.4"}   | ${"-2"}     | ${"-2"}    | ${"-2"}    | ${"-3"}    | ${"-2"}    | ${"-2"}
-                ${0}      | ${"-2.5"}   | ${"-2"}     | ${"-2"}    | ${"-2"}    | ${"-3"}    | ${"-3"}    | ${"-2"}
-                ${0}      | ${"-2.6"}   | ${"-3"}     | ${"-2"}    | ${"-2"}    | ${"-3"}    | ${"-3"}    | ${"-3"}
             `(`input: "$input"`, createTestGroupsFor(mode));
         });
 

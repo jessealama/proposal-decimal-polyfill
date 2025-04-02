@@ -3,7 +3,6 @@ import {
     Digit,
     ROUNDING_MODE_CEILING,
     ROUNDING_MODE_FLOOR,
-    ROUNDING_MODE_HALF_EVEN,
     ROUNDING_MODE_HALF_EXPAND,
     ROUNDING_MODE_TRUNCATE,
     RoundingMode,
@@ -222,6 +221,10 @@ export class Rational {
         );
     }
 
+    private isInteger(): boolean {
+        return this.denominator === 1n;
+    }
+
     public toFixed(n: number): string {
         if (n !== Infinity && !Number.isInteger(n)) {
             throw new TypeError(
@@ -289,145 +292,68 @@ export class Rational {
         return result + "." + zeroesNeeded;
     }
 
-    private static roundHalfEven(
-        initialPart: Rational,
-        penultimateDigit: Digit,
-        finalDigit: Digit,
-        quantum: Rational
-    ): Rational {
-        if (finalDigit < 5) {
-            return initialPart;
-        }
-
-        if (finalDigit > 5) {
-            return Rational.add(
-                initialPart,
-                initialPart.isNegative ? quantum.negate() : quantum
-            );
-        }
-
-        if (penultimateDigit % 2 === 0) {
-            return initialPart;
-        }
-
-        return Rational.add(
-            initialPart,
-            initialPart.isNegative ? quantum.negate() : quantum
-        );
+    private truncate(): Rational
+    {
+        let s = this.toFixed(1);
+        let [integerPart, _] = s.split(".");
+        return Rational.fromString(integerPart);
     }
 
-    private static roundHalfExpand(
-        initialPart: Rational,
-        penultimateDigit: Digit,
-        finalDigit: Digit,
-        quantum: Rational
-    ): Rational {
-        if (finalDigit < 5) {
-            return initialPart;
+    private floor(): Rational
+    {
+        if (this.isInteger()) {
+            return this;
         }
 
-        return Rational.add(
-            initialPart,
-            initialPart.isNegative ? quantum.negate() : quantum
-        );
+        if (this.isNegative) {
+            return Rational.subtract(this.truncate(), Rational.fromString("1"));
+        }
+
+        return this.truncate();
     }
 
-    private static roundCeil(
-        initialPart: Rational,
-        penultimateDigit: Digit,
-        finalDigit: Digit,
-        quantum: Rational
-    ): Rational {
-        if (initialPart.isNegative) {
-            return initialPart;
+    roundPositive(mode: RoundingMode): Rational {
+        let mLow = this.floor();
+        let fraction = Rational.subtract(this, mLow);
+
+        if (fraction.isZero()) {
+            return mLow;
         }
 
-        if (finalDigit === 0) {
-            return initialPart;
+        let one = Rational.fromString("1");
+        let mHigh = Rational.add(mLow, one);
+
+        if (mode === ROUNDING_MODE_FLOOR) {
+            return mLow;
         }
-
-        return Rational.add(initialPart, quantum);
-    }
-
-    private static roundFloor(
-        initialPart: Rational,
-        penultimateDigit: Digit,
-        finalDigit: Digit,
-        quantum: Rational
-    ): Rational {
-        if (initialPart.isNegative) {
-            return Rational.subtract(initialPart, quantum);
-        }
-
-        return initialPart;
-    }
-
-    round(numFractionalDigits: number, mode: RoundingMode): Rational {
-        if (numFractionalDigits < 0) {
-            throw new RangeError(
-                "Cannot round to negative number of decimal places"
-            );
-        }
-
-        let s = this.toFixed(numFractionalDigits + 1);
-
-        let [integerPart, fractionalPart] = s.split(".");
-
-        let quantum = Rational.fromString(
-            numFractionalDigits === 0
-                ? "1"
-                : "0" + "." + "0".repeat(numFractionalDigits - 1) + "1"
-        );
-        let truncated = Rational.fromString(
-            integerPart + "." + fractionalPart.substring(0, numFractionalDigits)
-        );
-
-        let penultimateDigit = parseInt(
-            numFractionalDigits === 0
-                ? integerPart.charAt(integerPart.length - 1)
-                : fractionalPart.charAt(numFractionalDigits - 1)
-        ) as Digit;
-        let finalDigit = parseInt(
-            fractionalPart.charAt(numFractionalDigits)
-        ) as Digit;
 
         if (mode === ROUNDING_MODE_TRUNCATE) {
-            return truncated;
-        }
-
-        if (mode === ROUNDING_MODE_HALF_EVEN) {
-            return Rational.roundHalfEven(
-                truncated,
-                penultimateDigit,
-                finalDigit,
-                quantum
-            );
+            return mLow;
         }
 
         if (mode === ROUNDING_MODE_CEILING) {
-            return Rational.roundCeil(
-                truncated,
-                penultimateDigit,
-                finalDigit,
-                quantum
-            );
+            return mHigh;
         }
 
-        if (mode === ROUNDING_MODE_FLOOR) {
-            return Rational.roundFloor(
-                truncated,
-                penultimateDigit,
-                finalDigit,
-                quantum
-            );
+        let oneHalf = Rational.fromString("0.5");
+
+        if (fraction.cmp(oneHalf) === -1) {
+            return mLow;
         }
 
-        return Rational.roundHalfExpand(
-            truncated,
-            penultimateDigit,
-            finalDigit,
-            quantum
-        );
+        if (fraction.cmp(oneHalf) === 1) {
+            return mHigh;
+        }
+
+        if (mode === ROUNDING_MODE_HALF_EXPAND) {
+            return mHigh;
+        }
+
+        if (Rational.multiply(mLow, oneHalf).isInteger()) {
+            return mLow;
+        }
+
+        return mHigh;
     }
 
     cmp(x: Rational): -1 | 0 | 1 {

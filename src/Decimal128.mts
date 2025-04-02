@@ -21,6 +21,7 @@ import {
 } from "./common.mjs";
 import { Rational } from "./Rational.mjs";
 import { Decimal } from "./Decimal.mjs";
+import { ROUNDING_MODE_CEILING, ROUNDING_MODE_FLOOR } from "./common.mjs";
 
 const EXPONENT_MIN = -6176;
 const NORMAL_EXPONENT_MIN = -6143;
@@ -96,7 +97,7 @@ function adjustDecimal128(d: Decimal): Decimal128Value {
     }
 
     let scaledSig = v.scale10(MAX_SIGNIFICANT_DIGITS - integerPart.length);
-    let rounded = scaledSig.round(0, "halfEven");
+    let rounded = scaledSig.isNegative ? scaledSig.negate().roundPositive("halfEven").negate() : scaledSig.roundPositive("halfEven");
     let rescaled = rounded.scale10(
         0 - MAX_SIGNIFICANT_DIGITS + integerPart.length
     );
@@ -991,19 +992,27 @@ export class Decimal128 {
         }
 
         let v = this.cohort() as Rational;
-        let roundedV = v.round(numDecimalDigits, mode);
+        let scaledV = v.scale10(numDecimalDigits);
 
-        if (roundedV.isZero()) {
-            return new Decimal128(
-                new Decimal({
-                    cohort: v.isNegative ? "-0" : "0",
-                    quantum: 0 - numDecimalDigits,
-                })
-            );
+        if (this.isNegative()) {
+            scaledV = v.negate();
+            if (mode === ROUNDING_MODE_FLOOR) {
+                mode = ROUNDING_MODE_CEILING;
+            } else if (mode === ROUNDING_MODE_CEILING) {
+                mode = ROUNDING_MODE_FLOOR;
+            }
         }
 
+        let roundedScaledV = scaledV.roundPositive(mode);
+
+        if (this.isNegative()) {
+            roundedScaledV = roundedScaledV.negate();
+        }
+
+        let rescaledRoundedV = roundedScaledV.scale10(-numDecimalDigits);
+
         return new Decimal128(
-            new Decimal({ cohort: roundedV, quantum: 0 - numDecimalDigits })
+            new Decimal({ cohort: rescaledRoundedV, quantum: 0 - numDecimalDigits })
         );
     }
 
