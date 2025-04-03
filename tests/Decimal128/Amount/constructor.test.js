@@ -5,39 +5,39 @@ describe("amount", () => {
         describe("can throw", () => {
             test("non-string given as first argument", () => {
                 expect(
-                    () => new Decimal128.Amount(42, 2, "fractionalDigits")
+                    () => new Decimal128.Amount(42, 2)
                 ).toThrow(Error);
             });
             test("non-decimal string given as first argument", () => {
                 expect(
-                    () => new Decimal128.Amount("foobar", 2, "fractionalDigits")
+                    () => new Decimal128.Amount("foobar", 2)
                 ).toThrow(Error);
             });
             test("non-number given as second argument", () => {
                 expect(
-                    () => new Decimal128.Amount("42", false, "fractionalDigits")
+                    () => new Decimal128.Amount("42", false)
                 ).toThrow(Error);
             });
             test("non-integer number given as second argument", () => {
                 expect(
-                    () => new Decimal128.Amount("42", 1.3, "fractionalDigits")
+                    () => new Decimal128.Amount("42", 1.3)
                 ).toThrow(Error);
             });
             test("negative integer number given as second argument", () => {
                 expect(
-                    () => new Decimal128.Amount("42", -2, "fractionalDigits")
+                    () => new Decimal128.Amount("42", -2)
                 ).toThrow(Error);
             });
-            test("out-of-range argument given as third argument", () => {
-                expect(
-                    () => new Decimal128.Amount("42", -2, "jimmy rodgers")
-                ).toThrow(Error);
+            test("number too big", () => {
+               expect(
+                    () => new Decimal128.Amount("42", 100)
+                ).toThrow(RangeError);
             });
         });
         describe("works", () => {
             test("simple case", () => {
                 expect(
-                    new Decimal128.Amount("42", 3, "significantDigits")
+                    new Decimal128.Amount("42", 3)
                 ).toBeTruthy();
             });
         });

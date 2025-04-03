@@ -1275,6 +1275,10 @@ Decimal128.Amount = class Amount {
             throw new RangeError("Precision must be a non-negative integer");
         }
 
+        if (precision > MAX_SIGNIFICANT_DIGITS) {
+            throw new RangeError(`Cannot specify more than ${MAX_SIGNIFICANT_DIGITS} significant digits`);
+        }
+
         this.val = v;
         this.precision = precision;
     }
