@@ -447,8 +447,7 @@ export class Rational {
         return 0;
     }
 
-    isInteger(): boolean
-    {
+    isInteger(): boolean {
         return this.denominator === one;
     }
 

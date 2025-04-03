@@ -1236,8 +1236,12 @@ const PRECISION_MODES: PrecisionMode[] = [
     PRECISION_MODE_SIGNIFICANT_DIGITS,
 ];
 
-function areSamePrecision(x: Decimal128, fractional: number, significant: number): boolean {
-    let s = x.toFixed({digits: fractional});
+function areSamePrecision(
+    x: Decimal128,
+    fractional: number,
+    significant: number
+): boolean {
+    let s = x.toFixed({ digits: fractional });
 
     let [whole, decimal] = s.split(".");
 
@@ -1255,9 +1259,8 @@ function areSamePrecision(x: Decimal128, fractional: number, significant: number
 Decimal128.Amount = class Amount {
     private val: Decimal128;
     private precision: number;
-    private mode: PrecisionMode;
 
-    constructor(val: string, precision: number, mode: PrecisionMode) {
+    constructor(val: string, precision: number) {
         if (typeof val !== "string") {
             throw new TypeError("Value must be a string");
         }
@@ -1272,15 +1275,8 @@ Decimal128.Amount = class Amount {
             throw new RangeError("Precision must be a non-negative integer");
         }
 
-        if (PRECISION_MODES.indexOf(mode) === -1) {
-            throw new RangeError(
-                `Precision mode must be one of '${PRECISION_MODES.join("', '")}'`
-            );
-        }
-
         this.val = v;
         this.precision = precision;
-        this.mode = mode;
     }
 
     equals(other: Amount): boolean {
@@ -1288,22 +1284,10 @@ Decimal128.Amount = class Amount {
             return false;
         }
 
-        if (this.mode === other.mode) {
-            return this.precision === other.precision;
-        }
-
-        if (this.mode === PRECISION_MODE_FRACTIONAL_DIGITS) {
-            return areSamePrecision(this.val, this.precision, other.precision);
-        }
-
-        return areSamePrecision(this.val, other.precision, this.precision);
+        return this.precision === other.precision;
     }
 
     toString(): string {
-        if (this.mode === PRECISION_MODE_FRACTIONAL_DIGITS) {
-            return this.val.toFixed({ digits: this.precision });
-        }
-
         return this.val.toPrecision({ digits: this.precision });
     }
 
@@ -1312,11 +1296,7 @@ Decimal128.Amount = class Amount {
             options = {};
         }
 
-        if (this.mode === PRECISION_MODE_FRACTIONAL_DIGITS) {
-            options.minimumFractionDigits = this.precision;
-        } else if (this.mode === PRECISION_MODE_SIGNIFICANT_DIGITS) {
-            options.minimumSignificantDigits = this.precision;
-        }
+        options.minimumSignificantDigits = this.precision;
 
         let formatter = new Intl.NumberFormat(locale, options);
         // @ts-ignore
@@ -1324,21 +1304,23 @@ Decimal128.Amount = class Amount {
     }
 
     withSignificantDigits(precision: number): Amount {
-        return new Amount(this.toString(), precision, PRECISION_MODE_SIGNIFICANT_DIGITS);
+        return this.val.withSignificantDigits(precision);
     }
 
     withFractionalDigits(precision: number): Amount {
-        return new Amount(this.toString(), precision, PRECISION_MODE_FRACTIONAL_DIGITS);
+        return this.val.withFractionalDigits(precision);
     }
-}
+};
 
 Decimal128.prototype.withSignificantDigits = function (precision: number) {
-    return new Decimal128.Amount(this.toString(), precision, PRECISION_MODE_SIGNIFICANT_DIGITS);
-}
+    return new Decimal128.Amount(this.toString(), precision);
+};
 
 Decimal128.prototype.withFractionalDigits = function (precision: number) {
-    return new Decimal128.Amount(this.toString(), precision, PRECISION_MODE_FRACTIONAL_DIGITS);
-}
+    let truncated = this.abs().round(precision, ROUNDING_MODE_TRUNCATE);
+    let numIntegerDigits = truncated.toString().length;
+    return new Decimal128.Amount(this.toString(), numIntegerDigits - precision);
+};
 
 Decimal128.prototype.valueOf = function () {
     throw TypeError("Decimal128.prototype.valueOf throws unconditionally");
