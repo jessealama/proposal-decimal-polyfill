@@ -1227,35 +1227,6 @@ export class Decimal128 {
     }
 }
 
-const PRECISION_MODE_FRACTIONAL_DIGITS = "fractionalDigits";
-const PRECISION_MODE_SIGNIFICANT_DIGITS = "significantDigits";
-type PrecisionMode = "fractionalDigits" | "significantDigits";
-
-const PRECISION_MODES: PrecisionMode[] = [
-    PRECISION_MODE_FRACTIONAL_DIGITS,
-    PRECISION_MODE_SIGNIFICANT_DIGITS,
-];
-
-function areSamePrecision(
-    x: Decimal128,
-    fractional: number,
-    significant: number
-): boolean {
-    let s = x.toFixed({ digits: fractional });
-
-    let [whole, decimal] = s.split(".");
-
-    let numIntegerDigits = whole.length;
-
-    if (decimal === undefined) {
-        return numIntegerDigits === significant;
-    }
-
-    let numFractionalDigits = decimal.length;
-
-    return significant === numIntegerDigits + numFractionalDigits;
-}
-
 Decimal128.Amount = class Amount {
     private val: Decimal128;
     private precision: number;
