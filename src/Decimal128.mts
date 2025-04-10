@@ -168,8 +168,7 @@ export class Decimal128 {
     static Amount: any;
 
     // will be defined later
-    withSignificantDigits: any;
-    withFractionalDigits: any;
+    toAmount: any;
 
     constructor(n: string | number | bigint | Decimal) {
         let data;
@@ -1255,11 +1254,7 @@ Decimal128.Amount = class Amount {
     }
 
     equals(other: Amount): boolean {
-        if (!this.val.equals(other.val)) {
-            return false;
-        }
-
-        return this.precision === other.precision;
+        return this.val.equals(other.val) && this.precision === other.precision;
     }
 
     toString(): string {
@@ -1279,22 +1274,25 @@ Decimal128.Amount = class Amount {
     }
 
     withSignificantDigits(precision: number): Amount {
-        return this.val.withSignificantDigits(precision);
+        return this.val.toAmount(precision, "significantDigits");
     }
 
     withFractionalDigits(precision: number): Amount {
-        return this.val.withFractionalDigits(precision);
+        return this.val.toAmount(precision, "fractionalDigits");
     }
 };
 
-Decimal128.prototype.withSignificantDigits = function (precision: number) {
-    return new Decimal128.Amount(this.toString(), precision);
-};
 
-Decimal128.prototype.withFractionalDigits = function (precision: number) {
-    let truncated = this.abs().round(precision, ROUNDING_MODE_TRUNCATE);
-    let numIntegerDigits = truncated.toString().length;
-    return new Decimal128.Amount(this.toString(), numIntegerDigits - precision);
+type PrecisionMode = "significantDigits" | "fractionalDigits";
+
+Decimal128.prototype.toAmount = function (precision: number, precisionMode: PrecisionMode) {
+    if (precisionMode === "fractionalDigits") {
+        let truncated = this.abs().round(precision, ROUNDING_MODE_TRUNCATE);
+        let numIntegerDigits = truncated.toString().length;
+        return new Decimal128.Amount(this.toString(), numIntegerDigits - precision);
+    }
+
+    return new Decimal128.Amount(this.toString(), precision);
 };
 
 Decimal128.prototype.valueOf = function () {
