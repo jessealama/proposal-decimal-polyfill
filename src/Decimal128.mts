@@ -165,6 +165,10 @@ export class Decimal128 {
     private readonly _isNaN: boolean = false;
     private readonly _isFinite: boolean = true;
     private readonly _isNegative: boolean = false;
+    static Amount: any;
+
+    // will be defined later
+    toAmount: any;
 
     constructor(n: string | number | bigint | Decimal) {
         let data;
@@ -496,7 +500,7 @@ export class Decimal128 {
 
         if (numDigits < precision) {
             const additionalZeroes = "0".repeat(precision - numDigits);
-            return p + s + additionalZeroes;
+            return p + s + (this.isInteger() ? "." : "") + additionalZeroes;
         }
 
         if (numDigits === precision) {
@@ -568,15 +572,13 @@ export class Decimal128 {
     }
 
     private isInteger(): boolean {
-        let s = this.toString();
+        let d = this.cohort();
 
-        let [_, rhs] = s.split(/[.]/);
-
-        if (rhs === undefined) {
+        if (d === "0" || d === "-0") {
             return true;
         }
 
-        return !!rhs.match(/^0+$/);
+        return d.isInteger();
     }
 
     toBigInt(): bigint {
@@ -1223,6 +1225,82 @@ export class Decimal128 {
         return ss.numerator;
     }
 }
+
+Decimal128.Amount = class Amount {
+    private val: Decimal128;
+    private precision: number;
+
+    constructor(val: string, precision: number) {
+        if (typeof val !== "string") {
+            throw new TypeError("Value must be a string");
+        }
+
+        let v = new Decimal128(val); // might throw
+
+        if (!Number.isInteger(precision)) {
+            throw new Error("Precision must be an integer");
+        }
+
+        if (precision < 0) {
+            throw new RangeError("Precision must be a non-negative integer");
+        }
+
+        if (precision > MAX_SIGNIFICANT_DIGITS) {
+            throw new RangeError(
+                `Cannot specify more than ${MAX_SIGNIFICANT_DIGITS} significant digits`
+            );
+        }
+
+        this.val = v;
+        this.precision = precision;
+    }
+
+    equals(other: Amount): boolean {
+        return this.val.equals(other.val) && this.precision === other.precision;
+    }
+
+    toString(): string {
+        return this.val.toPrecision({ digits: this.precision });
+    }
+
+    toLocaleString(locale: string, options: Intl.NumberFormatOptions): string {
+        if (undefined === options) {
+            options = {};
+        }
+
+        options.minimumSignificantDigits = this.precision;
+
+        let formatter = new Intl.NumberFormat(locale, options);
+        // @ts-ignore
+        return formatter.format(this.toString());
+    }
+
+    withSignificantDigits(precision: number): Amount {
+        return this.val.toAmount(precision, "significantDigits");
+    }
+
+    withFractionalDigits(precision: number): Amount {
+        return this.val.toAmount(precision, "fractionalDigits");
+    }
+};
+
+type PrecisionMode = "significantDigits" | "fractionalDigits";
+
+Decimal128.prototype.toAmount = function (
+    precision: number,
+    precisionMode: PrecisionMode
+) {
+    if (precisionMode === "fractionalDigits") {
+        let truncated = this.abs().round(precision, ROUNDING_MODE_TRUNCATE);
+        let numIntegerDigits = truncated.toString().length;
+        return new Decimal128.Amount(
+            this.toString(),
+            numIntegerDigits - precision
+        );
+    }
+
+    return new Decimal128.Amount(this.toString(), precision);
+};
 
 Decimal128.prototype.valueOf = function () {
     throw TypeError("Decimal128.prototype.valueOf throws unconditionally");

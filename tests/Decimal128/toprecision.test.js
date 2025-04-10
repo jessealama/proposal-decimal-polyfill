@@ -12,6 +12,11 @@ describe("toPrecision", () => {
                 new Decimal128("42").toPrecision({ digits: 1 })
             ).toStrictEqual("4e+1");
         });
+        test("digits = 3", () => {
+            expect(
+                new Decimal128("42").toPrecision({ digits: 3 })
+            ).toStrictEqual("42.0");
+        });
     });
     let d = new Decimal128("123.456");
 

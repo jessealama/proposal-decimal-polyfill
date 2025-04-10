@@ -447,6 +447,10 @@ export class Rational {
         return 0;
     }
 
+    isInteger(): boolean {
+        return this.denominator === one;
+    }
+
     isZero(): boolean {
         return this.numerator === zero;
     }
