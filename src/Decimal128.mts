@@ -1246,7 +1246,9 @@ Decimal128.Amount = class Amount {
         }
 
         if (precision > MAX_SIGNIFICANT_DIGITS) {
-            throw new RangeError(`Cannot specify more than ${MAX_SIGNIFICANT_DIGITS} significant digits`);
+            throw new RangeError(
+                `Cannot specify more than ${MAX_SIGNIFICANT_DIGITS} significant digits`
+            );
         }
 
         this.val = v;
@@ -1282,14 +1284,19 @@ Decimal128.Amount = class Amount {
     }
 };
 
-
 type PrecisionMode = "significantDigits" | "fractionalDigits";
 
-Decimal128.prototype.toAmount = function (precision: number, precisionMode: PrecisionMode) {
+Decimal128.prototype.toAmount = function (
+    precision: number,
+    precisionMode: PrecisionMode
+) {
     if (precisionMode === "fractionalDigits") {
         let truncated = this.abs().round(precision, ROUNDING_MODE_TRUNCATE);
         let numIntegerDigits = truncated.toString().length;
-        return new Decimal128.Amount(this.toString(), numIntegerDigits - precision);
+        return new Decimal128.Amount(
+            this.toString(),
+            numIntegerDigits - precision
+        );
     }
 
     return new Decimal128.Amount(this.toString(), precision);
