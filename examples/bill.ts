@@ -1,18 +1,18 @@
-import { Decimal128 } from "../src/Decimal128.mjs";
+import { Decimal } from "../src/Decimal.mjs";
 
-const zero = new Decimal128("0");
-const one = new Decimal128("1");
+const zero = new Decimal("0");
+const one = new Decimal("1");
 
 interface Item {
     price: string;
     count: string;
 }
 
-function calculateBill(items: Item[], tax: string): Decimal128 {
+function calculateBill(items: Item[], tax: string): Decimal {
     let total = items.reduce((total, { price, count }) => {
-        return total.add(new Decimal128(price).multiply(new Decimal128(count)));
+        return total.add(new Decimal(price).multiply(new Decimal(count)));
     }, zero);
-    return total.multiply(new Decimal128(tax).add(one));
+    return total.multiply(new Decimal(tax).add(one));
 }
 
 const items = [
