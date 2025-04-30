@@ -1,4 +1,4 @@
-import { Decimal128 } from "../src/Decimal128.mjs";
+import { Decimal } from "../src/Decimal.mjs";
 
 function getRandomInt(max: number): number {
     return Math.floor(Math.random() * max);
@@ -17,11 +17,11 @@ function getRandomDigitsAsString(n: number): string {
     return digits.slice(0, n).join("") + "." + digits.slice(n).join("");
 }
 
-const two = new Decimal128(2);
+const two = new Decimal(2);
 
 function compareNumbers(digits1: string, digits2: string): [string, string] {
-    let d1 = new Decimal128(digits1);
-    let d2 = new Decimal128(digits2);
+    let d1 = new Decimal(digits1);
+    let d2 = new Decimal(digits2);
 
     let decimalResult = d1.add(d2).divide(two);
     let numberResult = (Number(digits1) + Number(digits2)) / 2;
@@ -37,8 +37,8 @@ function keepTrying(): boolean {
     let [result1, result2] = compareNumbers(digits1, digits2);
 
     if (result1 !== result2) {
-        let diff = new Decimal128(result1)
-            .subtract(new Decimal128(result2))
+        let diff = new Decimal(result1)
+            .subtract(new Decimal(result2))
             .abs();
         console.log(
             `(${digits1} + ${digits2})/2 = ${result1} but it should be ${result2} (difference: ${diff.toString()})`

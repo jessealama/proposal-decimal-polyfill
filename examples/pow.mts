@@ -1,6 +1,6 @@
-import { Decimal128 } from "../src/Decimal128.mjs";
+import { Decimal } from "../src/Decimal.mjs";
 
-function pow(a: Decimal128, b: number): Decimal128 {
+function pow(a: Decimal, b: number): Decimal {
     let result = a;
     for (let i = 0; i < b; i++) {
         result = result.multiply(a);

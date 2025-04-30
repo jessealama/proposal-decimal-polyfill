@@ -1,4 +1,4 @@
-import { Decimal128 } from "../src/Decimal128.mjs";
+import { Decimal } from "../src/Decimal128.mjs";
 import { BigNumber} from "bignumber.js";
 import pkg from 'decimal.js-light';
 const { Decimal } = pkg;
@@ -11,8 +11,8 @@ console.log("Decimal128");
 console.time();
 
 for (let i = 0; i < numIterations; i ++) {
-    let d = new Decimal128(lotsOfNines);
-    new Decimal128(lotsOfThrees).divide(d).toString();
+    let d = new Decimal(lotsOfNines);
+    new Decimal(lotsOfThrees).divide(d).toString();
 }
 
 console.timeEnd();

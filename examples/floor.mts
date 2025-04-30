@@ -1,6 +1,6 @@
-import { Decimal128 } from "../src/Decimal128.mjs";
+import { Decimal } from "../src/Decimal.mjs";
 
-function floor(d: Decimal128): Decimal128 {
+function floor(d: Decimal): Decimal {
     return d.round(0, "floor");
 }
 

@@ -1,13 +1,13 @@
-import { Decimal128 } from "../src/Decimal128.mjs";
+import { Decimal } from "../src/Decimal.mjs";
 import { pow } from "./pow.mjs";
 
-const one = new Decimal128("1");
-const paymentsPerYear = new Decimal128("12");
+const one = new Decimal("1");
+const paymentsPerYear = new Decimal("12");
 
-function calculateMonthlyPayment(p: string, r: string, y: string): Decimal128 {
-    const principal = new Decimal128(p);
-    const annualInterestRate = new Decimal128(r);
-    const years = new Decimal128(y);
+function calculateMonthlyPayment(p: string, r: string, y: string): Decimal {
+    const principal = new Decimal(p);
+    const annualInterestRate = new Decimal(r);
+    const years = new Decimal(y);
     const monthlyInterestRate = annualInterestRate.divide(paymentsPerYear);
     const paymentCount = paymentsPerYear.multiply(years);
     const onePlusInterestRate = monthlyInterestRate.add(one);
