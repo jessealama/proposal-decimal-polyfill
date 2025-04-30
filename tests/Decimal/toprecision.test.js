@@ -12,6 +12,12 @@ describe("toPrecision", () => {
                 new Decimal128("42").toPrecision({ digits: 1 })
             ).toStrictEqual("4e+1");
         });
+        test("argument is greater than total number of significant digits", () => {
+            expect(
+                new Decimal128("123.456").toPrecision({ digits: 7 })
+            ).toStrictEqual("123.4560");
+        });
+
         test("digits = 3", () => {
             expect(
                 new Decimal128("42").toPrecision({ digits: 3 })

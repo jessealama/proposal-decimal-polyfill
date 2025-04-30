@@ -121,7 +121,7 @@ export class Rational {
         if (s.match(/^[0-9]+[eE][+-]?[0-9]+$/)) {
             let [num, exp] = s.split(/[eE]/);
             let originalRat = new Rational(BigInt(num), 1n);
-            return originalRat.scale10(Number(exp));
+            return originalRat.scale10(BigInt(exp));
         }
 
         if (s.match(/[.]/)) {
@@ -130,7 +130,7 @@ export class Rational {
             if (decimal.match(/[eE]/)) {
                 let [dec, exp] = decimal.split(/[eE]/);
                 let originalRat = Rational.fromString(`${whole}.${dec}`);
-                return originalRat.scale10(Number(exp));
+                return originalRat.scale10(BigInt(exp));
             }
 
             let numerator = BigInt(whole + decimal);
@@ -141,19 +141,19 @@ export class Rational {
         throw new SyntaxError(`Invalid rational number string: ${s}`);
     }
 
-    public scale10(n: number): Rational {
+    public scale10(n: bigint): Rational {
         if (this.isNegative) {
             return this.negate().scale10(n).negate();
         }
 
-        if (n === 0) {
+        if (n === 0n) {
             return this;
         }
 
         if (n < 0) {
             return new Rational(
                 this.numerator,
-                this.denominator * ten ** BigInt(0 - n)
+                this.denominator * ten ** (0n - n)
             );
         }
 
@@ -161,6 +161,14 @@ export class Rational {
             this.numerator * ten ** BigInt(n),
             this.denominator
         );
+    }
+
+    public abs(): Rational {
+        if (this.isNegative) {
+            return this.negate();
+        }
+
+        return new Rational(this.numerator, this.denominator);
     }
 
     public negate(): Rational {
@@ -171,54 +179,47 @@ export class Rational {
         return new Rational(this.numerator * minusOne, this.denominator);
     }
 
-    private static _add(x: Rational, y: Rational): Rational {
-        if (x.isNegative) {
-            return Rational._subtract(y, x.negate());
+    public add( y: Rational): Rational {
+        if (this.isNegative) {
+            return y.subtract(this.negate());
         }
 
         if (y.isNegative) {
-            return Rational._subtract(x, y.negate());
+            return this.subtract(y.negate());
         }
 
         return new Rational(
-            x.numerator * y.denominator + y.numerator * x.denominator,
-            x.denominator * y.denominator
+            this.numerator * y.denominator + y.numerator * this.denominator,
+            this.denominator * y.denominator
         );
     }
 
-    private static _subtract(x: Rational, y: Rational): Rational {
-        if (x.isNegative) {
-            return Rational._add(x.negate(), y).negate();
+    public subtract(y: Rational): Rational {
+        if (this.isNegative) {
+            return this.negate().add(y).negate();
         }
 
         return new Rational(
-            x.numerator * y.denominator - y.numerator * x.denominator,
-            x.denominator * y.denominator
+            this.numerator * y.denominator - y.numerator * this.denominator,
+            this.denominator * y.denominator
         );
     }
 
-    private static _multiply(x: Rational, y: Rational): Rational {
+    public multiply(y: Rational): Rational {
         return new Rational(
-            x.numerator * y.numerator,
-            x.denominator * y.denominator
+            this.numerator * y.numerator,
+            this.denominator * y.denominator
         );
     }
 
-    public static add(...theArgs: Rational[]): Rational {
-        return theArgs.reduce(
-            (acc, cur) => Rational._add(acc, cur),
-            new Rational(zero, one)
-        );
-    }
+    public divide(y: Rational): Rational {
+        if (y.isZero()) {
+            throw new RangeError("Cannot divide by zero");
+        }
 
-    public static subtract(x: Rational, ...theArgs: Rational[]): Rational {
-        return theArgs.reduce((acc, cur) => Rational._subtract(acc, cur), x);
-    }
-
-    public static multiply(...theArgs: Rational[]): Rational {
-        return theArgs.reduce(
-            (acc, cur) => Rational._multiply(acc, cur),
-            new Rational(one, one)
+        return new Rational(
+            this.numerator * y.denominator,
+            this.denominator * y.numerator
         );
     }
 
@@ -241,9 +242,7 @@ export class Rational {
 
         if (this.numerator === zero) {
             if (Infinity === n) {
-                throw new RangeError(
-                    "Cannot enumerate infinite decimal places of zero"
-                );
+                return "0";
             }
 
             return "0" + "." + "0".repeat(n);
@@ -300,8 +299,7 @@ export class Rational {
         }
 
         if (finalDigit > 5) {
-            return Rational.add(
-                initialPart,
+            return initialPart.add(
                 initialPart.isNegative ? quantum.negate() : quantum
             );
         }
@@ -310,8 +308,7 @@ export class Rational {
             return initialPart;
         }
 
-        return Rational.add(
-            initialPart,
+        return initialPart.add(
             initialPart.isNegative ? quantum.negate() : quantum
         );
     }
@@ -326,8 +323,7 @@ export class Rational {
             return initialPart;
         }
 
-        return Rational.add(
-            initialPart,
+        return initialPart.add(
             initialPart.isNegative ? quantum.negate() : quantum
         );
     }
@@ -346,7 +342,7 @@ export class Rational {
             return initialPart;
         }
 
-        return Rational.add(initialPart, quantum);
+        return initialPart.add(quantum);
     }
 
     private static roundFloor(
@@ -356,7 +352,7 @@ export class Rational {
         quantum: Rational
     ): Rational {
         if (initialPart.isNegative) {
-            return Rational.subtract(initialPart, quantum);
+            return initialPart.subtract(quantum);
         }
 
         return initialPart;
@@ -369,65 +365,29 @@ export class Rational {
             );
         }
 
-        let s = this.toFixed(numFractionalDigits + 1);
-
-        let [integerPart, fractionalPart] = s.split(".");
-
-        let quantum = Rational.fromString(
-            numFractionalDigits === 0
-                ? "1"
-                : "0" + "." + "0".repeat(numFractionalDigits - 1) + "1"
-        );
-        let truncated = Rational.fromString(
-            integerPart + "." + fractionalPart.substring(0, numFractionalDigits)
-        );
-
-        let penultimateDigit = parseInt(
-            numFractionalDigits === 0
-                ? integerPart.charAt(integerPart.length - 1)
-                : fractionalPart.charAt(numFractionalDigits - 1)
-        ) as Digit;
-        let finalDigit = parseInt(
-            fractionalPart.charAt(numFractionalDigits)
-        ) as Digit;
-
-        if (mode === ROUNDING_MODE_TRUNCATE) {
-            return truncated;
+        if (!Number.isInteger(numFractionalDigits)) {
+            throw new RangeError("Cannot round to non-integer number of decimal places");
         }
 
-        if (mode === ROUNDING_MODE_HALF_EVEN) {
-            return Rational.roundHalfEven(
-                truncated,
-                penultimateDigit,
-                finalDigit,
-                quantum
-            );
+        let sign = this.isNegative ? -1 : 1;
+        let scaled = this.scale10(BigInt(numFractionalDigits));
+
+        if (sign === -1) {
+            scaled = scaled.negate();
+            if (mode === ROUNDING_MODE_FLOOR) {
+                mode = ROUNDING_MODE_CEILING;
+            } else if (mode === ROUNDING_MODE_CEILING) {
+                mode = ROUNDING_MODE_FLOOR;
+            }
         }
 
-        if (mode === ROUNDING_MODE_CEILING) {
-            return Rational.roundCeil(
-                truncated,
-                penultimateDigit,
-                finalDigit,
-                quantum
-            );
+        let roundedScaled = scaled.ApplyRoundingModeToPositive(mode);
+
+        if (sign === -1) {
+            roundedScaled = roundedScaled.negate();
         }
 
-        if (mode === ROUNDING_MODE_FLOOR) {
-            return Rational.roundFloor(
-                truncated,
-                penultimateDigit,
-                finalDigit,
-                quantum
-            );
-        }
-
-        return Rational.roundHalfExpand(
-            truncated,
-            penultimateDigit,
-            finalDigit,
-            quantum
-        );
+        return roundedScaled.scale10(0n - BigInt(numFractionalDigits));
     }
 
     cmp(x: Rational): -1 | 0 | 1 {
@@ -448,10 +408,115 @@ export class Rational {
     }
 
     isInteger(): boolean {
-        return this.denominator === one;
+        return this.denominator === 1n;
     }
 
     isZero(): boolean {
         return this.numerator === zero;
     }
+
+    floor(): Rational {
+        if (this.isInteger()) {
+            return this;
+        }
+
+        let s = this.toFixed(1);
+
+        let [integerPart, _] = s.split(".");
+
+        return Rational.fromString(integerPart);
+    }
+
+    intLog10(): bigint {
+        if (this.isNegative) {
+             throw new Error("Cannot compute logarithm of a negative number");
+        }
+
+        if (this.isZero()) {
+            throw new Error("Cannot compute logarithm of zero");
+        }
+
+        let ratOne = new Rational(1n, 1n);
+        let ratTen = new Rational(10n, 1n);
+
+        if (this.cmp(ratOne) === -1) {
+            let q = ratOne;
+            let n = 0n;
+            while (this.cmp(q) === -1) {
+                q = q.scale10(-1n);
+                n++;
+            }
+
+            return 0n - n;
+        }
+
+        if (this.cmp(ratOne) === 0) {
+            return 0n;
+        }
+
+        let q = ratTen;
+        let n = 0n;
+        while (this.cmp(q) >= 0) {
+            q = q.scale10(1n);
+            n++;
+        }
+
+        return n;
+    }
+
+    public ApplyRoundingModeToPositive(roundingMode: RoundingMode): Rational {
+        if (this.isNegative) {
+            throw new RangeError("Cannot apply rounding mode to negative number");
+        }
+
+        if (this.isZero()) {
+            throw new RangeError("Cannot apply rounding mode to zero");
+        }
+
+        let mLow = this.floor();
+        let fraction = this.subtract(mLow);
+
+        if (fraction.isZero()) {
+            return mLow;
+        }
+
+        let mHigh = mLow.add(new Rational(1n, 1n));
+
+        if (roundingMode === ROUNDING_MODE_FLOOR || roundingMode === ROUNDING_MODE_TRUNCATE) {
+            return mLow;
+        }
+
+        if (roundingMode === ROUNDING_MODE_CEILING) {
+            return mHigh;
+        }
+
+        let oneHalf = new Rational(1n, 2n);
+
+        if (fraction.cmp(oneHalf) === -1) {
+            return mLow;
+        }
+
+        if (fraction.cmp(oneHalf) === 1) {
+            return mHigh;
+        }
+
+        if (roundingMode === ROUNDING_MODE_HALF_EXPAND) {
+            return mHigh;
+        }
+
+        if (mLow.isInteger() && mLow.divide(new Rational(2n, 1n)).isInteger()) {
+            return mLow;
+        }
+
+        return mHigh;
+    }
+
+    public coefficient(): bigint {
+        if (this.isInteger()) {
+            return this.numerator;
+        }
+
+        return this.scale10(1n).coefficient();
+    }
+
 }

@@ -370,8 +370,8 @@ describe("examples for TC39 plenary slides", () => {
         expect(a.round(2, "ceil").toString()).toStrictEqual("1.46");
     });
     test("round to 1 decimal place, rounding mode unspecified", () => {
-        expect(a.round(1).toString()).toStrictEqual("1.4");
-        expect(a.round(1, "halfEven").toString()).toStrictEqual("1.4");
+        expect(a.round(1).toString()).toStrictEqual("1.5");
+        expect(a.round(1, "halfEven").toString()).toStrictEqual("1.5");
     });
     test("round to 0 decimal places, rounding mode is floor", () => {
         expect(a.round(0, "floor").toString()).toStrictEqual("1");

@@ -1,6 +1,4 @@
 import { Decimal128 } from "../../src/Decimal128.mjs";
-import { expectDecimal128 } from "./util.js";
-import { Decimal } from "../../src/Decimal.mjs";
 
 describe("NaN", () => {
     test("works", () => {

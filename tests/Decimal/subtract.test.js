@@ -30,10 +30,10 @@ describe("subtraction", () => {
             "9".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "0"
         );
     });
-    test("integer overflow", () => {
+    test("large subtraction does not overflow, but does get apporoximated", () => {
         let a = new Decimal128("-" + bigDigits);
         let b = new Decimal128("9");
-        expect(a.subtract(b).toString()).toStrictEqual("-Infinity");
+        expect(a.subtract(b).toString()).toStrictEqual("-10000000000000000000000000000000010");
     });
     describe("NaN", () => {
         test("NaN minus NaN is NaN", () => {

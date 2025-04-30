@@ -24,7 +24,7 @@ describe("limits", () => {
         expect(new Decimal128("42").isSubnormal()).toStrictEqual(false);
     });
     test("zero is not subnormal", () => {
-        expect(() => new Decimal128("0").isSubnormal()).toThrow(RangeError);
+        expect(new Decimal128("0").isSubnormal()).toStrictEqual(false);
     });
     test("simple number with exponent at limit", () => {
         expect(new Decimal128("42E-6144").isSubnormal()).toStrictEqual(false);

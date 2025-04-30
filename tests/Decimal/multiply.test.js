@@ -45,26 +45,26 @@ describe("multiply", () => {
     test("both arguments negative", () => {
         checkProduct("-987.654", "-321.987", "318011.748498");
     });
-    test("integer overflow", () => {
+    test("approximation needed ", () => {
         expect(
             new Decimal128("123456789123456789")
                 .multiply(new Decimal128("987654321987654321"))
                 .toString()
-        ).toStrictEqual("Infinity");
+        ).toStrictEqual("121932631356500531347203169112635300");
     });
-    test("integer overflow (negative)", () => {
+    test("approximation needed (negative)", () => {
         expect(
             new Decimal128("123456789123456789")
                 .multiply(new Decimal128("-987654321987654321"))
                 .toString()
-        ).toStrictEqual("-Infinity");
+        ).toStrictEqual("-121932631356500531347203169112635300");
     });
-    test("decimal overflow", () => {
+    test("approximation needed", () => {
         expect(
             new Decimal128("123456789123456789.987654321")
                 .multiply(new Decimal128("987654321123456789.123456789"))
                 .toString()
-        ).toStrictEqual("Infinity");
+        ).toStrictEqual("121932631249809479868770005427526300");
     });
     describe("zero", () => {
         let d = new Decimal128("42.65");

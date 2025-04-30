@@ -1,6 +1,5 @@
 import { Decimal128 } from "../../src/Decimal128.mjs";
 import { expectDecimal128 } from "./util.js";
-import { Decimal } from "../../src/Decimal.mjs";
 
 describe("NaN", () => {
     test("works", () => {
@@ -61,8 +60,8 @@ describe("to decimal places", function () {
     test("cutoff with rounding if number has more digits than requested (1)", () => {
         expectDecimal128(decimalD.toFixed({ digits: 2 }), "123.46");
     });
-    test("cutoff if number has more digits than requested (no rounding)", () => {
-        expectDecimal128(decimalD.toFixed({ digits: 1 }), "123.4");
+    test("cutoff if number has more digits than requested (with rounding)", () => {
+        expectDecimal128(decimalD.toFixed({ digits: 1 }), "123.5");
     });
     test("zero decimal places", () => {
         expectDecimal128(decimalD.toFixed({ digits: 0 }), "123");

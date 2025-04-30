@@ -141,6 +141,6 @@ describe("scientific string syntax", () => {
         );
     });
     test("0E+2", () => {
-        expect(new Decimal128("0E+2").toExponential()).toStrictEqual("0e+2");
+        expect(new Decimal128("0E+2").toExponential()).toStrictEqual("0e+0");
     });
 });

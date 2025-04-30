@@ -49,11 +49,11 @@ describe("addition", () => {
     test("big plus one is OK", () => {
         expect(big.add(one).toString()).toStrictEqual(one.add(big).toString());
     });
-    test("two plus big is not OK (too many significant digits)", () => {
-        expect(two.add(big).toString()).toStrictEqual("Infinity");
+    test("two plus big has too many significant digits, approximation needed", () => {
+        expect(two.add(big).toString()).toStrictEqual("10000000000000000000000000000000000");
     });
     test("big plus two is not OK (too many significant digits)", () => {
-        expect(big.add(two).toString()).toStrictEqual("Infinity");
+        expect(big.add(two).toString()).toStrictEqual("10000000000000000000000000000000000");
     });
     describe("non-normalized", () => {
         test("one point zero plus one point zero", () => {
