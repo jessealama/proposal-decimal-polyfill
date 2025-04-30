@@ -1,13 +1,13 @@
-import { Decimal128 } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal128.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const bigDigits = "9".repeat(MAX_SIGNIFICANT_DIGITS);
 
-const zero = new Decimal128("0");
-const minusZero = new Decimal128("-0");
-const one = new Decimal128("1");
-const minusOne = new Decimal128("-1");
-const two = new Decimal128("2");
+const zero = new Decimal("0");
+const minusZero = new Decimal("-0");
+const one = new Decimal("1");
+const minusOne = new Decimal("-1");
+const two = new Decimal("2");
 
 describe("addition", () => {
     test("one plus one equals two", () => {
@@ -24,7 +24,7 @@ describe("addition", () => {
         expect(minusZero.add(minusZero).toString()).toStrictEqual("-0");
     });
     test("two negatives", () => {
-        expect(minusOne.add(new Decimal128("-99")).toString()).toStrictEqual(
+        expect(minusOne.add(new Decimal("-99")).toString()).toStrictEqual(
             "-100"
         );
     });
@@ -33,13 +33,13 @@ describe("addition", () => {
         let b = "0.2";
         let c = "0.3";
         expect(
-            new Decimal128(a).add(new Decimal128(b)).toString()
+            new Decimal(a).add(new Decimal(b)).toString()
         ).toStrictEqual(c);
         expect(
-            new Decimal128(b).add(new Decimal128(a)).toString()
+            new Decimal(b).add(new Decimal(a)).toString()
         ).toStrictEqual(c);
     });
-    let big = new Decimal128(bigDigits);
+    let big = new Decimal(bigDigits);
     test("big plus zero is OK", () => {
         expect(big.add(zero).toString()).toStrictEqual(bigDigits);
     });
@@ -58,30 +58,30 @@ describe("addition", () => {
     describe("non-normalized", () => {
         test("one point zero plus one point zero", () => {
             expect(
-                new Decimal128("1.0").add(new Decimal128("1.0")).toString()
+                new Decimal("1.0").add(new Decimal("1.0")).toString()
             ).toStrictEqual("2");
         });
     });
     describe("NaN", () => {
         test("NaN plus NaN is NaN", () => {
             expect(
-                new Decimal128("NaN").add(new Decimal128("NaN")).toString()
+                new Decimal("NaN").add(new Decimal("NaN")).toString()
             ).toStrictEqual("NaN");
         });
         test("NaN plus number", () => {
             expect(
-                new Decimal128("NaN").add(new Decimal128("1")).toString()
+                new Decimal("NaN").add(new Decimal("1")).toString()
             ).toStrictEqual("NaN");
         });
         test("number plus NaN", () => {
             expect(
-                new Decimal128("1").add(new Decimal128("NaN")).toString()
+                new Decimal("1").add(new Decimal("NaN")).toString()
             ).toStrictEqual("NaN");
         });
     });
     describe("infinity", () => {
-        let posInf = new Decimal128("Infinity");
-        let negInf = new Decimal128("-Infinity");
+        let posInf = new Decimal("Infinity");
+        let negInf = new Decimal("-Infinity");
         test("positive infinity plus number", () => {
             expect(posInf.add(one).toString()).toStrictEqual("Infinity");
         });
@@ -102,11 +102,11 @@ describe("addition", () => {
         });
         test("add number to positive infinity", () => {
             expect(
-                new Decimal128("123.5").add(posInf).toString()
+                new Decimal("123.5").add(posInf).toString()
             ).toStrictEqual("Infinity");
         });
         test("add number to negative infinity", () => {
-            expect(new Decimal128("-2").add(negInf).toString()).toStrictEqual(
+            expect(new Decimal("-2").add(negInf).toString()).toStrictEqual(
                 "-Infinity"
             );
         });
@@ -116,8 +116,8 @@ describe("addition", () => {
 describe("specify rounding mode", () => {
     test("truncate rounding mode", () => {
         expect(
-            new Decimal128("1234567890123456789012345678901234")
-                .add(new Decimal128("0.5"), { roundingMode: "trunc" })
+            new Decimal("1234567890123456789012345678901234")
+                .add(new Decimal("0.5"), { roundingMode: "trunc" })
                 .toString()
         ).toStrictEqual("1234567890123456789012345678901234");
     });
@@ -126,12 +126,12 @@ describe("specify rounding mode", () => {
 describe("examples from the General Decimal Arithmetic specification", () => {
     test("example one", () => {
         expect(
-            new Decimal128("12").add(new Decimal128("7.00")).toString()
+            new Decimal("12").add(new Decimal("7.00")).toString()
         ).toStrictEqual("19");
     });
     test("example two", () => {
         expect(
-            new Decimal128("1E+2").add(new Decimal128("1E+4")).toExponential()
+            new Decimal("1E+2").add(new Decimal("1E+4")).toExponential()
         ).toStrictEqual("1.01e+4");
     });
 });

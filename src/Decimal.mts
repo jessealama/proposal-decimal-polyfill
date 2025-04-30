@@ -137,7 +137,7 @@ function handleDecimalNotation(s: string): Decimal128Value {
     return RoundToDecimal128Domain(v);
 }
 
-export class Decimal128 {
+export class Decimal {
     private readonly d: FiniteValue | undefined = undefined;
     private readonly _isNaN: boolean = false;
     private readonly _isFinite: boolean = true;
@@ -231,7 +231,7 @@ export class Decimal128 {
         return Number(v.intLog10());
     }
 
-    public mantissa(): Decimal128 {
+    public mantissa(): Decimal {
         if (this.isZero()) {
             throw new RangeError("Zero does not have a mantissa");
         }
@@ -240,9 +240,9 @@ export class Decimal128 {
             return this.negate().mantissa().negate();
         }
 
-        let x: Decimal128 = this;
-        let decimalOne = new Decimal128("1");
-        let decimalTen = new Decimal128("10");
+        let x: Decimal = this;
+        let decimalOne = new Decimal("1");
+        let decimalTen = new Decimal("10");
 
         while (0 <= x.compare(decimalTen)) {
             x = x.scale10(-1);
@@ -255,7 +255,7 @@ export class Decimal128 {
         return x;
     }
 
-    public scale10(n: number): Decimal128 {
+    public scale10(n: number): Decimal {
         if (this.isNaN()) {
             throw new RangeError("NaN cannot be scaled");
         }
@@ -278,7 +278,7 @@ export class Decimal128 {
             return this.clone();
         }
 
-        return new Decimal128(v.scale10(BigInt(n)).toFixed(Infinity));
+        return new Decimal(v.scale10(BigInt(n)).toFixed(Infinity));
     }
 
     private coefficient(): bigint {
@@ -432,27 +432,7 @@ export class Decimal128 {
         let d = this.d as Rational;
         let s = this.abs().emitDecimal();
 
-        const { q, n } = findLargestQ(d);
-        const coefficient = n.toFixed(Infinity);
-        const numDigits = coefficient.length;
-
-        if (numDigits < precision) {
-            let s = this.emitDecimal();
-            const additionalZeroes = "0".repeat(precision - numDigits);
-            return p + s + (this.isInteger() ? "." : "") + additionalZeroes;
-        }
-
-        if (numDigits === precision) {
-            return p + s;
-        }
-
-        const exp = q + BigInt(precision);
-        const scaled = d.abs().scale10(BigInt(-exp));
-        const scaledAndRoudned = scaled.ApplyRoundingModeToPositive(ROUNDING_MODE_HALF_EVEN);
-
-        const str = scaledAndRoudned.toFixed(Infinity);
-
-        return p + str + `e+${exp}`;
+        return s;
     }
 
     toExponential(opts?: { digits?: number }): string {
@@ -563,7 +543,7 @@ export class Decimal128 {
      *
      * @param x
      */
-    compare(x: Decimal128): number {
+    compare(x: Decimal): number {
         if (this.isNaN() || x.isNaN()) {
             return NaN;
         }
@@ -606,7 +586,7 @@ export class Decimal128 {
         return ourCohort.cmp(theirCohort);
     }
 
-    equals(other: Decimal128): boolean {
+    equals(other: Decimal): boolean {
         if (this.isNaN() || other.isNaN()) {
             return false;
         }
@@ -626,7 +606,7 @@ export class Decimal128 {
         return 0 === this.compare(other);
     }
 
-    notEquals(other: Decimal128): boolean {
+    notEquals(other: Decimal): boolean {
         if (this.isNaN() || other.isNaN()) {
             return false;
         }
@@ -634,11 +614,11 @@ export class Decimal128 {
         return 0 !== this.compare(other);
     }
 
-    lessThan(x: Decimal128): boolean {
+    lessThan(x: Decimal): boolean {
         return this.compare(x) === -1;
     }
 
-    lessThanOrEqual(x: Decimal128): boolean {
+    lessThanOrEqual(x: Decimal): boolean {
         if (this.isNaN() || x.isNaN()) {
             return false;
         }
@@ -648,11 +628,11 @@ export class Decimal128 {
         return c === -1 || c === 0;
     }
 
-    greaterThan(x: Decimal128): boolean {
+    greaterThan(x: Decimal): boolean {
         return this.compare(x) === 1;
     }
 
-    greaterThanOrEqual(x: Decimal128): boolean {
+    greaterThanOrEqual(x: Decimal): boolean {
         if (this.isNaN() || x.isNaN()) {
             return false;
         }
@@ -662,9 +642,9 @@ export class Decimal128 {
         return c === 1 || c === 0;
     }
 
-    abs(): Decimal128 {
+    abs(): Decimal {
         if (this.isNaN()) {
-            return new Decimal128(NAN);
+            return new Decimal(NAN);
         }
 
         if (!this.isFinite()) {
@@ -687,9 +667,9 @@ export class Decimal128 {
      *
      * @param x
      */
-    add(x: Decimal128): Decimal128 {
+    add(x: Decimal): Decimal {
         if (this.isNaN() || x.isNaN()) {
-            return new Decimal128(NAN);
+            return new Decimal(NAN);
         }
 
         if (!this.isFinite()) {
@@ -698,7 +678,7 @@ export class Decimal128 {
                     return x.clone();
                 }
 
-                return new Decimal128(NAN);
+                return new Decimal(NAN);
             }
 
             return this.clone();
@@ -726,13 +706,13 @@ export class Decimal128 {
 
         if (sum.isZero()) {
             if (this._isNegative) {
-                return new Decimal128("-0");
+                return new Decimal("-0");
             }
 
-            return new Decimal128("0");
+            return new Decimal("0");
         }
 
-        return new Decimal128(sum.toFixed(Infinity));
+        return new Decimal(sum.toFixed(Infinity));
     }
 
     /**
@@ -740,15 +720,15 @@ export class Decimal128 {
      *
      * @param x
      */
-    subtract(x: Decimal128): Decimal128 {
+    subtract(x: Decimal): Decimal {
         if (this.isNaN() || x.isNaN()) {
-            return new Decimal128(NAN);
+            return new Decimal(NAN);
         }
 
         if (!this.isFinite()) {
             if (!x.isFinite()) {
                 if (this.isNegative() === x.isNegative()) {
-                    return new Decimal128(NAN);
+                    return new Decimal(NAN);
                 }
 
                 return this.clone();
@@ -778,10 +758,10 @@ export class Decimal128 {
         let difference= ourCohort.subtract(theirCohort);
 
         if (difference.isZero()) {
-            return new Decimal128("0");
+            return new Decimal("0");
         }
 
-        return new Decimal128(difference.toFixed(Infinity));
+        return new Decimal(difference.toFixed(Infinity));
     }
 
     /**
@@ -791,33 +771,33 @@ export class Decimal128 {
      *
      * @param x
      */
-    multiply(x: Decimal128): Decimal128 {
+    multiply(x: Decimal): Decimal {
         if (this.isNaN() || x.isNaN()) {
-            return new Decimal128(NAN);
+            return new Decimal(NAN);
         }
 
         if (!this.isFinite()) {
             if (x.isZero()) {
-                return new Decimal128(NAN);
+                return new Decimal(NAN);
             }
 
             if (this.isNegative() === x.isNegative()) {
-                return new Decimal128(POSITIVE_INFINITY);
+                return new Decimal(POSITIVE_INFINITY);
             }
 
-            return new Decimal128(NEGATIVE_INFINITY);
+            return new Decimal(NEGATIVE_INFINITY);
         }
 
         if (!x.isFinite()) {
             if (this.isZero()) {
-                return new Decimal128(NAN);
+                return new Decimal(NAN);
             }
 
             if (this.isNegative() === x.isNegative()) {
-                return new Decimal128(POSITIVE_INFINITY);
+                return new Decimal(POSITIVE_INFINITY);
             }
 
-            return new Decimal128(NEGATIVE_INFINITY);
+            return new Decimal(NEGATIVE_INFINITY);
         }
 
         if (this.isNegative()) {
@@ -832,25 +812,25 @@ export class Decimal128 {
         let theirCohort = x.d as Rational;
 
         if (this.isZero()) {
-            return new Decimal128(ourCohort.toString());
+            return new Decimal(ourCohort.toString());
         }
 
         if (x.isZero()) {
-            return new Decimal128(theirCohort.toString());
+            return new Decimal(theirCohort.toString());
         }
 
         let product = ourCohort.multiply(theirCohort);
 
-        return new Decimal128(product.toFixed(Infinity));
+        return new Decimal(product.toFixed(Infinity));
     }
 
-    private clone(): Decimal128 {
+    private clone(): Decimal {
         if (this.isNaN()) {
-            return new Decimal128(NAN);
+            return new Decimal(NAN);
         }
 
         if (!this.isFinite()) {
-            return new Decimal128(
+            return new Decimal(
                 this.isNegative() ? NEGATIVE_INFINITY : POSITIVE_INFINITY
             );
         }
@@ -858,10 +838,10 @@ export class Decimal128 {
         let v = this.d as FiniteValue;
 
         if (v === "0" || v === "-0") {
-            return new Decimal128(v);
+            return new Decimal(v);
         }
 
-        return new Decimal128(v.toFixed(Infinity));
+        return new Decimal(v.toFixed(Infinity));
     }
 
     /**
@@ -869,13 +849,13 @@ export class Decimal128 {
      *
      * @param x
      */
-    divide(x: Decimal128): Decimal128 {
+    divide(x: Decimal): Decimal {
         if (this.isNaN() || x.isNaN()) {
-            return new Decimal128(NAN);
+            return new Decimal(NAN);
         }
 
         if (x.isZero()) {
-            return new Decimal128(NAN);
+            return new Decimal(NAN);
         }
 
         if (this.isZero()) {
@@ -884,26 +864,26 @@ export class Decimal128 {
 
         if (!this.isFinite()) {
             if (!x.isFinite()) {
-                return new Decimal128(NAN);
+                return new Decimal(NAN);
             }
 
             if (this.isNegative() === x.isNegative()) {
-                return new Decimal128(POSITIVE_INFINITY);
+                return new Decimal(POSITIVE_INFINITY);
             }
 
             if (this.isNegative()) {
                 return this.clone();
             }
 
-            return new Decimal128(NEGATIVE_INFINITY);
+            return new Decimal(NEGATIVE_INFINITY);
         }
 
         if (!x.isFinite()) {
             if (this.isNegative() === x.isNegative()) {
-                return new Decimal128("0");
+                return new Decimal("0");
             }
 
-            return new Decimal128("-0");
+            return new Decimal("-0");
         }
 
         if (this.isNegative()) {
@@ -919,7 +899,7 @@ export class Decimal128 {
         let quotient = ourV.divide(theirV);
         let rounded = RoundToDecimal128Domain(quotient) as Rational;
 
-        return new Decimal128(rounded.toFixed(Infinity));
+        return new Decimal(rounded.toFixed(Infinity));
     }
 
     /**
@@ -930,7 +910,7 @@ export class Decimal128 {
     round(
         numDecimalDigits: number = 0,
         mode: RoundingMode = ROUNDING_MODE_HALF_EVEN
-    ): Decimal128 {
+    ): Decimal {
         if (!ROUNDING_MODES.includes(mode)) {
             throw new RangeError(`Invalid rounding mode "${mode}"`);
         }
@@ -947,19 +927,19 @@ export class Decimal128 {
         let roundedV = v.round(numDecimalDigits, mode);
 
         if (roundedV.isZero()) {
-            return new Decimal128(v.isNegative ? "-0" : "0");
+            return new Decimal(v.isNegative ? "-0" : "0");
         }
 
-        return new Decimal128(roundedV.toFixed(Infinity));
+        return new Decimal(roundedV.toFixed(Infinity));
     }
 
-    negate(): Decimal128 {
+    negate(): Decimal {
         if (this.isNaN()) {
             return this.clone();
         }
 
         if (!this.isFinite()) {
-            return new Decimal128(
+            return new Decimal(
                 this.isNegative() ? POSITIVE_INFINITY : NEGATIVE_INFINITY
             );
         }
@@ -967,14 +947,14 @@ export class Decimal128 {
         let v = this.d as FiniteValue;
 
         if (v === "0") {
-            return new Decimal128("-0");
+            return new Decimal("-0");
         }
 
         if (v === "-0") {
-            return new Decimal128("0");
+            return new Decimal("0");
         }
 
-        return new Decimal128(v.negate().toFixed(Infinity));
+        return new Decimal(v.negate().toFixed(Infinity));
     }
 
     /**
@@ -983,9 +963,9 @@ export class Decimal128 {
      * @param d
      * @throws RangeError If argument is zero
      */
-    remainder(d: Decimal128): Decimal128 {
+    remainder(d: Decimal): Decimal {
         if (this.isNaN() || d.isNaN()) {
-            return new Decimal128(NAN);
+            return new Decimal(NAN);
         }
 
         if (this.isNegative()) {
@@ -997,7 +977,7 @@ export class Decimal128 {
         }
 
         if (!this.isFinite()) {
-            return new Decimal128(NAN);
+            return new Decimal(NAN);
         }
 
         if (!d.isFinite()) {
@@ -1005,7 +985,7 @@ export class Decimal128 {
         }
 
         if (d.isZero()) {
-            return new Decimal128(NAN);
+            return new Decimal(NAN);
         }
 
         if (this.compare(d) === -1) {
@@ -1085,8 +1065,8 @@ export class Decimal128 {
     }
 }
 
-Decimal128.Amount = class Amount {
-    private val: Decimal128;
+Decimal.Amount = class Amount {
+    private val: Decimal;
     private precision: number;
 
     constructor(val: string, precision: number) {
@@ -1094,7 +1074,7 @@ Decimal128.Amount = class Amount {
             throw new TypeError("Value must be a string");
         }
 
-        let v = new Decimal128(val); // might throw
+        let v = new Decimal(val); // might throw
 
         if (!Number.isInteger(precision)) {
             throw new Error("Precision must be an integer");
@@ -1145,23 +1125,23 @@ Decimal128.Amount = class Amount {
 
 type PrecisionMode = "significantDigits" | "fractionalDigits";
 
-Decimal128.prototype.toAmount = function (
+Decimal.prototype.toAmount = function (
     precision: number,
     precisionMode: PrecisionMode
 ) {
     if (precisionMode === "fractionalDigits") {
         let truncated = this.abs().round(precision, ROUNDING_MODE_TRUNCATE);
         let numIntegerDigits = truncated.toString().length;
-        return new Decimal128.Amount(
+        return new Decimal.Amount(
             this.toString(),
             numIntegerDigits - precision
         );
     }
 
-    return new Decimal128.Amount(this.toString(), precision);
+    return new Decimal.Amount(this.toString(), precision);
 };
 
-Decimal128.prototype.valueOf = function () {
+Decimal.prototype.valueOf = function () {
     throw TypeError("Decimal128.prototype.valueOf throws unconditionally");
 };
 

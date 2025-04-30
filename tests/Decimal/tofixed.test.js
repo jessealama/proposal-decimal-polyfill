@@ -1,12 +1,12 @@
-import { Decimal128 } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal128.mjs";
 import { expectDecimal128 } from "./util.js";
 
 describe("NaN", () => {
     test("works", () => {
-        expect(new Decimal128("NaN").toFixed()).toStrictEqual("NaN");
+        expect(new Decimal("NaN").toFixed()).toStrictEqual("NaN");
     });
     test("works, digits reqwusted", () => {
-        expect(new Decimal128("NaN").toFixed({ digits: 77 })).toStrictEqual(
+        expect(new Decimal("NaN").toFixed({ digits: 77 })).toStrictEqual(
             "NaN"
         );
     });
@@ -14,37 +14,37 @@ describe("NaN", () => {
 
 describe("zero", () => {
     test("positive zero", () => {
-        expect(new Decimal128("0").toFixed()).toStrictEqual("0");
+        expect(new Decimal("0").toFixed()).toStrictEqual("0");
     });
     test("negative zero", () => {
-        expect(new Decimal128("-0").toFixed()).toStrictEqual("-0");
+        expect(new Decimal("-0").toFixed()).toStrictEqual("-0");
     });
 });
 
 describe("infinity", () => {
     test("positive infinity", () => {
-        expect(new Decimal128("Infinity").toFixed()).toStrictEqual("Infinity");
+        expect(new Decimal("Infinity").toFixed()).toStrictEqual("Infinity");
     });
     test("positive infinity, digits requested", () => {
         expect(
-            new Decimal128("Infinity").toFixed({ digits: 42 })
+            new Decimal("Infinity").toFixed({ digits: 42 })
         ).toStrictEqual("Infinity");
     });
     test("negative infinity", () => {
-        expect(new Decimal128("-Infinity").toFixed()).toStrictEqual(
+        expect(new Decimal("-Infinity").toFixed()).toStrictEqual(
             "-Infinity"
         );
     });
     test("negative infinity, digits requested", () => {
         expect(
-            new Decimal128("-Infinity").toFixed({ digits: 55 })
+            new Decimal("-Infinity").toFixed({ digits: 55 })
         ).toStrictEqual("-Infinity");
     });
 });
 
 describe("to decimal places", function () {
     const d = "123.456";
-    const decimalD = new Decimal128(d);
+    const decimalD = new Decimal(d);
     test("no argument", () => {
         expectDecimal128(decimalD.toFixed(), "123.456");
     });
@@ -67,7 +67,7 @@ describe("to decimal places", function () {
         expectDecimal128(decimalD.toFixed({ digits: 0 }), "123");
     });
     test("zero decimal places for integer", () => {
-        expectDecimal128(new Decimal128("42").toFixed({ digits: 0 }), "42");
+        expectDecimal128(new Decimal("42").toFixed({ digits: 0 }), "42");
     });
     test("negative number of decimal places throws", () => {
         expect(() => decimalD.toFixed({ digits: -1 })).toThrow(RangeError);
@@ -79,7 +79,7 @@ describe("to decimal places", function () {
         expect(() => decimalD.toFixed("flab")).toThrow(TypeError);
     });
     test("zeroes get added", () => {
-        expect(new Decimal128("42").toFixed({ digits: 10 })).toStrictEqual(
+        expect(new Decimal("42").toFixed({ digits: 10 })).toStrictEqual(
             "42.0000000000"
         );
     });

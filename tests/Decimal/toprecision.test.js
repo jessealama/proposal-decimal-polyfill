@@ -1,32 +1,32 @@
-import { Decimal128 } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal128.mjs";
 
 const NoArgument = Symbol();
 
 describe("toPrecision", () => {
     describe("integer", () => {
         test("digits unspecified", () => {
-            expect(new Decimal128("42").toPrecision()).toStrictEqual("42");
+            expect(new Decimal("42").toPrecision()).toStrictEqual("42");
         });
         test("digits = 1", () => {
             expect(
-                new Decimal128("42").toPrecision({ digits: 1 })
+                new Decimal("42").toPrecision({ digits: 1 })
             ).toStrictEqual("4e+1");
         });
         test("argument is greater than total number of significant digits", () => {
             expect(
-                new Decimal128("123.456").toPrecision({ digits: 7 })
+                new Decimal("123.456").toPrecision({ digits: 7 })
             ).toStrictEqual("123.4560");
         });
 
         test("digits = 3", () => {
             expect(
-                new Decimal128("42").toPrecision({ digits: 3 })
+                new Decimal("42").toPrecision({ digits: 3 })
             ).toStrictEqual("42.0");
         });
     });
-    let d = new Decimal128("123.456");
+    let d = new Decimal("123.456");
 
-    describe("simple example", () => {
+    describe("simple example > 1", () => {
         describe.each([
             { sign: "positive", input: d },
             { sign: "negative", input: d.negate() },
@@ -48,11 +48,59 @@ describe("toPrecision", () => {
                 const o = sign === "positive" ? output : `-${output}`;
                 expect(s).toStrictEqual(o);
             });
+        });
+    });
 
-            test("zero digits requested", () => {
-                expect(() => input.toPrecision({ digits: 0 })).toThrow(
-                    RangeError
-                );
+    describe("simple example < 1, no need for exponential notation", () => {
+        let d = new Decimal("0.000123456");
+        describe.each([
+            { sign: "positive", input: d },
+            { sign: "negative", input: d.negate() },
+        ])("$sign", ({ sign, input }) => {
+            test.each`
+                name                                                                                     | arg              | output
+                ${"no arguments"}                                                                        | ${NoArgument}    | ${"0.000123456"}
+                ${"argument is greater than total number of significant digits"}                         | ${{ digits: 7 }} | ${"0.0001234560"}
+                ${"argument is equal to number of significant digits"}                                   | ${{ digits: 6 }} | ${"0.000123456"}
+                ${"argument less than number of significant digits, rounded needed"}                     | ${{ digits: 5 }} | ${"0.00012346"}
+                ${"argument less than number of significant digits, rounded does not change last digit"} | ${{ digits: 4 }} | ${"0.0001235"}
+                ${"argument equals number of integer digits"}                                            | ${{ digits: 3 }} | ${"0.000123"}
+                ${"argument less than number of integer digits"}                                         | ${{ digits: 2 }} | ${"0.00012"}
+                ${"single digit requested"}                                                              | ${{ digits: 1 }} | ${"0.0001"}
+            `("$name", ({ arg, output }) => {
+                const d = input;
+                const s =
+                    arg === NoArgument ? d.toPrecision() : d.toPrecision(arg);
+                const o = sign === "positive" ? output : `-${output}`;
+                expect(s).toStrictEqual(o);
+            });
+        });
+    });
+
+    describe("simple example < 1, need exponential notation", () => {
+        let d = new Decimal("0.00000012345678");
+        describe.each([
+            { sign: "positive", input: d },
+            { sign: "negative", input: d.negate() },
+        ])("$sign", ({ sign, input }) => {
+            test.each`
+                name                                                              | arg              | output
+                ${"no arguments"}                                                 | ${NoArgument}    | ${"1.2345678e-7"}
+                ${"more digits requested than available "}                        | ${{ digits: 9 }} | ${"1.23456780e-7"}
+                ${"number of digits requested exactly matches available digits"}  | ${{ digits: 8 }} | ${"1.2345678e-7"}
+                ${"seven digits requested"}                                       | ${{ digits: 7 }} | ${"1.234568e-7"}
+                ${"six digits requested"}                                         | ${{ digits: 6 }} | ${"1.23457e-7"}
+                ${"five digits requested"}                                        | ${{ digits: 5 }} | ${"1.2346e-7"}
+                ${"four digits requested"}                                        | ${{ digits: 4 }} | ${"1.235e-7"}
+                ${"three digits requested"}                                       | ${{ digits: 3 }} | ${"1.23e-7"}
+                ${"two digits requested"}                                         | ${{ digits: 2 }} | ${"1.2e-7"}
+                ${"single digit requested"}                                       | ${{ digits: 1 }} | ${"1e-7"}                                 
+            `("$name", ({ arg, output }) => {
+                const d = input;
+                const s =
+                    arg === NoArgument ? d.toPrecision() : d.toPrecision(arg);
+                const o = sign === "positive" ? output : `-${output}`;
+                expect(s).toStrictEqual(o);
             });
         });
     });
@@ -80,7 +128,7 @@ describe("toPrecision", () => {
 });
 
 describe("NaN", () => {
-    let nan = new Decimal128("NaN");
+    let nan = new Decimal("NaN");
     test("works", () => {
         expect(nan.toPrecision()).toStrictEqual("NaN");
     });
@@ -97,21 +145,21 @@ describe("zero", () => {
         ${"zero point zero gets canonicalized"}     | ${" 0.0"} | ${NoArgument}    | ${" 0"}
         ${"zero point zero, one significant digit"} | ${" 0.0"} | ${{ digits: 1 }} | ${" 0"}
     `("$name", ({ input, arg, output }) => {
-        const d = new Decimal128(input.trim());
+        const d = new Decimal(input.trim());
         const s = arg === NoArgument ? d.toPrecision() : d.toPrecision(arg);
         const o = output.trim();
         expect(s).toStrictEqual(o);
     });
     test("zero with additional digits", () => {
-        expect(new Decimal128("0").toPrecision({ digits: 2 })).toStrictEqual(
+        expect(new Decimal("0").toPrecision({ digits: 2 })).toStrictEqual(
             "0.0"
         );
     });
 });
 
 describe("infinity", () => {
-    let posInf = new Decimal128("Infinity");
-    let negInf = new Decimal128("-Infinity");
+    let posInf = new Decimal("Infinity");
+    let negInf = new Decimal("-Infinity");
 
     test.each`
         name                                     | input     | arg               | output
@@ -147,7 +195,7 @@ describe("tests", () => {
         `(
             "$input precision($digits) = $output",
             ({ input, digits, output }) => {
-                const s = new Decimal128(input.trim()).toPrecision({ digits });
+                const s = new Decimal(input.trim()).toPrecision({ digits });
                 expect(s).toStrictEqual(output.trim());
             }
         );
@@ -170,7 +218,7 @@ describe("tests", () => {
         `(
             "$input precision($digits) = $output",
             ({ input, digits, output }) => {
-                const s = new Decimal128(input.trim()).toPrecision({ digits });
+                const s = new Decimal(input.trim()).toPrecision({ digits });
                 expect(s).toStrictEqual(output.trim());
             }
         );
@@ -193,13 +241,13 @@ describe("tests", () => {
         `(
             "$input precision($digits) = $output",
             ({ input, digits, output }) => {
-                const s = new Decimal128(input.trim()).toPrecision({ digits });
+                const s = new Decimal(input.trim()).toPrecision({ digits });
                 expect(s).toStrictEqual(output.trim());
             }
         );
     });
     describe("with large positive exponent output", () => {
-        const d = new Decimal128("1002500000_0005500000_0008500000_0001");
+        const d = new Decimal("1002500000_0005500000_0008500000_0001");
         //                       "1234567890_1234567890_1234567890_1234"
 
         describe("positive", () => {
@@ -240,7 +288,7 @@ describe("tests", () => {
     });
 
     describe("with large negative exponent output", () => {
-        const d = new Decimal128("0.1002500000_0005500000_0008500000_0001");
+        const d = new Decimal("0.1002500000_0005500000_0008500000_0001");
         //                       "0.1234567890_1234567890_1234567890_1234"
 
         describe("positive", () => {
@@ -281,7 +329,7 @@ describe("tests", () => {
     });
 
     describe("with large negative exponent output with leading zero in decimal portion", () => {
-        const d = new Decimal128("0.000_1002500000_0005500000_0008500000_0001");
+        const d = new Decimal("0.000_1002500000_0005500000_0008500000_0001");
         //                       "0.000_1234567890_1234567890_1234567890_1234"
 
         describe("positive", () => {

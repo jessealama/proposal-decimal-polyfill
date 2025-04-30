@@ -1,14 +1,14 @@
-import { Decimal128 } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal128.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
-const nan = new Decimal128("NaN");
-const zero = new Decimal128("0");
-const negZero = new Decimal128("-0");
-const one = new Decimal128("1");
+const nan = new Decimal("NaN");
+const zero = new Decimal("0");
+const negZero = new Decimal("-0");
+const one = new Decimal("1");
 
 describe("compare", () => {
-    let d1 = new Decimal128("987.123");
-    let d2 = new Decimal128("123.456789");
+    let d1 = new Decimal("987.123");
+    let d2 = new Decimal("123.456789");
     test("simple example", () => {
         expect(d1.compare(d1)).toStrictEqual(0);
     });
@@ -16,43 +16,43 @@ describe("compare", () => {
         expect(d1.compare(d2)).toStrictEqual(1);
     });
     test("negative numbers", () => {
-        let a = new Decimal128("-123.456");
+        let a = new Decimal("-123.456");
         expect(a.compare(a)).toStrictEqual(0);
     });
     test("integer part is the same, decimal part is not", () => {
-        let a = new Decimal128("42.678");
-        let b = new Decimal128("42.6789");
+        let a = new Decimal("42.678");
+        let b = new Decimal("42.6789");
         expect(a.compare(b)).toStrictEqual(-1);
     });
     test("negative and positive are different", () => {
         expect(
-            new Decimal128("-123.456").compare(new Decimal128("123.456"))
+            new Decimal("-123.456").compare(new Decimal("123.456"))
         ).toStrictEqual(-1);
     });
     test("limit of significant digits", () => {
         expect(
-            new Decimal128("0.4166666666666666666666666666666667").compare(
-                new Decimal128("0.41666666666666666666666666666666666")
+            new Decimal("0.4166666666666666666666666666666667").compare(
+                new Decimal("0.41666666666666666666666666666666666")
             )
         ).toStrictEqual(0);
     });
     test("beyond limit of significant digits", () => {
         expect(
-            new Decimal128("0.41666666666666666666666666666666667").compare(
-                new Decimal128("0.41666666666666666666666666666666666")
+            new Decimal("0.41666666666666666666666666666666667").compare(
+                new Decimal("0.41666666666666666666666666666666666")
             )
         ).toStrictEqual(0);
     });
     test("non-example", () => {
         expect(
-            new Decimal128("0.037").compare(new Decimal128("0.037037037037"))
+            new Decimal("0.037").compare(new Decimal("0.037037037037"))
         ).toStrictEqual(-1);
     });
     describe("examples from a presentation", () => {
-        let a = new Decimal128("1.00");
-        let b = new Decimal128("1.0000");
-        let c = new Decimal128("1.0001");
-        let d = new Decimal128("0.9999");
+        let a = new Decimal("1.00");
+        let b = new Decimal("1.0000");
+        let c = new Decimal("1.0001");
+        let d = new Decimal("0.9999");
         test("use mathematical equality by default", () => {
             expect(a.compare(b)).toStrictEqual(0);
         });
@@ -71,15 +71,15 @@ describe("compare", () => {
 describe("many digits", () => {
     test("non-integers get rounded", () => {
         expect(
-            new Decimal128(
+            new Decimal(
                 "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS + 50)
-            ).compare(new Decimal128("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS)))
+            ).compare(new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS)))
         ).toStrictEqual(0);
     });
     test("non-equality within limits", () => {
         expect(
-            new Decimal128("0." + "4".repeat(33)).compare(
-                new Decimal128("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
+            new Decimal("0." + "4".repeat(33)).compare(
+                new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
             )
         ).toStrictEqual(-1);
     });
@@ -106,8 +106,8 @@ describe("many digits", () => {
         });
     });
     describe("infinity", () => {
-        let posInf = new Decimal128("Infinity");
-        let negInf = new Decimal128("-Infinity");
+        let posInf = new Decimal("Infinity");
+        let negInf = new Decimal("-Infinity");
         test("positive infinity vs number", () => {
             expect(posInf.compare(one)).toStrictEqual(1);
         });
@@ -166,9 +166,9 @@ describe("zero", () => {
 });
 
 describe("normalization", () => {
-    let d1 = new Decimal128("1.2");
-    let d2 = new Decimal128("1.20");
-    let d3 = new Decimal128("1.200");
+    let d1 = new Decimal("1.2");
+    let d2 = new Decimal("1.20");
+    let d3 = new Decimal("1.200");
     test("compare normalized to normalized", () => {
         expect(d1.compare(d2)).toStrictEqual(0);
     });
@@ -184,32 +184,32 @@ describe("examples from the General Decimal Arithmetic specification", () => {
     describe("compare", () => {
         test("example one", () => {
             expect(
-                new Decimal128("2.1").compare(new Decimal128("3"))
+                new Decimal("2.1").compare(new Decimal("3"))
             ).toStrictEqual(-1);
         });
         test("example two", () => {
             expect(
-                new Decimal128("2.1").compare(new Decimal128("2.1"))
+                new Decimal("2.1").compare(new Decimal("2.1"))
             ).toStrictEqual(0);
         });
         test("example three", () => {
             expect(
-                new Decimal128("2.1").compare(new Decimal128("2.10"))
+                new Decimal("2.1").compare(new Decimal("2.10"))
             ).toStrictEqual(0);
         });
         test("example four", () => {
             expect(
-                new Decimal128("3").compare(new Decimal128("2.1"))
+                new Decimal("3").compare(new Decimal("2.1"))
             ).toStrictEqual(1);
         });
         test("example five", () => {
             expect(
-                new Decimal128("2.1").compare(new Decimal128("-3"))
+                new Decimal("2.1").compare(new Decimal("-3"))
             ).toStrictEqual(1);
         });
         test("example six", () => {
             expect(
-                new Decimal128("-3").compare(new Decimal128("2.1"))
+                new Decimal("-3").compare(new Decimal("2.1"))
             ).toStrictEqual(-1);
         });
     });

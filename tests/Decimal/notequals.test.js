@@ -1,35 +1,35 @@
-import { Decimal128 } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal128.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
-const nan = new Decimal128("NaN");
-const zero = new Decimal128("0");
-const negZero = new Decimal128("-0");
-const one = new Decimal128("1");
+const nan = new Decimal("NaN");
+const zero = new Decimal("0");
+const negZero = new Decimal("-0");
+const one = new Decimal("1");
 
 describe("notEquals", () => {
-    let d1 = new Decimal128("987.123");
-    let d2 = new Decimal128("123.456789");
+    let d1 = new Decimal("987.123");
+    let d2 = new Decimal("123.456789");
     test("simple example", () => {
         expect(
-            new Decimal128("123.456789").notEquals(new Decimal128("123.456789"))
+            new Decimal("123.456789").notEquals(new Decimal("123.456789"))
         ).toStrictEqual(false);
     });
     test("non-example", () => {
         expect(
-            new Decimal128("987.123").notEquals(new Decimal128("123.456789"))
+            new Decimal("987.123").notEquals(new Decimal("123.456789"))
         ).toStrictEqual(true);
     });
     test("limit of significant digits", () => {
         expect(
-            new Decimal128("0.4166666666666666666666666666666667").notEquals(
-                new Decimal128("0.41666666666666666666666666666666666")
+            new Decimal("0.4166666666666666666666666666666667").notEquals(
+                new Decimal("0.41666666666666666666666666666666666")
             )
         ).toStrictEqual(false);
     });
     test("beyond limit of significant digits", () => {
         expect(
-            new Decimal128("0.41666666666666666666666666666666667").notEquals(
-                new Decimal128("0.41666666666666666666666666666666666")
+            new Decimal("0.41666666666666666666666666666666667").notEquals(
+                new Decimal("0.41666666666666666666666666666666666")
             )
         ).toStrictEqual(false);
     });
@@ -38,19 +38,19 @@ describe("notEquals", () => {
 describe("many digits", () => {
     test("non-integers get rounded", () => {
         expect(
-            new Decimal128(
+            new Decimal(
                 "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS + 50)
             ).notEquals(
-                new Decimal128("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
+                new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
             )
         ).toStrictEqual(false);
     });
     test("non-equality within limits", () => {
         expect(
-            new Decimal128(
+            new Decimal(
                 "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS - 1)
             ).notEquals(
-                new Decimal128("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
+                new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
             )
         ).toStrictEqual(true);
     });
@@ -77,8 +77,8 @@ describe("many digits", () => {
         });
     });
     describe("infinity", () => {
-        let posInf = new Decimal128("Infinity");
-        let negInf = new Decimal128("-Infinity");
+        let posInf = new Decimal("Infinity");
+        let negInf = new Decimal("-Infinity");
         test("positive infinity vs number", () => {
             expect(posInf.notEquals(one)).toStrictEqual(true);
         });

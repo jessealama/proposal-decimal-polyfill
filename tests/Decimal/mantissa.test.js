@@ -1,14 +1,14 @@
-import { Decimal128 } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal128.mjs";
 
 describe("mantissa and exponent", () => {
     test("0", () => {
-        expect(() => new Decimal128("0").mantissa()).toThrow(RangeError);
+        expect(() => new Decimal("0").mantissa()).toThrow(RangeError);
     });
     test("0.0", () => {
-        expect(() => new Decimal128("0.0").mantissa()).toThrow(RangeError);
+        expect(() => new Decimal("0.0").mantissa()).toThrow(RangeError);
     });
     test("-0", () => {
-        expect(() => new Decimal128("-0").mantissa()).toThrow(RangeError);
+        expect(() => new Decimal("-0").mantissa()).toThrow(RangeError);
     });
     let data = [
         ["123.456", "1.23456", 2],
@@ -28,7 +28,7 @@ describe("mantissa and exponent", () => {
     ];
     for (const [n, sigDigits, exponent] of data) {
         test(`simple example (${n})`, () => {
-            let d = new Decimal128(n);
+            let d = new Decimal(n);
             expect(d.mantissa().toString()).toStrictEqual(sigDigits);
             expect(d.exponent()).toStrictEqual(exponent);
         });

@@ -1,97 +1,97 @@
-import { Decimal128 } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal128.mjs";
 import { expectDecimal128 } from "./util.js";
 import { ROUNDING_MODES } from "../../src/common.mjs";
 
 describe("rounding", () => {
     describe("no arguments (round to integer)", () => {
         test("positive odd", () => {
-            expect(new Decimal128("1.5").round().toString()).toStrictEqual("2");
+            expect(new Decimal("1.5").round().toString()).toStrictEqual("2");
         });
         test("positive even", () => {
-            expect(new Decimal128("2.5").round().toString()).toStrictEqual("2");
+            expect(new Decimal("2.5").round().toString()).toStrictEqual("2");
         });
         test("round up (positive)", () => {
-            expect(new Decimal128("2.6").round().toString()).toStrictEqual("3");
+            expect(new Decimal("2.6").round().toString()).toStrictEqual("3");
         });
         test("round up (negative)", () => {
-            expect(new Decimal128("-2.6").round().toString()).toStrictEqual(
+            expect(new Decimal("-2.6").round().toString()).toStrictEqual(
                 "-3"
             );
         });
         test("negative odd", () => {
-            expect(new Decimal128("-1.5").round().toString()).toStrictEqual(
+            expect(new Decimal("-1.5").round().toString()).toStrictEqual(
                 "-2"
             );
         });
         test("negative even", () => {
-            expect(new Decimal128("-2.5").round().toString()).toStrictEqual(
+            expect(new Decimal("-2.5").round().toString()).toStrictEqual(
                 "-2"
             );
         });
         test("round down (positive)", () => {
-            expect(new Decimal128("1.1").round().toString()).toStrictEqual("1");
+            expect(new Decimal("1.1").round().toString()).toStrictEqual("1");
         });
     });
     describe("round after a certain number of decimal digits", () => {
         test("multiple digits", () => {
-            expect(new Decimal128("42.345").round(2).toString()).toStrictEqual(
+            expect(new Decimal("42.345").round(2).toString()).toStrictEqual(
                 "42.34"
             );
         });
         test("more digits than are available", () => {
-            expect(new Decimal128("1.5").round(1).toString()).toStrictEqual(
+            expect(new Decimal("1.5").round(1).toString()).toStrictEqual(
                 "1.5"
             );
         });
         test("negative odd", () => {
-            expect(new Decimal128("-1.5").round(1).toString()).toStrictEqual(
+            expect(new Decimal("-1.5").round(1).toString()).toStrictEqual(
                 "-1.5"
             );
         });
         test("round down (positive)", () => {
-            expect(new Decimal128("1.1").round(6).toString()).toStrictEqual(
+            expect(new Decimal("1.1").round(6).toString()).toStrictEqual(
                 "1.1"
             );
         });
     });
     test("integer", () => {
-        expect(new Decimal128("42").round().toString()).toStrictEqual("42");
+        expect(new Decimal("42").round().toString()).toStrictEqual("42");
     });
     test("negative integer", () => {
-        expect(new Decimal128("-42").round().toString()).toStrictEqual("-42");
+        expect(new Decimal("-42").round().toString()).toStrictEqual("-42");
     });
     test("negative number of digits requested is truncation", () => {
-        expect(() => new Decimal128("1.5").round(-42)).toThrow(RangeError);
+        expect(() => new Decimal("1.5").round(-42)).toThrow(RangeError);
     });
     test("too many digits requested", () => {
-        expect(() => new Decimal128("1.5").round(2 ** 53)).toThrow(RangeError);
+        expect(() => new Decimal("1.5").round(2 ** 53)).toThrow(RangeError);
     });
     test("round to zero", () => {
         expect(
-            new Decimal128("0.5").round(0, "trunc").toString()
+            new Decimal("0.5").round(0, "trunc").toString()
         ).toStrictEqual("0");
     });
     test("round to minus zero", () => {
         expect(
-            new Decimal128("-0.5").round(0, "trunc").toString()
+            new Decimal("-0.5").round(0, "trunc").toString()
         ).toStrictEqual("-0");
     });
 });
 
 describe("unsupported rounding mode", () => {
     test("throws", () => {
-        expect(() => new Decimal128("1.5").round(0, "foobar")).toThrow(
+        expect(() => new Decimal("1.5").round(0, "foobar")).toThrow(
             RangeError
         );
     });
 });
 
 describe("Intl.NumberFormat examples", () => {
-    let minusOnePointFive = new Decimal128("-1.5");
-    let zeroPointFour = new Decimal128("0.4");
-    let zeroPointFive = new Decimal128("0.5");
-    let zeroPointSix = new Decimal128("0.6");
-    let onePointFive = new Decimal128("1.5");
+    let minusOnePointFive = new Decimal("-1.5");
+    let zeroPointFour = new Decimal("0.4");
+    let zeroPointFive = new Decimal("0.5");
+    let zeroPointSix = new Decimal("0.6");
+    let onePointFive = new Decimal("1.5");
     describe("ceil", () => {
         test("-1.5", () => {
             expect(minusOnePointFive.round(0, "ceil").toString()).toStrictEqual(
@@ -224,11 +224,11 @@ describe("Intl.NumberFormat examples", () => {
         });
     });
     test("NaN", () => {
-        expect(new Decimal128("NaN").round().toString()).toStrictEqual("NaN");
+        expect(new Decimal("NaN").round().toString()).toStrictEqual("NaN");
     });
     describe("infinity", () => {
-        let posInf = new Decimal128("Infinity");
-        let negInf = new Decimal128("-Infinity");
+        let posInf = new Decimal("Infinity");
+        let negInf = new Decimal("-Infinity");
         test(`positive infinity (no argument)`, () => {
             expect(posInf.round().toString()).toStrictEqual("Infinity");
         });
@@ -261,32 +261,32 @@ describe("Intl.NumberFormat examples", () => {
 describe("ceiling", function () {
     test("ceiling works (positive)", () => {
         expect(
-            new Decimal128("123.456").round(0, "ceil").toString()
+            new Decimal("123.456").round(0, "ceil").toString()
         ).toStrictEqual("124");
     });
     test("ceiling works (negative)", () => {
         expect(
-            new Decimal128("-123.456").round(0, "ceil").toString()
+            new Decimal("-123.456").round(0, "ceil").toString()
         ).toStrictEqual("-123");
     });
     test("ceiling of an integer is unchanged", () => {
-        expect(new Decimal128("123").round(0, "ceil").toString()).toStrictEqual(
+        expect(new Decimal("123").round(0, "ceil").toString()).toStrictEqual(
             "123"
         );
     });
     test("NaN", () => {
-        expect(new Decimal128("NaN").round(0, "ceil").toString()).toStrictEqual(
+        expect(new Decimal("NaN").round(0, "ceil").toString()).toStrictEqual(
             "NaN"
         );
     });
     test("positive infinity", () => {
         expect(
-            new Decimal128("Infinity").round(0, "ceil").toString()
+            new Decimal("Infinity").round(0, "ceil").toString()
         ).toStrictEqual("Infinity");
     });
     test("minus infinity", () => {
         expect(
-            new Decimal128("-Infinity").round(0, "ceil").toString()
+            new Decimal("-Infinity").round(0, "ceil").toString()
         ).toStrictEqual("-Infinity");
     });
 });
@@ -295,19 +295,19 @@ describe("truncate", () => {
     describe("truncate", () => {
         test("123.45678", () => {
             expectDecimal128(
-                new Decimal128("123.45678").round(0, "trunc"),
+                new Decimal("123.45678").round(0, "trunc"),
                 "123"
             );
         });
         test("-42.99", () => {
-            expectDecimal128(new Decimal128("-42.99").round(0, "trunc"), "-42");
+            expectDecimal128(new Decimal("-42.99").round(0, "trunc"), "-42");
         });
         test("0.00765", () => {
-            expectDecimal128(new Decimal128("0.00765").round(0, "trunc"), "0");
+            expectDecimal128(new Decimal("0.00765").round(0, "trunc"), "0");
         });
         test("NaN", () => {
             expect(
-                new Decimal128("NaN").round(0, "trunc").toString()
+                new Decimal("NaN").round(0, "trunc").toString()
             ).toStrictEqual("NaN");
         });
     });
@@ -315,12 +315,12 @@ describe("truncate", () => {
     describe("infinity", () => {
         test("positive infinity", () => {
             expect(
-                new Decimal128("Infinity").round(0, "trunc").toString()
+                new Decimal("Infinity").round(0, "trunc").toString()
             ).toStrictEqual("Infinity");
         });
         test("negative infinity", () => {
             expect(
-                new Decimal128("-Infinity").round(0, "trunc").toString()
+                new Decimal("-Infinity").round(0, "trunc").toString()
             ).toStrictEqual("-Infinity");
         });
     });
@@ -329,43 +329,43 @@ describe("truncate", () => {
 describe("floor", function () {
     test("floor works (positive)", () => {
         expect(
-            new Decimal128("123.456").round(0, "floor").toString()
+            new Decimal("123.456").round(0, "floor").toString()
         ).toStrictEqual("123");
     });
     test("floor works (negative)", () => {
         expect(
-            new Decimal128("-123.456").round(0, "floor").toString()
+            new Decimal("-123.456").round(0, "floor").toString()
         ).toStrictEqual("-124");
     });
     test("floor of integer is unchanged", () => {
         expect(
-            new Decimal128("123").round(0, "floor").toString()
+            new Decimal("123").round(0, "floor").toString()
         ).toStrictEqual("123");
     });
     test("floor of zero is unchanged", () => {
-        expect(new Decimal128("0").round(0, "floor").toString()).toStrictEqual(
+        expect(new Decimal("0").round(0, "floor").toString()).toStrictEqual(
             "0"
         );
     });
     test("NaN", () => {
         expect(
-            new Decimal128("NaN").round(0, "floor").toString()
+            new Decimal("NaN").round(0, "floor").toString()
         ).toStrictEqual("NaN");
     });
     test("positive infinity", () => {
         expect(
-            new Decimal128("Infinity").round(0, "floor").toString()
+            new Decimal("Infinity").round(0, "floor").toString()
         ).toStrictEqual("Infinity");
     });
     test("minus infinity", () => {
         expect(
-            new Decimal128("-Infinity").round(0, "floor").toString()
+            new Decimal("-Infinity").round(0, "floor").toString()
         ).toStrictEqual("-Infinity");
     });
 });
 
 describe("examples for TC39 plenary slides", () => {
-    let a = new Decimal128("1.456");
+    let a = new Decimal("1.456");
     test("round to 2 decimal places, rounding mode is ceiling", () => {
         expect(a.round(2, "ceil").toString()).toStrictEqual("1.46");
     });

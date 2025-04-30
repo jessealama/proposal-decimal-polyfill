@@ -223,6 +223,10 @@ export class Rational {
         );
     }
 
+    toNumber(): number {
+        return Number(this.toFixed(Infinity));
+    }
+
     public toFixed(n: number): string {
         if (n !== Infinity && !Number.isInteger(n)) {
             throw new TypeError(
