@@ -220,20 +220,6 @@ export class Decimal {
         return this.d === "0" || this.d === "-0";
     }
 
-    public exponent(): number {
-        if (this.isZero()) {
-            return -Infinity;
-        }
-
-        if (this.isNegative()) {
-            return this.negate().exponent();
-        }
-
-        let v = this.d as Rational;
-
-        return Number(v.intLog10());
-    }
-
     public mantissa(): Decimal {
         if (this.isZero()) {
             throw new RangeError("Zero does not have a mantissa");
@@ -1017,7 +1003,7 @@ export class Decimal {
             );
         }
 
-        let exp = this.exponent();
+        let exp = this.unrestrictedExponent();
         return exp >= NORMAL_EXPONENT_MIN && exp <= NORMAL_EXPONENT_MAX;
     }
 
@@ -1036,19 +1022,43 @@ export class Decimal {
             return false;
         }
 
-        let exp = this.exponent();
+        let exp = this.unrestrictedExponent();
         return exp < NORMAL_EXPONENT_MIN;
     }
 
-    truncatedExponent(): number {
-        if (this.isZero() || this.isSubnormal()) {
-            return NORMAL_EXPONENT_MIN;
+    /**
+     * Returns the exponent of this Decimal128 value, regardless of whether it is normal or subnormal.
+     * @private
+     */
+    private unrestrictedExponent(): number {
+        if (this.isZero()) {
+            return -Infinity;
         }
 
-        return this.exponent();
+        if (this.isNegative()) {
+            return this.negate().exponent();
+        }
+
+        let v = this.d as Rational;
+        return Number(v.intLog10());
     }
 
-    scaledSignificand(): bigint {
+    exponent(): number {
+        if (this.isNaN()) {
+            throw new RangeError("Cannot determine exponent for NaN");
+        }
+
+        if (!this.isFinite()) {
+            throw new RangeError(
+                "Cannot determine whether an infinite value is subnormal"
+            );
+        }
+
+        let te = this.unrestrictedExponent();
+        return Math.max(te, NORMAL_EXPONENT_MIN);
+    }
+
+    significand(): bigint {
         if (this.isNaN()) {
             throw new RangeError("NaN does not have a scaled significand");
         }
@@ -1062,7 +1072,7 @@ export class Decimal {
         }
 
         let v = this.d as Rational;
-        let te = this.truncatedExponent();
+        let te = this.exponent();
         let ss = v.scale10(BigInt(MAX_SIGNIFICANT_DIGITS - 1 - te));
 
         return ss.numerator;
