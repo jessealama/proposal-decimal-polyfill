@@ -305,6 +305,10 @@ export class Decimal {
     }
 
     private emitDecimal(): string {
+        if (this.isZero()) {
+            return this._isNegative ? "-0" : "0";
+        }
+
         let v = this.d as Rational;
         return v.toFixed(Infinity);
     }
@@ -1088,6 +1092,7 @@ Decimal.Amount = class Amount {
         }
 
         let d = new Decimal(val);
+
         this.val = d; // might throw
 
         // @todo handle exponential notation, too, not just decimal notation
@@ -1157,19 +1162,37 @@ Decimal.prototype.valueOf = function () {
 };
 
 Decimal.prototype.withSignificantDigits = function (n: number): object {
-    return new Decimal.Amount(
+    if (this.isNaN()) {
+        throw new RangeError("Cannot create an amount from NaN");
+    }
+    if (!this.isFinite()) {
+        throw new RangeError("Cannot create an amount from Infinity");
+    }
+    return Decimal.Amount.from(
         this.toFixed({ digits: Infinity })
     ).withSignificantDigits(n);
 };
 
 Decimal.prototype.withFractionalDigits = function (n: number): object {
-    return new Decimal.Amount(
+    if (this.isNaN()) {
+        throw new RangeError("Cannot create an amount from NaN");
+    }
+    if (!this.isFinite()) {
+        throw new RangeError("Cannot create an amount from Infinity");
+    }
+    return Decimal.Amount.from(
         this.toFixed({ digits: Infinity })
     ).withFractionalDigits(n);
 };
 
 Decimal.prototype.withTrailingZeroes = function (n: number): object {
-    return new Decimal.Amount(
+    if (this.isNaN()) {
+        throw new RangeError("Cannot create an amount from NaN");
+    }
+    if (!this.isFinite()) {
+        throw new RangeError("Cannot create an amount from Infinity");
+    }
+    return Decimal.Amount.from(
         this.toFixed({ digits: Infinity })
     ).withTrailingZeroes(n);
 };
