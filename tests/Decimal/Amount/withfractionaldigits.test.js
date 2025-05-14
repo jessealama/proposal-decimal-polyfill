@@ -2,23 +2,16 @@ import { Decimal } from "../../../src/Decimal.mjs";
 
 describe("amount", () => {
     describe("withfractionaldigits", () => {
-        describe("constructed with fractional digits", () => {
-            test("rounded needed", () => {
-                expect(
-                    new Decimal.Amount("42.75", 2)
-                        .withFractionalDigits(1)
-                        .toString()
-                ).toStrictEqual("42.8");
-            });
+        let amount = new Decimal.Amount("42.75");
+        test("rounded needed", () => {
+            expect(amount.withFractionalDigits(1).toString()).toStrictEqual(
+                "42.8"
+            );
         });
-        describe("constructed with significant digits", () => {
-            test("rounded needed", () => {
-                expect(
-                    new Decimal.Amount("42.75", 4)
-                        .withFractionalDigits(1)
-                        .toString()
-                ).toStrictEqual("42.8");
-            });
+        test("impute precision", () => {
+            expect(amount.withFractionalDigits(4).toString()).toStrictEqual(
+                "42.7500"
+            );
         });
     });
 });

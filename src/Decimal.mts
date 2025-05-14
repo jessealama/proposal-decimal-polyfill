@@ -1066,39 +1066,41 @@ export class Decimal {
 
 Decimal.Amount = class Amount {
     private val: Decimal;
-    private precision: number;
+    public trailingZeroes: number;
+    public significantDigits: number;
+    public fractionalDigits: number;
 
-    constructor(val: string, precision: number) {
-        if (typeof val !== "string") {
-            throw new TypeError("Value must be a string");
+    constructor(val: string) {
+        this.val = new Decimal(val); // might throw
+
+        let [intPart, fracPart] = val.split(/[.]/);
+
+        this.fractionalDigits = undefined === fracPart ? 0 : fracPart.length;
+
+        if (undefined === fracPart) {
+            this.trailingZeroes = 0;
+        } else {
+            let m = fracPart.match(/0+$/);
+            if (m) {
+                this.trailingZeroes = m[0].length;
+            } else {
+                this.trailingZeroes = 0;
+            }
         }
 
-        let v = new Decimal(val); // might throw
-
-        if (!Number.isInteger(precision)) {
-            throw new Error("Precision must be an integer");
+        if (undefined === fracPart) {
+            this.significantDigits = intPart.length;
+        } else {
+            this.significantDigits = intPart.length + fracPart.length;
         }
-
-        if (precision < 0) {
-            throw new RangeError("Precision must be a non-negative integer");
-        }
-
-        if (precision > MAX_SIGNIFICANT_DIGITS) {
-            throw new RangeError(
-                `Cannot specify more than ${MAX_SIGNIFICANT_DIGITS} significant digits`
-            );
-        }
-
-        this.val = v;
-        this.precision = precision;
     }
 
-    equals(other: Amount): boolean {
-        return this.val.equals(other.val) && this.precision === other.precision;
+    toDecimal(): Decimal {
+        return this.val;
     }
 
     toString(): string {
-        return this.val.toPrecision({ digits: this.precision });
+        return this.val.toFixed({ digits: this.fractionalDigits });
     }
 
     toLocaleString(locale: string, options: Intl.NumberFormatOptions): string {
@@ -1106,7 +1108,7 @@ Decimal.Amount = class Amount {
             options = {};
         }
 
-        options.minimumSignificantDigits = this.precision;
+        options.minimumSignificantDigits = this.significantDigits;
 
         let formatter = new Intl.NumberFormat(locale, options);
         // @ts-ignore
@@ -1114,30 +1116,44 @@ Decimal.Amount = class Amount {
     }
 
     withSignificantDigits(precision: number): Amount {
-        return this.val.toAmount(precision, "significantDigits");
+        return new Amount(this.val.toPrecision({ digits: precision }));
     }
 
     withFractionalDigits(precision: number): Amount {
-        return this.val.toAmount(precision, "fractionalDigits");
+        return new Amount(this.val.toFixed({ digits: precision }));
+    }
+
+    withTrailingZeroes(precision: number): Amount {
+        let s = this.val.toFixed({ digits: Infinity });
+        let [intPart, fracPart] = s.split(/[.]/);
+
+        if (undefined === fracPart) {
+            return new Amount(
+                s + (precision > 0 ? "." + "0".repeat(precision) : "")
+            );
+        }
+
+        let m = fracPart.match(/0+$/);
+
+        if (m) {
+            let numTrailingZeroes = m[0].length;
+            if (numTrailingZeroes < precision) {
+                s = s + "0".repeat(precision - numTrailingZeroes);
+            } else {
+                s = s.substring(0, s.length - numTrailingZeroes - precision);
+            }
+
+            return new Amount(s);
+        }
+
+        return new Amount(s + "0".repeat(precision));
     }
 };
 
 type PrecisionMode = "significantDigits" | "fractionalDigits";
 
-Decimal.prototype.toAmount = function (
-    precision: number,
-    precisionMode: PrecisionMode
-) {
-    if (precisionMode === "fractionalDigits") {
-        let truncated = this.abs().round(precision, ROUNDING_MODE_TRUNCATE);
-        let numIntegerDigits = truncated.toString().length;
-        return new Decimal.Amount(
-            this.toString(),
-            numIntegerDigits - precision
-        );
-    }
-
-    return new Decimal.Amount(this.toString(), precision);
+Decimal.prototype.toAmount = function () {
+    return new Decimal.Amount(this.toFixed({ digits: Infinity }));
 };
 
 Decimal.prototype.valueOf = function () {

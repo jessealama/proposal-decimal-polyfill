@@ -1,16 +1,16 @@
 import { Decimal } from "../../../src/Decimal.mjs";
 
 describe("amount", () => {
-    describe("withsignificantdigits", () => {
+    describe("withtrailingzeroes", () => {
         let amount = new Decimal.Amount("42.75");
         test("rounded needed", () => {
-            expect(amount.withSignificantDigits(3).toString()).toStrictEqual(
-                "42.8"
+            expect(amount.withTrailingZeroes(0).toString()).toStrictEqual(
+                "42.75"
             );
         });
         test("impute additional precision", () => {
-            expect(amount.withSignificantDigits(5).toString()).toStrictEqual(
-                "42.750"
+            expect(amount.withTrailingZeroes(3).toString()).toStrictEqual(
+                "42.75000"
             );
         });
     });
