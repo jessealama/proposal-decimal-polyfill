@@ -20,9 +20,11 @@ describe("amount", () => {
         });
         describe("rounding", () => {
             test("might occur", () => {
-                expect(new Decimal.Amount("7.5", 0).toString()).toStrictEqual(
-                    "8"
-                );
+                let amount = new Decimal.Amount("7.5", 0);
+                expect(amount.toString()).toStrictEqual("8");
+                expect(amount.significantDigits).toStrictEqual(1);
+                expect(amount.fractionalDigits).toStrictEqual(0);
+                expect(amount.trailingZeroes).toStrictEqual(0);
             });
         });
     });
