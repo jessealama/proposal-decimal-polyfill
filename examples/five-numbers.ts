@@ -59,9 +59,7 @@ function keepTrying(): boolean {
     );
 
     if (result1 !== result2) {
-        let diff = new Decimal(result1)
-            .subtract(new Decimal(result2))
-            .abs();
+        let diff = new Decimal(result1).subtract(new Decimal(result2)).abs();
         console.log(
             `(${digits1} + ${digits2} + ${digits3} + ${digits4}) * ${digits5} = ${result1} but it should be ${result2} (difference: ${diff.toString()})`
         );
