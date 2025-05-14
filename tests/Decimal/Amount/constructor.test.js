@@ -1,4 +1,4 @@
-import { Decimal } from "../../../src/Decimal128.mjs";
+import { Decimal } from "../../../src/Decimal.mjs";
 
 describe("amount", () => {
     describe("constructor", () => {
@@ -19,9 +19,7 @@ describe("amount", () => {
                 expect(() => new Decimal.Amount("42", -2)).toThrow(Error);
             });
             test("number too big", () => {
-                expect(() => new Decimal.Amount("42", 100)).toThrow(
-                    RangeError
-                );
+                expect(() => new Decimal.Amount("42", 100)).toThrow(RangeError);
             });
         });
         describe("works", () => {

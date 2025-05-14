@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const bigDigits = "9".repeat(MAX_SIGNIFICANT_DIGITS);
@@ -40,7 +40,7 @@ describe("negate", () => {
     });
     test("limit of digits", () => {
         expect(
-            new Decimal("-" + bigDigits).negate().toString()
+            new Decimal("-" + bigDigits).negate().toFixed({ digits: Infinity })
         ).toStrictEqual(bigDigits);
     });
 });

@@ -18,7 +18,8 @@ import {
     ROUNDING_MODES,
     ROUNDING_MODE_HALF_EVEN,
     ROUNDING_MODE_TRUNCATE,
-    ROUNDING_MODE_CEILING, ROUNDING_MODE_FLOOR
+    ROUNDING_MODE_CEILING,
+    ROUNDING_MODE_FLOOR,
 } from "./common.mjs";
 import { Rational } from "./Rational.mjs";
 
@@ -36,7 +37,10 @@ const NAN = "NaN";
 const POSITIVE_INFINITY = "Infinity";
 const NEGATIVE_INFINITY = "-Infinity";
 
-function RoundToDecimal128Domain(v: Rational, mode: RoundingMode = ROUNDING_MODE_HALF_EVEN): Decimal128Value {
+function RoundToDecimal128Domain(
+    v: Rational,
+    mode: RoundingMode = ROUNDING_MODE_HALF_EVEN
+): Decimal128Value {
     if (v.isZero()) {
         return "0";
     }
@@ -294,12 +298,11 @@ export class Decimal {
             return v + "e+0";
         }
 
-        let p = this._isNegative ? "-" : "";
         let m = this.mantissa();
 
         let mAsString = m.toFixed({ digits: Infinity });
         let expPart = (e < 0 ? "-" : "+") + Math.abs(e);
-        return p + mAsString + "e" + expPart;
+        return mAsString + "e" + expPart;
     }
 
     private emitDecimal(): string {
@@ -322,6 +325,16 @@ export class Decimal {
 
         if (!this.isFinite()) {
             return (this.isNegative() ? "-" : "") + POSITIVE_INFINITY;
+        }
+
+        if (this.isZero()) {
+            return this._isNegative ? "-0" : "0";
+        }
+
+        let c = this.coefficient();
+
+        if (c.toString().length > 6) {
+            return this.emitExponential();
         }
 
         return this.emitDecimal();
@@ -373,7 +386,7 @@ export class Decimal {
             let [lhs, rhs] = roundedRendered.split(/[.]/);
             let numFractionDigits = rhs.length;
             if (numFractionDigits <= n) {
-                return lhs + "." + rhs + "0".repeat(n  -numFractionDigits);
+                return lhs + "." + rhs + "0".repeat(n - numFractionDigits);
             }
         }
 
@@ -417,9 +430,9 @@ export class Decimal {
             return (this.isNegative() ? "-" : "") + "Infinity";
         }
 
-        let p = this.isNegative() ? "-" : "";
-
         if (this.isZero()) {
+            let p = this.isNegative() ? "-" : "";
+
             if (precision === 1) {
                 return p + "0";
             }
@@ -430,9 +443,7 @@ export class Decimal {
         }
 
         let d = this.d as Rational;
-        let s = this.abs().emitDecimal();
-
-        return s;
+        return d.toPrecision(BigInt(precision));
     }
 
     toExponential(opts?: { digits?: number }): string {
@@ -755,7 +766,7 @@ export class Decimal {
 
         let ourCohort = this.d as Rational;
         let theirCohort = x.d as Rational;
-        let difference= ourCohort.subtract(theirCohort);
+        let difference = ourCohort.subtract(theirCohort);
 
         if (difference.isZero()) {
             return new Decimal("0");
@@ -1153,6 +1164,6 @@ function findLargestQ(d: Rational) {
 
     return {
         n: d.scale10(q),
-        q: q
+        q: q,
     };
 }

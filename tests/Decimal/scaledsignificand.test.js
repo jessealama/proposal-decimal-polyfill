@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 describe("NaN", () => {
     expect(() => new Decimal("NaN").scaledSignificand()).toThrow(RangeError);

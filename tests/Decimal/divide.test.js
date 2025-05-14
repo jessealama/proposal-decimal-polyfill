@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 describe("division", () => {
     test("simple example", () => {
@@ -13,7 +13,9 @@ describe("division", () => {
     });
     test("infinite decimal representation", () => {
         expect(
-            new Decimal("0.11").divide(new Decimal("0.3")).toString()
+            new Decimal("0.11")
+                .divide(new Decimal("0.3"))
+                .toFixed({ digits: Infinity })
         ).toStrictEqual("0.3666666666666666666666666666666667");
     });
     test("many digits, few significant", () => {
@@ -25,7 +27,9 @@ describe("division", () => {
     });
     test("one third", () => {
         expect(
-            new Decimal("1").divide(new Decimal("3")).toString()
+            new Decimal("1")
+                .divide(new Decimal("3"))
+                .toFixed({ digits: Infinity })
         ).toStrictEqual("0.3333333333333333333333333333333333");
     });
     test("one tenth", () => {
@@ -81,14 +85,14 @@ describe("division", () => {
             ).toStrictEqual("Infinity");
         });
         test("positive infinity divided by negative number", () => {
-            expect(
-                posInf.divide(new Decimal("-2")).toString()
-            ).toStrictEqual("-Infinity");
+            expect(posInf.divide(new Decimal("-2")).toString()).toStrictEqual(
+                "-Infinity"
+            );
         });
         test("minus infinity divided by positive number", () => {
-            expect(
-                negInf.divide(new Decimal("17")).toString()
-            ).toStrictEqual("-Infinity");
+            expect(negInf.divide(new Decimal("17")).toString()).toStrictEqual(
+                "-Infinity"
+            );
         });
         test("minus infinity divided by negative number", () => {
             expect(
@@ -106,14 +110,14 @@ describe("division", () => {
             ).toStrictEqual("-0");
         });
         test("negative number divided by positive infinity", () => {
-            expect(
-                new Decimal("-2").divide(posInf).toString()
-            ).toStrictEqual("-0");
+            expect(new Decimal("-2").divide(posInf).toString()).toStrictEqual(
+                "-0"
+            );
         });
         test("negative number divided by negative infinity", () => {
-            expect(
-                new Decimal("-2").divide(negInf).toString()
-            ).toStrictEqual("0");
+            expect(new Decimal("-2").divide(negInf).toString()).toStrictEqual(
+                "0"
+            );
         });
     });
     test("negative zero", () => {
@@ -137,12 +141,16 @@ describe("examples from the General Decimal Arithmetic Specification", () => {
     // some examples have been tweaked because we are working with more precision in Decimal128
     test("example one", () => {
         expect(
-            new Decimal("1").divide(new Decimal("3")).toString()
+            new Decimal("1")
+                .divide(new Decimal("3"))
+                .toFixed({ digits: Infinity })
         ).toStrictEqual("0.3333333333333333333333333333333333");
     });
     test("example two", () => {
         expect(
-            new Decimal("2").divide(new Decimal("3")).toString()
+            new Decimal("2")
+                .divide(new Decimal("3"))
+                .toFixed({ digits: Infinity })
         ).toStrictEqual("0.6666666666666666666666666666666667");
     });
     test("example three", () => {
@@ -182,9 +190,7 @@ describe("examples from the General Decimal Arithmetic Specification", () => {
     });
     test("example ten", () => {
         expect(
-            new Decimal("2.40E+6")
-                .divide(new Decimal("2"))
-                .toExponential()
+            new Decimal("2.40E+6").divide(new Decimal("2")).toExponential()
         ).toStrictEqual("1.2e+6");
     });
 });

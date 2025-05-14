@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const nan = new Decimal("NaN");
@@ -40,18 +40,14 @@ describe("many digits", () => {
         expect(
             new Decimal(
                 "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS + 50)
-            ).notEquals(
-                new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
-            )
+            ).notEquals(new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS)))
         ).toStrictEqual(false);
     });
     test("non-equality within limits", () => {
         expect(
             new Decimal(
                 "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS - 1)
-            ).notEquals(
-                new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
-            )
+            ).notEquals(new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS)))
         ).toStrictEqual(true);
     });
     describe("NaN", () => {

@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const bigDigits = "9".repeat(MAX_SIGNIFICANT_DIGITS);
@@ -32,28 +32,28 @@ describe("addition", () => {
         let a = "0.1";
         let b = "0.2";
         let c = "0.3";
-        expect(
-            new Decimal(a).add(new Decimal(b)).toString()
-        ).toStrictEqual(c);
-        expect(
-            new Decimal(b).add(new Decimal(a)).toString()
-        ).toStrictEqual(c);
+        expect(new Decimal(a).add(new Decimal(b)).toString()).toStrictEqual(c);
+        expect(new Decimal(b).add(new Decimal(a)).toString()).toStrictEqual(c);
     });
     let big = new Decimal(bigDigits);
     test("big plus zero is OK", () => {
-        expect(big.add(zero).toString()).toStrictEqual(bigDigits);
+        expect(big.add(zero).toString()).toStrictEqual(
+            "9.999999999999999999999999999999999e+33"
+        );
     });
     test("zero plus big is OK", () => {
-        expect(zero.add(big).toString()).toStrictEqual(bigDigits);
+        expect(zero.add(big).toString()).toStrictEqual(
+            "9.999999999999999999999999999999999e+33"
+        );
     });
     test("big plus one is OK", () => {
         expect(big.add(one).toString()).toStrictEqual(one.add(big).toString());
     });
     test("two plus big has too many significant digits, approximation needed", () => {
-        expect(two.add(big).toString()).toStrictEqual("10000000000000000000000000000000000");
+        expect(two.add(big).toString()).toStrictEqual("1e+34");
     });
-    test("big plus two is not OK (too many significant digits)", () => {
-        expect(big.add(two).toString()).toStrictEqual("10000000000000000000000000000000000");
+    test("big plus two has man significant digits", () => {
+        expect(big.add(two).toString()).toStrictEqual("1e+34");
     });
     describe("non-normalized", () => {
         test("one point zero plus one point zero", () => {
@@ -101,9 +101,9 @@ describe("addition", () => {
             expect(negInf.add(posInf).toString()).toStrictEqual("NaN");
         });
         test("add number to positive infinity", () => {
-            expect(
-                new Decimal("123.5").add(posInf).toString()
-            ).toStrictEqual("Infinity");
+            expect(new Decimal("123.5").add(posInf).toString()).toStrictEqual(
+                "Infinity"
+            );
         });
         test("add number to negative infinity", () => {
             expect(new Decimal("-2").add(negInf).toString()).toStrictEqual(
@@ -119,7 +119,7 @@ describe("specify rounding mode", () => {
             new Decimal("1234567890123456789012345678901234")
                 .add(new Decimal("0.5"), { roundingMode: "trunc" })
                 .toString()
-        ).toStrictEqual("1234567890123456789012345678901234");
+        ).toStrictEqual("1.234567890123456789012345678901234e+33");
     });
 });
 

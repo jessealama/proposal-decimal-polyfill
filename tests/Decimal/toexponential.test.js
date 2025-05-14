@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 import { expectDecimal128 } from "./util.js";
 
 describe("NaN", () => {
@@ -105,9 +105,7 @@ describe("to exponential string", () => {
     });
 
     test("round trip", () => {
-        expect(new Decimal("4.2E+0").toExponential()).toStrictEqual(
-            "4.2e+0"
-        );
+        expect(new Decimal("4.2E+0").toExponential()).toStrictEqual("4.2e+0");
     });
 
     test("significant has one digit", () => {
@@ -131,9 +129,7 @@ describe("scientific string syntax", () => {
         expect(new Decimal("1.23E+5").toString()).toStrictEqual("123000");
     });
     test("1.23E-8", () => {
-        expect(new Decimal("1.23E-8").toString()).toStrictEqual(
-            "0.0000000123"
-        );
+        expect(new Decimal("1.23E-8").toString()).toStrictEqual("0.0000000123");
     });
     test("-1.23E-10", () => {
         expect(new Decimal("-1.23E-10").toString()).toStrictEqual(

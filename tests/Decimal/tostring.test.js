@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 describe("NaN", () => {
     test("works", () => {
@@ -20,9 +20,7 @@ describe("infinity", () => {
         expect(new Decimal("Infinity").toString()).toStrictEqual("Infinity");
     });
     test("negative infinity", () => {
-        expect(new Decimal("-Infinity").toString()).toStrictEqual(
-            "-Infinity"
-        );
+        expect(new Decimal("-Infinity").toString()).toStrictEqual("-Infinity");
     });
 });
 

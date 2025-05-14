@@ -1,4 +1,4 @@
-import { Decimal } from "../../../src/Decimal128.mjs";
+import { Decimal } from "../../../src/Decimal.mjs";
 
 describe("amount", () => {
     describe("equals", () => {

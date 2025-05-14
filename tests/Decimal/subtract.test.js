@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 import { expectDecimal128 } from "./util.js";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
@@ -27,13 +27,15 @@ describe("subtraction", () => {
     test("close to range limit", () => {
         expectDecimal128(
             big.subtract(new Decimal("9")),
-            "9".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "0"
+            "9.99999999999999999999999999999999e+33"
         );
     });
     test("large subtraction does not overflow, but does get apporoximated", () => {
         let a = new Decimal("-" + bigDigits);
         let b = new Decimal("9");
-        expect(a.subtract(b).toString()).toStrictEqual("-10000000000000000000000000000000010");
+        expect(a.subtract(b).toString()).toStrictEqual(
+            "-1.000000000000000000000000000000001e+34"
+        );
     });
     describe("NaN", () => {
         test("NaN minus NaN is NaN", () => {

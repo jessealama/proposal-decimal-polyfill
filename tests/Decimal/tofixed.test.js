@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 import { expectDecimal128 } from "./util.js";
 
 describe("NaN", () => {
@@ -6,9 +6,7 @@ describe("NaN", () => {
         expect(new Decimal("NaN").toFixed()).toStrictEqual("NaN");
     });
     test("works, digits reqwusted", () => {
-        expect(new Decimal("NaN").toFixed({ digits: 77 })).toStrictEqual(
-            "NaN"
-        );
+        expect(new Decimal("NaN").toFixed({ digits: 77 })).toStrictEqual("NaN");
     });
 });
 
@@ -26,19 +24,17 @@ describe("infinity", () => {
         expect(new Decimal("Infinity").toFixed()).toStrictEqual("Infinity");
     });
     test("positive infinity, digits requested", () => {
-        expect(
-            new Decimal("Infinity").toFixed({ digits: 42 })
-        ).toStrictEqual("Infinity");
-    });
-    test("negative infinity", () => {
-        expect(new Decimal("-Infinity").toFixed()).toStrictEqual(
-            "-Infinity"
+        expect(new Decimal("Infinity").toFixed({ digits: 42 })).toStrictEqual(
+            "Infinity"
         );
     });
+    test("negative infinity", () => {
+        expect(new Decimal("-Infinity").toFixed()).toStrictEqual("-Infinity");
+    });
     test("negative infinity, digits requested", () => {
-        expect(
-            new Decimal("-Infinity").toFixed({ digits: 55 })
-        ).toStrictEqual("-Infinity");
+        expect(new Decimal("-Infinity").toFixed({ digits: 55 })).toStrictEqual(
+            "-Infinity"
+        );
     });
 });
 

@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 describe("NaN", () => {
     test("throws", () => {
@@ -11,9 +11,7 @@ describe("infinity", () => {
         expect(() => new Decimal("Infinity").isNormal()).toThrow(RangeError);
     });
     test("negative throws", () => {
-        expect(() => new Decimal("-Infinity").isNormal()).toThrow(
-            RangeError
-        );
+        expect(() => new Decimal("-Infinity").isNormal()).toThrow(RangeError);
     });
 });
 

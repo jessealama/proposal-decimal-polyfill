@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 describe("NaN", () => {
     test("throws", () => {
@@ -11,9 +11,7 @@ describe("simple examples", () => {
         expect(new Decimal("0").scale10(4).toString()).toStrictEqual("0");
     });
     test("42, 4", () => {
-        expect(new Decimal("42").scale10(4).toString()).toStrictEqual(
-            "420000"
-        );
+        expect(new Decimal("42").scale10(4).toString()).toStrictEqual("420000");
     });
     test("42, -4", () => {
         expect(new Decimal("42").scale10(-4).toString()).toStrictEqual(
@@ -33,8 +31,6 @@ describe("infinty", () => {
         expect(() => new Decimal("Infinity").scale10(5)).toThrow(RangeError);
     });
     test("negative infinity throws", () => {
-        expect(() => new Decimal("-Infinity").scale10(5)).toThrow(
-            RangeError
-        );
+        expect(() => new Decimal("-Infinity").scale10(5)).toThrow(RangeError);
     });
 });

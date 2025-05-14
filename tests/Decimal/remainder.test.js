@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 const a = "4.1";
 const b = "1.25";
@@ -42,9 +42,7 @@ describe("remainder", () => {
     describe("NaN", () => {
         test("NaN remainder NaN is NaN", () => {
             expect(
-                new Decimal("NaN")
-                    .remainder(new Decimal("NaN"))
-                    .toString()
+                new Decimal("NaN").remainder(new Decimal("NaN")).toString()
             ).toStrictEqual("NaN");
         });
         test("number remainder NaN is NaN", () => {

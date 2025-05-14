@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const nan = new Decimal("NaN");
@@ -71,9 +71,9 @@ describe("compare", () => {
 describe("many digits", () => {
     test("non-integers get rounded", () => {
         expect(
-            new Decimal(
-                "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS + 50)
-            ).compare(new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS)))
+            new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS + 50)).compare(
+                new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
+            )
         ).toStrictEqual(0);
     });
     test("non-equality within limits", () => {
@@ -183,9 +183,9 @@ describe("normalization", () => {
 describe("examples from the General Decimal Arithmetic specification", () => {
     describe("compare", () => {
         test("example one", () => {
-            expect(
-                new Decimal("2.1").compare(new Decimal("3"))
-            ).toStrictEqual(-1);
+            expect(new Decimal("2.1").compare(new Decimal("3"))).toStrictEqual(
+                -1
+            );
         });
         test("example two", () => {
             expect(
@@ -198,19 +198,19 @@ describe("examples from the General Decimal Arithmetic specification", () => {
             ).toStrictEqual(0);
         });
         test("example four", () => {
-            expect(
-                new Decimal("3").compare(new Decimal("2.1"))
-            ).toStrictEqual(1);
+            expect(new Decimal("3").compare(new Decimal("2.1"))).toStrictEqual(
+                1
+            );
         });
         test("example five", () => {
-            expect(
-                new Decimal("2.1").compare(new Decimal("-3"))
-            ).toStrictEqual(1);
+            expect(new Decimal("2.1").compare(new Decimal("-3"))).toStrictEqual(
+                1
+            );
         });
         test("example six", () => {
-            expect(
-                new Decimal("-3").compare(new Decimal("2.1"))
-            ).toStrictEqual(-1);
+            expect(new Decimal("-3").compare(new Decimal("2.1"))).toStrictEqual(
+                -1
+            );
         });
     });
 });

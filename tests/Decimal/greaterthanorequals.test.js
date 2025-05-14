@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const nan = new Decimal("NaN");
@@ -26,9 +26,7 @@ describe("lessThan", () => {
     });
     test("negative and positive are different", () => {
         expect(
-            new Decimal("-123.456").greaterThanOrEqual(
-                new Decimal("123.456")
-            )
+            new Decimal("-123.456").greaterThanOrEqual(new Decimal("123.456"))
         ).toStrictEqual(false);
     });
     test("limit of significant digits", () => {

@@ -54,7 +54,7 @@ describe("toFixed", () => {
         expect(new Rational(5n, 2n).toFixed(2)).toStrictEqual("2.50");
     });
     test("not exactly representable, greater than one", () => {
-        expect(new Rational(5n, 3n).toFixed(2)).toStrictEqual("1.66");
+        expect(new Rational(5n, 3n).toFixed(2)).toStrictEqual("1.67");
     });
     test("non-integer value not OK", () => {
         expect(() => new Rational(1n, 2n).toFixed(1.6)).toThrow(TypeError);

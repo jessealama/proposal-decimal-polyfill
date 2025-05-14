@@ -179,7 +179,7 @@ export class Rational {
         return new Rational(this.numerator * minusOne, this.denominator);
     }
 
-    public add( y: Rational): Rational {
+    public add(y: Rational): Rational {
         if (this.isNegative) {
             return y.subtract(this.negate());
         }
@@ -223,143 +223,225 @@ export class Rational {
         );
     }
 
-    toNumber(): number {
-        return Number(this.toFixed(Infinity));
+    /**
+     * Convert the rational number to its exact decimal representation
+     * This will only terminate for rational numbers whose denominator only has
+     * prime factors of 2 and 5
+     * @returns The exact decimal representation as a string
+     */
+    private toExactDecimal(): string {
+        // Handle zero case
+        if (this.numerator === 0n) {
+            return "0";
+        }
+
+        // Handle case where denominator is 1
+        if (this.denominator === 1n) {
+            return (this.isNegative ? "-" : "") + this.numerator.toString();
+        }
+
+        // Decompose denominator to check if it only has factors of 2 and 5
+        let denom = this.denominator;
+        let factor2 = 0;
+        let factor5 = 0;
+
+        // Count factors of 2
+        while (denom % 2n === 0n) {
+            denom /= 2n;
+            factor2++;
+        }
+
+        // Count factors of 5
+        while (denom % 5n === 0n) {
+            denom /= 5n;
+            factor5++;
+        }
+
+        // If there are other prime factors, this rational doesn't have a finite representation
+        if (denom !== 1n) {
+            throw new Error(
+                "This rational number does not have a finite decimal representation"
+            );
+        }
+
+        // Find how many decimal places we need (max of factors of 2 and 5)
+        const decimalPlaces = Math.max(factor2, factor5);
+
+        // Calculate the exact decimal value
+        // Multiply by 10^decimalPlaces to get an integer, then divide back
+        const scaleFactor = 10n ** BigInt(decimalPlaces);
+
+        // Ensure we have enough precision by scaling up first
+        const scaledNum = this.numerator * scaleFactor;
+        const exactValue = scaledNum / this.denominator;
+
+        // Split into integer and fractional parts
+        const integerPart = exactValue / scaleFactor;
+        const fractionalPart = exactValue % scaleFactor;
+
+        // Handle case where fraction is 0
+        if (fractionalPart === 0n) {
+            return (this.isNegative ? "-" : "") + integerPart.toString();
+        }
+
+        // Convert to string, ensuring the fractional part has the correct number of digits
+        let fractionalStr = fractionalPart.toString().replace(/-/g, "");
+        fractionalStr = fractionalStr.padStart(decimalPlaces, "0");
+
+        // Trim trailing zeros (since we're showing the exact representation)
+        fractionalStr = fractionalStr.replace(/0+$/, "");
+
+        let prefix = this.isNegative ? "-" : "";
+
+        // Combine integer and fractional parts
+        return fractionalStr.length > 0
+            ? `${prefix}${integerPart}.${fractionalStr}`
+            : `${prefix}${integerPart}`;
     }
 
-    public toFixed(n: number): string {
-        if (n !== Infinity && !Number.isInteger(n)) {
+    public toFixed(decimalPlaces: number): string {
+        if (decimalPlaces !== Infinity && !Number.isInteger(decimalPlaces)) {
             throw new TypeError(
                 "Cannot enumerate a non-integer number of decimal places"
             );
         }
 
-        if (n < 0) {
+        if (decimalPlaces < 0) {
             throw new RangeError(
                 "Cannot enumerate a negative number of decimal places"
             );
         }
 
-        if (this.isNegative) {
-            return "-" + this.negate().toFixed(n);
+        // Handle special case for Infinity - we need to calculate the exact representation
+        if (decimalPlaces === Infinity) {
+            return this.toExactDecimal();
         }
 
-        if (this.numerator === zero) {
-            if (Infinity === n) {
-                return "0";
-            }
-
-            return "0" + "." + "0".repeat(n);
+        if (this.isZero()) {
+            return decimalPlaces === 0 ? "0" : `0.${"0".repeat(decimalPlaces)}`;
         }
 
-        let digitGenerator = nextDigitForDivision(
-            this.numerator,
-            this.denominator,
-            n
-        );
+        // Regular finite decimal places case
+        // Get a rounded version of the value
+        const rounded = this.round(decimalPlaces, "halfEven");
 
-        let digit = digitGenerator.next();
-        let result = "";
+        // Calculate the integer and fractional parts
+        const scaleFactor = 10n ** BigInt(decimalPlaces as number);
+        const integerPart = rounded.numerator / rounded.denominator;
+        const fractionalPart =
+            ((rounded.numerator * scaleFactor) / rounded.denominator) %
+            scaleFactor;
+        const prefix = rounded.isNegative ? "-" : "";
 
-        while (!digit.done) {
-            let v = digit.value;
-            if (-1 === v) {
-                result = ("" === result ? "0" : result) + ".";
-            } else {
-                result = result + `${v}`;
-            }
+        // Convert to string, ensuring the fractional part has the correct number of digits
+        let fractionalStr = fractionalPart.toString().replace(/-/g, "");
+        fractionalStr = fractionalStr.padStart(decimalPlaces as number, "0");
 
-            digit = digitGenerator.next();
-        }
-
-        if (Infinity === n) {
-            return result;
-        }
-
-        let numFractionalDigits = countFractionalDigits(result);
-
-        if (numFractionalDigits >= n) {
-            return result;
-        }
-
-        let numZeroesNeeded = n - numFractionalDigits;
-        let zeroesNeeded = "0".repeat(numZeroesNeeded);
-
-        if (result.match(/[.]/)) {
-            return result + zeroesNeeded;
-        }
-
-        return result + "." + zeroesNeeded;
+        // Combine integer and fractional parts
+        return decimalPlaces === 0
+            ? `${prefix}${integerPart.toString()}`
+            : `${prefix}${integerPart}.${fractionalStr}`;
     }
 
-    private static roundHalfEven(
-        initialPart: Rational,
-        penultimateDigit: Digit,
-        finalDigit: Digit,
-        quantum: Rational
-    ): Rational {
-        if (finalDigit < 5) {
-            return initialPart;
+    public mantissa(): Rational {
+        if (this.isZero()) {
+            throw new RangeError("Zero does not have a mantissa");
         }
 
-        if (finalDigit > 5) {
-            return initialPart.add(
-                initialPart.isNegative ? quantum.negate() : quantum
+        if (this.isNegative) {
+            return this.negate().mantissa().negate();
+        }
+
+        let x: Rational = this;
+        let ratOne = new Rational(1n, 1n);
+        let ratTen = new Rational(10n, 1n);
+
+        while (0 <= x.cmp(ratTen)) {
+            x = x.scale10(-1n);
+        }
+
+        while (x.cmp(ratOne) === -1) {
+            x = x.scale10(1n);
+        }
+
+        return x;
+    }
+
+    public exponent(): bigint {
+        if (this.isZero()) {
+            throw new RangeError("Zero does not have an exponent");
+        }
+
+        if (this.isNegative) {
+            return this.negate().exponent();
+        }
+
+        let e = 0n;
+        let x: Rational = this;
+        let ratOne = new Rational(1n, 1n);
+        let ratTen = new Rational(10n, 1n);
+
+        while (0 <= x.cmp(ratTen)) {
+            x = x.scale10(-1n);
+            e++;
+        }
+
+        while (x.cmp(ratOne) === -1) {
+            x = x.scale10(1n);
+            e--;
+        }
+
+        return e;
+    }
+
+    public toPrecision(precision: bigint): string {
+        if (precision < 1) {
+            throw new RangeError(
+                "Cannot enumerate a negative number of significant digits"
             );
         }
 
-        if (penultimateDigit % 2 === 0) {
-            return initialPart;
+        // Handle zero case
+        if (this.numerator === 0n) {
+            return precision === 1n
+                ? "0"
+                : `0.${"0".repeat(Number(precision - 1n))}`;
         }
 
-        return initialPart.add(
-            initialPart.isNegative ? quantum.negate() : quantum
-        );
-    }
+        // Calculate the exponent (position of the most significant digit)
+        let exponent = this.exponent();
 
-    private static roundHalfExpand(
-        initialPart: Rational,
-        penultimateDigit: Digit,
-        finalDigit: Digit,
-        quantum: Rational
-    ): Rational {
-        if (finalDigit < 5) {
-            return initialPart;
+        // Determine if we should use fixed-point or exponential notation
+        const useExponential = exponent < -6n || exponent >= precision;
+        let scale = Math.max(0, Number(precision - 1n - exponent));
+
+        if (useExponential) {
+            // Convert to mantissa and exponent format
+            let mantissa = this.mantissa();
+            let scaledMantissa = mantissa.scale10(precision - 1n);
+            let roundedScaledMantissa = scaledMantissa.round(0, "halfEven");
+            let recaledMantissa = roundedScaledMantissa.scale10(1n - precision);
+            let rescaledMantissaStr = recaledMantissa.toFixed(Infinity);
+
+            // Possible pad with trailing zeros, if required
+            let [intPart, fractionalPart] = rescaledMantissaStr
+                .replace(/^-/, "")
+                .split(".");
+
+            let numDigits =
+                intPart.length + (fractionalPart ? fractionalPart.length : 0);
+
+            if (precision > numDigits) {
+                let zerosToPad = Number(precision) - numDigits;
+                rescaledMantissaStr += "0".repeat(zerosToPad);
+            }
+
+            // Return in exponential notation
+            return `${rescaledMantissaStr}e${exponent >= 0 ? "+" : ""}${exponent}`;
+        } else {
+            // Use toFixed with the calculated number of decimal places
+            return this.toFixed(scale);
         }
-
-        return initialPart.add(
-            initialPart.isNegative ? quantum.negate() : quantum
-        );
-    }
-
-    private static roundCeil(
-        initialPart: Rational,
-        penultimateDigit: Digit,
-        finalDigit: Digit,
-        quantum: Rational
-    ): Rational {
-        if (initialPart.isNegative) {
-            return initialPart;
-        }
-
-        if (finalDigit === 0) {
-            return initialPart;
-        }
-
-        return initialPart.add(quantum);
-    }
-
-    private static roundFloor(
-        initialPart: Rational,
-        penultimateDigit: Digit,
-        finalDigit: Digit,
-        quantum: Rational
-    ): Rational {
-        if (initialPart.isNegative) {
-            return initialPart.subtract(quantum);
-        }
-
-        return initialPart;
     }
 
     round(numFractionalDigits: number, mode: RoundingMode): Rational {
@@ -370,7 +452,9 @@ export class Rational {
         }
 
         if (!Number.isInteger(numFractionalDigits)) {
-            throw new RangeError("Cannot round to non-integer number of decimal places");
+            throw new RangeError(
+                "Cannot round to non-integer number of decimal places"
+            );
         }
 
         let sign = this.isNegative ? -1 : 1;
@@ -420,20 +504,23 @@ export class Rational {
     }
 
     floor(): Rational {
-        if (this.isInteger()) {
-            return this;
+        // Integer division using BigInt
+        const quotient = this.numerator / this.denominator;
+        const remainder = this.numerator % this.denominator;
+
+        // For positive numbers, the floor is just the integer quotient
+        if (!this.isNegative) {
+            return new Rational(quotient, 1n);
         }
 
-        let s = this.toFixed(1);
-
-        let [integerPart, _] = s.split(".");
-
-        return Rational.fromString(integerPart);
+        // For negative numbers, we need to adjust if there's a remainder
+        // For a negative number -n/d, floor(-n/d) = -ceil(n/d) = -(⌊n/d⌋ + (remainder > 0 ? 1 : 0))
+        return new Rational(remainder > 0n ? -(quotient + 1n) : -quotient, 1n);
     }
 
     intLog10(): bigint {
         if (this.isNegative) {
-             throw new Error("Cannot compute logarithm of a negative number");
+            throw new Error("Cannot compute logarithm of a negative number");
         }
 
         if (this.isZero()) {
@@ -470,7 +557,9 @@ export class Rational {
 
     public ApplyRoundingModeToPositive(roundingMode: RoundingMode): Rational {
         if (this.isNegative) {
-            throw new RangeError("Cannot apply rounding mode to negative number");
+            throw new RangeError(
+                "Cannot apply rounding mode to negative number"
+            );
         }
 
         if (this.isZero()) {
@@ -486,7 +575,10 @@ export class Rational {
 
         let mHigh = mLow.add(new Rational(1n, 1n));
 
-        if (roundingMode === ROUNDING_MODE_FLOOR || roundingMode === ROUNDING_MODE_TRUNCATE) {
+        if (
+            roundingMode === ROUNDING_MODE_FLOOR ||
+            roundingMode === ROUNDING_MODE_TRUNCATE
+        ) {
             return mLow;
         }
 
@@ -522,5 +614,4 @@ export class Rational {
 
         return this.scale10(1n).coefficient();
     }
-
 }

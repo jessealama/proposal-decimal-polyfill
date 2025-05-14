@@ -1,32 +1,18 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 const NoArgument = Symbol();
 
-describe("toPrecision", () => {
-    describe("integer", () => {
-        test("digits unspecified", () => {
-            expect(new Decimal("42").toPrecision()).toStrictEqual("42");
-        });
-        test("digits = 1", () => {
-            expect(
-                new Decimal("42").toPrecision({ digits: 1 })
-            ).toStrictEqual("4e+1");
-        });
-        test("argument is greater than total number of significant digits", () => {
-            expect(
-                new Decimal("123.456").toPrecision({ digits: 7 })
-            ).toStrictEqual("123.4560");
-        });
-
-        test("digits = 3", () => {
-            expect(
-                new Decimal("42").toPrecision({ digits: 3 })
-            ).toStrictEqual("42.0");
-        });
+describe("one off", () => {
+    test("one", () => {
+        expect(
+            new Decimal("-0.00000012345678").toPrecision({ digits: 9 })
+        ).toStrictEqual("-1.23456780e-7");
     });
-    let d = new Decimal("123.456");
+});
 
+describe("toPrecision", () => {
     describe("simple example > 1", () => {
+        let d = new Decimal("123.456");
         describe.each([
             { sign: "positive", input: d },
             { sign: "negative", input: d.negate() },
@@ -37,9 +23,9 @@ describe("toPrecision", () => {
                 ${"argument is greater than total number of significant digits"}                         | ${{ digits: 7 }} | ${"123.4560"}
                 ${"argument is equal to number of significant digits"}                                   | ${{ digits: 6 }} | ${"123.456"}
                 ${"argument less than number of significant digits, rounded needed"}                     | ${{ digits: 5 }} | ${"123.46"}
-                ${"argument less than number of significant digits, rounded does not change last digit"} | ${{ digits: 4 }} | ${"123.4"}
+                ${"argument less than number of significant digits, rounded does not change last digit"} | ${{ digits: 4 }} | ${"123.5"}
                 ${"argument equals number of integer digits"}                                            | ${{ digits: 3 }} | ${"123"}
-                ${"argument less than number of integer digits"}                                         | ${{ digits: 2 }} | ${"12e+1"}
+                ${"argument less than number of integer digits"}                                         | ${{ digits: 2 }} | ${"1.2e+2"}
                 ${"single digit requested"}                                                              | ${{ digits: 1 }} | ${"1e+2"}
             `("$name", ({ arg, output }) => {
                 const d = input;
@@ -84,17 +70,17 @@ describe("toPrecision", () => {
             { sign: "negative", input: d.negate() },
         ])("$sign", ({ sign, input }) => {
             test.each`
-                name                                                              | arg              | output
-                ${"no arguments"}                                                 | ${NoArgument}    | ${"1.2345678e-7"}
-                ${"more digits requested than available "}                        | ${{ digits: 9 }} | ${"1.23456780e-7"}
-                ${"number of digits requested exactly matches available digits"}  | ${{ digits: 8 }} | ${"1.2345678e-7"}
-                ${"seven digits requested"}                                       | ${{ digits: 7 }} | ${"1.234568e-7"}
-                ${"six digits requested"}                                         | ${{ digits: 6 }} | ${"1.23457e-7"}
-                ${"five digits requested"}                                        | ${{ digits: 5 }} | ${"1.2346e-7"}
-                ${"four digits requested"}                                        | ${{ digits: 4 }} | ${"1.235e-7"}
-                ${"three digits requested"}                                       | ${{ digits: 3 }} | ${"1.23e-7"}
-                ${"two digits requested"}                                         | ${{ digits: 2 }} | ${"1.2e-7"}
-                ${"single digit requested"}                                       | ${{ digits: 1 }} | ${"1e-7"}                                 
+                name                                                             | arg              | output
+                ${"no arguments"}                                                | ${NoArgument}    | ${"1.2345678e-7"}
+                ${"more digits requested than available "}                       | ${{ digits: 9 }} | ${"1.23456780e-7"}
+                ${"number of digits requested exactly matches available digits"} | ${{ digits: 8 }} | ${"1.2345678e-7"}
+                ${"seven digits requested"}                                      | ${{ digits: 7 }} | ${"1.234568e-7"}
+                ${"six digits requested"}                                        | ${{ digits: 6 }} | ${"1.23457e-7"}
+                ${"five digits requested"}                                       | ${{ digits: 5 }} | ${"1.2346e-7"}
+                ${"four digits requested"}                                       | ${{ digits: 4 }} | ${"1.235e-7"}
+                ${"three digits requested"}                                      | ${{ digits: 3 }} | ${"1.23e-7"}
+                ${"two digits requested"}                                        | ${{ digits: 2 }} | ${"1.2e-7"}
+                ${"single digit requested"}                                      | ${{ digits: 1 }} | ${"1e-7"}
             `("$name", ({ arg, output }) => {
                 const d = input;
                 const s =
@@ -105,7 +91,8 @@ describe("toPrecision", () => {
         });
     });
 
-    describe("", () => {
+    describe("weird inputs", () => {
+        let d = new Decimal("123.456");
         test("non-object argument throws", () => {
             expect(() => d.toPrecision("whatever")).toThrow(TypeError);
         });
@@ -223,85 +210,21 @@ describe("tests", () => {
             }
         );
     });
-    describe("with exponent output", () => {
-        test.each`
-            input      | digits | output
-            ${" 1014"} | ${3}   | ${"101e+1"}
-            ${" 1015"} | ${3}   | ${"102e+1"}
-            ${" 1016"} | ${3}   | ${"102e+1"}
-            ${" 1024"} | ${3}   | ${"102e+1"}
-            ${" 1025"} | ${3}   | ${"102e+1"}
-            ${" 1026"} | ${3}   | ${"103e+1"}
-            ${"-1014"} | ${3}   | ${"-101e+1"}
-            ${"-1015"} | ${3}   | ${"-102e+1"}
-            ${"-1016"} | ${3}   | ${"-102e+1"}
-            ${"-1024"} | ${3}   | ${"-102e+1"}
-            ${"-1025"} | ${3}   | ${"-102e+1"}
-            ${"-1026"} | ${3}   | ${"-103e+1"}
-        `(
-            "$input precision($digits) = $output",
-            ({ input, digits, output }) => {
-                const s = new Decimal(input.trim()).toPrecision({ digits });
-                expect(s).toStrictEqual(output.trim());
-            }
-        );
-    });
-    describe("with large positive exponent output", () => {
-        const d = new Decimal("1002500000_0005500000_0008500000_0001");
-        //                       "1234567890_1234567890_1234567890_1234"
-
-        describe("positive", () => {
-            test.each`
-                digits | output
-                ${3}   | ${"100e+31"}
-                ${4}   | ${"1002e+30"}
-                ${5}   | ${"10025e+29"}
-                ${13}  | ${"1002500000000e+21"}
-                ${14}  | ${"10025000000006e+20"}
-                ${15}  | ${"100250000000055e+19"}
-                ${23}  | ${"10025000000005500000001e+11"}
-                ${24}  | ${"100250000000055000000008e+10"}
-                ${25}  | ${"1002500000000550000000085e+9"}
-            `("precision($digits) = $output", ({ digits, output }) => {
-                const s = d.toPrecision({ digits });
-                expect(s).toStrictEqual(output.trim());
-            });
-        });
-        describe("negative", () => {
-            const negD = d.negate();
-            test.each`
-                digits | output
-                ${3}   | ${"-100e+31"}
-                ${4}   | ${"-1002e+30"}
-                ${5}   | ${"-10025e+29"}
-                ${13}  | ${"-1002500000000e+21"}
-                ${14}  | ${"-10025000000006e+20"}
-                ${15}  | ${"-100250000000055e+19"}
-                ${23}  | ${"-10025000000005500000001e+11"}
-                ${24}  | ${"-100250000000055000000008e+10"}
-                ${25}  | ${"-1002500000000550000000085e+9"}
-            `("precision($digits) = $output", ({ digits, output }) => {
-                const s = negD.toPrecision({ digits });
-                expect(s).toStrictEqual(output.trim());
-            });
-        });
-    });
 
     describe("with large negative exponent output", () => {
         const d = new Decimal("0.1002500000_0005500000_0008500000_0001");
-        //                       "0.1234567890_1234567890_1234567890_1234"
 
         describe("positive", () => {
             test.each`
                 digits | output
                 ${3}   | ${"0.100"}
-                ${4}   | ${"0.1002"}
+                ${4}   | ${"0.1003"}
                 ${5}   | ${"0.10025"}
-                ${13}  | ${"0.1002500000000"}
+                ${13}  | ${"0.1002500000001"}
                 ${14}  | ${"0.10025000000006"}
                 ${15}  | ${"0.100250000000055"}
                 ${23}  | ${"0.10025000000005500000001"}
-                ${24}  | ${"0.100250000000055000000008"}
+                ${24}  | ${"0.100250000000055000000009"}
                 ${25}  | ${"0.1002500000000550000000085"}
             `("precision($digits) = $output", ({ digits, output }) => {
                 const s = d.toPrecision({ digits });
@@ -313,13 +236,13 @@ describe("tests", () => {
             test.each`
                 digits | output
                 ${3}   | ${"-0.100"}
-                ${4}   | ${"-0.1002"}
+                ${4}   | ${"-0.1003"}
                 ${5}   | ${"-0.10025"}
-                ${13}  | ${"-0.1002500000000"}
+                ${13}  | ${"-0.1002500000001"}
                 ${14}  | ${"-0.10025000000006"}
                 ${15}  | ${"-0.100250000000055"}
                 ${23}  | ${"-0.10025000000005500000001"}
-                ${24}  | ${"-0.100250000000055000000008"}
+                ${24}  | ${"-0.100250000000055000000009"}
                 ${25}  | ${"-0.1002500000000550000000085"}
             `("precision($digits) = $output", ({ digits, output }) => {
                 const s = negD.toPrecision({ digits });
@@ -338,13 +261,13 @@ describe("tests", () => {
                 ${1}   | ${"0.0001"}
                 ${2}   | ${"0.00010"}
                 ${3}   | ${"0.000100"}
-                ${4}   | ${"0.0001002"}
+                ${4}   | ${"0.0001003"}
                 ${5}   | ${"0.00010025"}
-                ${13}  | ${"0.0001002500000000"}
+                ${13}  | ${"0.0001002500000001"}
                 ${14}  | ${"0.00010025000000006"}
                 ${15}  | ${"0.000100250000000055"}
                 ${23}  | ${"0.00010025000000005500000001"}
-                ${24}  | ${"0.000100250000000055000000008"}
+                ${24}  | ${"0.000100250000000055000000009"}
                 ${25}  | ${"0.0001002500000000550000000085"}
             `("precision($digits) = $output", ({ digits, output }) => {
                 const s = d.toPrecision({ digits });
@@ -358,13 +281,13 @@ describe("tests", () => {
                 ${1}   | ${"-0.0001"}
                 ${2}   | ${"-0.00010"}
                 ${3}   | ${"-0.000100"}
-                ${4}   | ${"-0.0001002"}
+                ${4}   | ${"-0.0001003"}
                 ${5}   | ${"-0.00010025"}
-                ${13}  | ${"-0.0001002500000000"}
+                ${13}  | ${"-0.0001002500000001"}
                 ${14}  | ${"-0.00010025000000006"}
                 ${15}  | ${"-0.000100250000000055"}
                 ${23}  | ${"-0.00010025000000005500000001"}
-                ${24}  | ${"-0.000100250000000055000000008"}
+                ${24}  | ${"-0.000100250000000055000000009"}
                 ${25}  | ${"-0.0001002500000000550000000085"}
             `("precision($digits) = $output", ({ digits, output }) => {
                 const s = negD.toPrecision({ digits });

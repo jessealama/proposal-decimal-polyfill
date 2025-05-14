@@ -1,4 +1,4 @@
-import { Decimal } from "../../src/Decimal128.mjs";
+import { Decimal } from "../../src/Decimal.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const bigDigits = "9".repeat(MAX_SIGNIFICANT_DIGITS);
@@ -22,7 +22,7 @@ describe("abs", () => {
     });
     test("limit of digits", () => {
         expect(new Decimal("-" + bigDigits).abs().toString()).toStrictEqual(
-            bigDigits
+            "9.999999999999999999999999999999999e+33"
         );
     });
 });
@@ -38,8 +38,6 @@ describe("examples from the General Decimal Arithmetic specification", () => {
         expect(new Decimal("101.5").abs().toString()).toStrictEqual("101.5");
     });
     test("-101.5", () => {
-        expect(new Decimal("-101.5").abs().toString()).toStrictEqual(
-            "101.5"
-        );
+        expect(new Decimal("-101.5").abs().toString()).toStrictEqual("101.5");
     });
 });
