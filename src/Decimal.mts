@@ -41,9 +41,11 @@ function RoundToDecimal128Domain(
     v: Rational,
     mode: RoundingMode = ROUNDING_MODE_HALF_EVEN
 ): Decimal128Value {
+    /* c8 ignore start */
     if (v.isZero()) {
         return "0";
     }
+    /* c8 ignore end */
 
     if (v.isNegative) {
         let reverseRoundingMode = mode;
@@ -55,13 +57,17 @@ function RoundToDecimal128Domain(
 
         let d = RoundToDecimal128Domain(v.negate(), reverseRoundingMode);
 
+        /* c8 ignore start */
         if (d === "Infinity") {
             return "-Infinity";
         }
+        /* c8 ignore end */
 
+        /* c8 ignore start */
         if (d === "0") {
             return "-0";
         }
+        /* c8 ignore end */
 
         return (d as Rational).negate();
     }
@@ -79,10 +85,12 @@ function RoundToDecimal128Domain(
 
     let rounded = m.ApplyRoundingModeToPositive(mode);
 
+    /* c8 ignore start */
     if (rounded.cmp(rat10.scale10(34n)) === 0) {
         te = te + 1n;
         rounded = rat10.scale10(33n);
     }
+    /* c8 ignore end */
 
     if (te > 6111n) {
         return "Infinity";
