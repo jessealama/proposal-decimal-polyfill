@@ -9,6 +9,4 @@ src/*.d.mts
 /examples/*.d.mts
 /examples/*.js
 /examples/*.map
-/src/Decimal.mjs.map
-/src/Rational.mjs.map
-/src/common.mjs.map
+/src/*.mjs.map
