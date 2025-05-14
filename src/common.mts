@@ -1,5 +1,3 @@
-export type Digit = -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9; // -1 signals that we're moving from the integer part to the decimal part of a decimal number
-
 export const ROUNDING_MODE_CEILING = "ceil";
 export const ROUNDING_MODE_FLOOR = "floor";
 export const ROUNDING_MODE_TRUNCATE = "trunc";
