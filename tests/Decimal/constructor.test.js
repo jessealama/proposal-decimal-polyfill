@@ -43,6 +43,9 @@ describe("constructor", () => {
                 })
             ).toStrictEqual("123456789123456789123456789123456800");
         });
+        test("right at limit of significant digits", () => {
+            expect(new Decimal("10e+34")).toBeInstanceOf(Decimal);
+        });
         test("five as last digit past limit: tie to even unchanged", () => {
             expect(
                 new Decimal("1234567890123456789012345678901234.5").toFixed({

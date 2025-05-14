@@ -1,9 +1,6 @@
 import {
-    countFractionalDigits,
-    Digit,
     ROUNDING_MODE_CEILING,
     ROUNDING_MODE_FLOOR,
-    ROUNDING_MODE_HALF_EVEN,
     ROUNDING_MODE_HALF_EXPAND,
     ROUNDING_MODE_TRUNCATE,
     RoundingMode,
@@ -21,51 +18,6 @@ function gcd(a: bigint, b: bigint): bigint {
         a = t;
     }
     return a;
-}
-
-function* nextDigitForDivision(
-    x: bigint,
-    y: bigint,
-    n: number
-): Generator<Digit> {
-    let result = "";
-    let emittedDecimalPoint = false;
-    let done = false;
-
-    while (!done && countFractionalDigits(result) < n) {
-        if (x === zero) {
-            done = true;
-        } else if (x < y) {
-            if (emittedDecimalPoint) {
-                x = x * ten;
-                if (x < y) {
-                    // look ahead: are we still a power of 10 behind?
-                    result = result + "0";
-                    yield 0;
-                }
-            } else {
-                emittedDecimalPoint = true;
-                result = (result === "" ? "0" : result) + ".";
-                x = x * ten;
-                yield -1;
-                if (x < y) {
-                    // look ahead: are we still a power of 10 behind?
-                    result = result + "0";
-                    yield 0;
-                }
-            }
-        } else {
-            let q = x / y;
-            x = x % y;
-            let qString = q.toString();
-            result = result + qString;
-            for (let i = 0; i < qString.length; i++) {
-                yield parseInt(qString.charAt(i)) as Digit;
-            }
-        }
-    }
-
-    return 0;
 }
 
 export class Rational {
@@ -163,14 +115,6 @@ export class Rational {
         );
     }
 
-    public abs(): Rational {
-        if (this.isNegative) {
-            return this.negate();
-        }
-
-        return new Rational(this.numerator, this.denominator);
-    }
-
     public negate(): Rational {
         if (this.isNegative) {
             return new Rational(this.numerator, this.denominator);
@@ -213,10 +157,6 @@ export class Rational {
     }
 
     public divide(y: Rational): Rational {
-        if (y.isZero()) {
-            throw new RangeError("Cannot divide by zero");
-        }
-
         return new Rational(
             this.numerator * y.denominator,
             this.denominator * y.numerator
@@ -230,12 +170,6 @@ export class Rational {
      * @returns The exact decimal representation as a string
      */
     private toExactDecimal(): string {
-        // Handle zero case
-        if (this.numerator === 0n) {
-            return "0";
-        }
-
-        // Handle case where denominator is 1
         if (this.denominator === 1n) {
             return (this.isNegative ? "-" : "") + this.numerator.toString();
         }
@@ -257,13 +191,6 @@ export class Rational {
             factor5++;
         }
 
-        // If there are other prime factors, this rational doesn't have a finite representation
-        if (denom !== 1n) {
-            throw new Error(
-                "This rational number does not have a finite decimal representation"
-            );
-        }
-
         // Find how many decimal places we need (max of factors of 2 and 5)
         const decimalPlaces = Math.max(factor2, factor5);
 
@@ -278,11 +205,6 @@ export class Rational {
         // Split into integer and fractional parts
         const integerPart = exactValue / scaleFactor;
         const fractionalPart = exactValue % scaleFactor;
-
-        // Handle case where fraction is 0
-        if (fractionalPart === 0n) {
-            return (this.isNegative ? "-" : "") + integerPart.toString();
-        }
 
         // Convert to string, ensuring the fractional part has the correct number of digits
         let fractionalStr = fractionalPart.toString().replace(/-/g, "");
@@ -344,10 +266,6 @@ export class Rational {
     }
 
     public mantissa(): Rational {
-        if (this.isZero()) {
-            throw new RangeError("Zero does not have a mantissa");
-        }
-
         if (this.isNegative) {
             return this.negate().mantissa().negate();
         }
@@ -368,10 +286,6 @@ export class Rational {
     }
 
     public exponent(): bigint {
-        if (this.isZero()) {
-            throw new RangeError("Zero does not have an exponent");
-        }
-
         if (this.isNegative) {
             return this.negate().exponent();
         }
@@ -395,20 +309,6 @@ export class Rational {
     }
 
     public toPrecision(precision: bigint): string {
-        if (precision < 1) {
-            throw new RangeError(
-                "Cannot enumerate a negative number of significant digits"
-            );
-        }
-
-        // Handle zero case
-        if (this.numerator === 0n) {
-            return precision === 1n
-                ? "0"
-                : `0.${"0".repeat(Number(precision - 1n))}`;
-        }
-
-        // Calculate the exponent (position of the most significant digit)
         let exponent = this.exponent();
 
         // Determine if we should use fixed-point or exponential notation
@@ -448,12 +348,6 @@ export class Rational {
         if (numFractionalDigits < 0) {
             throw new RangeError(
                 "Cannot round to negative number of decimal places"
-            );
-        }
-
-        if (!Number.isInteger(numFractionalDigits)) {
-            throw new RangeError(
-                "Cannot round to non-integer number of decimal places"
             );
         }
 
@@ -504,29 +398,10 @@ export class Rational {
     }
 
     floor(): Rational {
-        // Integer division using BigInt
-        const quotient = this.numerator / this.denominator;
-        const remainder = this.numerator % this.denominator;
-
-        // For positive numbers, the floor is just the integer quotient
-        if (!this.isNegative) {
-            return new Rational(quotient, 1n);
-        }
-
-        // For negative numbers, we need to adjust if there's a remainder
-        // For a negative number -n/d, floor(-n/d) = -ceil(n/d) = -(⌊n/d⌋ + (remainder > 0 ? 1 : 0))
-        return new Rational(remainder > 0n ? -(quotient + 1n) : -quotient, 1n);
+        return new Rational(this.numerator / this.denominator, 1n);
     }
 
     intLog10(): bigint {
-        if (this.isNegative) {
-            throw new Error("Cannot compute logarithm of a negative number");
-        }
-
-        if (this.isZero()) {
-            throw new Error("Cannot compute logarithm of zero");
-        }
-
         let ratOne = new Rational(1n, 1n);
         let ratTen = new Rational(10n, 1n);
 
@@ -556,16 +431,6 @@ export class Rational {
     }
 
     public ApplyRoundingModeToPositive(roundingMode: RoundingMode): Rational {
-        if (this.isNegative) {
-            throw new RangeError(
-                "Cannot apply rounding mode to negative number"
-            );
-        }
-
-        if (this.isZero()) {
-            throw new RangeError("Cannot apply rounding mode to zero");
-        }
-
         let mLow = this.floor();
         let fraction = this.subtract(mLow);
 

@@ -6,7 +6,7 @@ const zero = new Decimal("0");
 const negZero = new Decimal("-0");
 const one = new Decimal("1");
 
-describe("lessThan", () => {
+describe("greaterThanOrEqual", () => {
     let d1 = new Decimal("987.123");
     let d2 = new Decimal("123.456789");
     test("simple example", () => {

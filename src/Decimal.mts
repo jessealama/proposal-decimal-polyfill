@@ -153,21 +153,17 @@ export class Decimal {
 
     constructor(n: string | number | bigint) {
         let data;
-        if ("object" === typeof n) {
-            data = n;
+        let s: string;
+
+        if ("number" === typeof n) {
+            s = Object.is(n, -0) ? "-0" : n.toString();
+        } else if ("bigint" === typeof n) {
+            s = n.toString();
         } else {
-            let s: string;
-
-            if ("number" === typeof n) {
-                s = Object.is(n, -0) ? "-0" : n.toString();
-            } else if ("bigint" === typeof n) {
-                s = n.toString();
-            } else {
-                s = n;
-            }
-
-            data = handleDecimalNotation(s);
+            s = n;
         }
+
+        data = handleDecimalNotation(s);
 
         if (data === "NaN") {
             this._isNaN = true;
@@ -214,14 +210,6 @@ export class Decimal {
     }
 
     public exponent(): number {
-        if (this.isNaN()) {
-            return NaN;
-        }
-
-        if (!this.isFinite()) {
-            return Infinity;
-        }
-
         if (this.isZero()) {
             return -Infinity;
         }
@@ -306,12 +294,7 @@ export class Decimal {
     }
 
     private emitDecimal(): string {
-        let v = this.d as FiniteValue;
-
-        if (v === "0" || v === "-0") {
-            return v;
-        }
-
+        let v = this.d as Rational;
         return v.toFixed(Infinity);
     }
 
@@ -493,14 +476,6 @@ export class Decimal {
     }
 
     private isInteger(): boolean {
-        if (this.isNaN()) {
-            return false;
-        }
-
-        if (!this.isFinite()) {
-            return false;
-        }
-
         let d = this.d as FiniteValue;
 
         if (d === "0" || d === "-0") {
@@ -723,7 +698,9 @@ export class Decimal {
             return new Decimal("0");
         }
 
-        return new Decimal(sum.toFixed(Infinity));
+        let rounded = RoundToDecimal128Domain(sum) as Rational;
+
+        return new Decimal(rounded.toFixed(Infinity));
     }
 
     /**
@@ -772,7 +749,9 @@ export class Decimal {
             return new Decimal("0");
         }
 
-        return new Decimal(difference.toFixed(Infinity));
+        let rounded = RoundToDecimal128Domain(difference) as Rational;
+
+        return new Decimal(rounded.toFixed(Infinity));
     }
 
     /**
@@ -831,8 +810,9 @@ export class Decimal {
         }
 
         let product = ourCohort.multiply(theirCohort);
+        let rounded = RoundToDecimal128Domain(product) as Rational;
 
-        return new Decimal(product.toFixed(Infinity));
+        return new Decimal(rounded.toFixed(Infinity));
     }
 
     private clone(): Decimal {
@@ -1153,17 +1133,5 @@ Decimal.prototype.toAmount = function (
 };
 
 Decimal.prototype.valueOf = function () {
-    throw TypeError("Decimal128.prototype.valueOf throws unconditionally");
+    throw TypeError("Decimal.prototype.valueOf throws unconditionally");
 };
-
-function findLargestQ(d: Rational) {
-    let q = 0n;
-    while (!d.scale10(q).isInteger()) {
-        q++;
-    }
-
-    return {
-        n: d.scale10(q),
-        q: q,
-    };
-}
