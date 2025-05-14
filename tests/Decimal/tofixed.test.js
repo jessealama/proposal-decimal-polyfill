@@ -65,6 +65,9 @@ describe("to decimal places", function () {
     test("zero decimal places for integer", () => {
         expectDecimal128(new Decimal("42").toFixed({ digits: 0 }), "42");
     });
+    test("impute precision to an integer", () => {
+        expectDecimal128(new Decimal("42").toFixed({ digits: 1 }), "42.0");
+    });
     test("negative number of decimal places throws", () => {
         expect(() => decimalD.toFixed({ digits: -1 })).toThrow(RangeError);
     });

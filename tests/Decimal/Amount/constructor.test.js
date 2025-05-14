@@ -18,5 +18,12 @@ describe("amount", () => {
                 expect(a.trailingZeroes).toStrictEqual(2);
             });
         });
+        describe("rounding", () => {
+            test("might occur", () => {
+                expect(new Decimal.Amount("7.5", 0).toString()).toStrictEqual(
+                    "8"
+                );
+            });
+        });
     });
 });

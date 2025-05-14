@@ -2,7 +2,7 @@ import { Decimal } from "../../../src/Decimal.mjs";
 
 describe("amount", () => {
     describe("withfractionaldigits", () => {
-        let amount = new Decimal.Amount("42.75");
+        let amount = new Decimal.Amount("42.75", 2);
         test("rounded needed", () => {
             expect(amount.withFractionalDigits(1).toString()).toStrictEqual(
                 "42.8"
