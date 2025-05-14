@@ -1041,7 +1041,7 @@ export class Decimal {
 
     exponent(): number {
         if (this.isNaN()) {
-            throw new RangeError("Cannot determine whether NaN is subnormal");
+            throw new RangeError("Cannot determine exponent for NaN");
         }
 
         if (!this.isFinite()) {
