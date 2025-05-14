@@ -1026,6 +1026,10 @@ export class Decimal {
         return exp < NORMAL_EXPONENT_MIN;
     }
 
+    /**
+     * Returns the exponent of this Decimal128 value, regardless of whether it is normal or subnormal.
+     * @private
+     */
     private unrestrictedExponent(): number {
         if (this.isZero()) {
             return -Infinity;
