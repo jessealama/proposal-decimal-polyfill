@@ -2,7 +2,7 @@ import { Decimal } from "../../../src/Decimal.mjs";
 
 describe("amount", () => {
     describe("withsignificantdigits", () => {
-        let amount = new Decimal.Amount("42.75");
+        let amount = new Decimal.Amount("42.75", 2);
         test("rounded needed", () => {
             expect(amount.withSignificantDigits(3).toString()).toStrictEqual(
                 "42.8"
