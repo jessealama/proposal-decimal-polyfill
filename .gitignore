@@ -9,3 +9,4 @@ src/*.d.mts
 /examples/*.d.mts
 /examples/*.js
 /examples/*.map
+/src/*.mjs.map

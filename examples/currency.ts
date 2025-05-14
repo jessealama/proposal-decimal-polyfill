@@ -1,8 +1,8 @@
-import { Decimal128 } from "../src/Decimal128.mjs";
+import { Decimal } from "../src/Decimal.mjs";
 
-let exchangeRateEurToUsd = new Decimal128("1.09");
-let amountInUsd = new Decimal128("450.27");
-let exchangeRateUsdToEur = new Decimal128(1).divide(exchangeRateEurToUsd);
+let exchangeRateEurToUsd = new Decimal("1.09");
+let amountInUsd = new Decimal("450.27");
+let exchangeRateUsdToEur = new Decimal(1).divide(exchangeRateEurToUsd);
 
 let amountInEur = exchangeRateUsdToEur.multiply(amountInUsd);
 console.log(amountInEur.round(2).toString());

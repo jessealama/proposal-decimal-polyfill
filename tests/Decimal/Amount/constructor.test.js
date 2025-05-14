@@ -1,0 +1,22 @@
+import { Decimal } from "../../../src/Decimal.mjs";
+
+describe("amount", () => {
+    describe("constructor", () => {
+        describe("can throw", () => {
+            test("non-string given as first argument", () => {
+                expect(() => new Decimal.Amount(42)).toThrow(Error);
+            });
+            test("non-decimal string given as first argument", () => {
+                expect(() => new Decimal.Amount("foobar")).toThrow(Error);
+            });
+        });
+        describe("works", () => {
+            test("simple case", () => {
+                let a = new Decimal.Amount("6.200", 3);
+                expect(a.significantDigits).toStrictEqual(4);
+                expect(a.fractionalDigits).toStrictEqual(3);
+                expect(a.trailingZeroes).toStrictEqual(2);
+            });
+        });
+    });
+});
