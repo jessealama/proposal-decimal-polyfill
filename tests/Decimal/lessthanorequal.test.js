@@ -50,75 +50,75 @@ describe("lessThanOrEqual", () => {
             new Decimal("0.037").lessThanOrEqual(new Decimal("0.037037037037"))
         ).toStrictEqual(true);
     });
-});
 
-describe("many digits", () => {
-    test("non-integers get rounded", () => {
-        expect(
-            new Decimal(
-                "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS + 50)
-            ).lessThanOrEqual(
-                new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
-            )
-        ).toStrictEqual(true);
-    });
-    test("non-equality within limits", () => {
-        expect(
-            new Decimal(
-                "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS - 1)
-            ).lessThanOrEqual(
-                new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
-            )
-        ).toStrictEqual(true);
-    });
-    describe("NaN", () => {
-        test("NaN lessThan NaN is false", () => {
-            expect(nan.lessThanOrEqual(nan)).toStrictEqual(false);
+    describe("many digits", () => {
+        test("non-integers get rounded", () => {
+            expect(
+                new Decimal(
+                    "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS + 50)
+                ).lessThanOrEqual(
+                    new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
+                )
+            ).toStrictEqual(true);
         });
-        test("number equals NaN is false", () => {
-            expect(one.lessThanOrEqual(nan)).toStrictEqual(false);
+        test("non-equality within limits", () => {
+            expect(
+                new Decimal(
+                    "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS - 1)
+                ).lessThanOrEqual(
+                    new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
+                )
+            ).toStrictEqual(true);
         });
-        test("NaN equals number is false", () => {
-            expect(nan.lessThanOrEqual(one)).toStrictEqual(false);
+        describe("NaN", () => {
+            test("NaN lessThan NaN is false", () => {
+                expect(nan.lessThanOrEqual(nan)).toStrictEqual(false);
+            });
+            test("number equals NaN is false", () => {
+                expect(one.lessThanOrEqual(nan)).toStrictEqual(false);
+            });
+            test("NaN equals number is false", () => {
+                expect(nan.lessThanOrEqual(one)).toStrictEqual(false);
+            });
         });
-    });
-    describe("minus zero", () => {
-        test("left hand", () => {
-            expect(negZero.lessThanOrEqual(zero)).toStrictEqual(true);
+        describe("minus zero", () => {
+            test("left hand", () => {
+                expect(negZero.lessThanOrEqual(zero)).toStrictEqual(true);
+            });
+            test("right hand", () => {
+                expect(zero.lessThanOrEqual(negZero)).toStrictEqual(true);
+            });
+            test("both arguments", () => {
+                expect(negZero.lessThanOrEqual(negZero)).toStrictEqual(true);
+            });
         });
-        test("right hand", () => {
-            expect(zero.lessThanOrEqual(negZero)).toStrictEqual(true);
-        });
-        test("both arguments", () => {
-            expect(negZero.lessThanOrEqual(negZero)).toStrictEqual(true);
-        });
-    });
-    describe("infinity", () => {
-        let posInf = new Decimal("Infinity");
-        let negInf = new Decimal("-Infinity");
-        test("positive infinity vs number", () => {
-            expect(posInf.lessThanOrEqual(one)).toStrictEqual(false);
-        });
-        test("negative infinity vs number", () => {
-            expect(negInf.lessThanOrEqual(one)).toStrictEqual(true);
-        });
-        test("negative infintity vs positive infinity", () => {
-            expect(negInf.lessThanOrEqual(posInf)).toStrictEqual(true);
-        });
-        test("positive infinity vs negative infinity", () => {
-            expect(posInf.lessThanOrEqual(negInf)).toStrictEqual(false);
-        });
-        test("positive infinity both arguments", () => {
-            expect(posInf.lessThanOrEqual(posInf)).toStrictEqual(true);
-        });
-        test("negative infinity both arguments", () => {
-            expect(negInf.lessThanOrEqual(negInf)).toStrictEqual(true);
-        });
-        test("compare number to positive infinity", () => {
-            expect(one.lessThanOrEqual(posInf)).toStrictEqual(true);
-        });
-        test("compare number to negative infinity", () => {
-            expect(one.lessThanOrEqual(negInf)).toStrictEqual(false);
+        describe("infinity", () => {
+            let posInf = new Decimal("Infinity");
+            let negInf = new Decimal("-Infinity");
+            test("positive infinity vs number", () => {
+                expect(posInf.lessThanOrEqual(one)).toStrictEqual(false);
+            });
+            test("negative infinity vs number", () => {
+                expect(negInf.lessThanOrEqual(one)).toStrictEqual(true);
+            });
+            test("negative infintity vs positive infinity", () => {
+                expect(negInf.lessThanOrEqual(posInf)).toStrictEqual(true);
+            });
+            test("positive infinity vs negative infinity", () => {
+                expect(posInf.lessThanOrEqual(negInf)).toStrictEqual(false);
+            });
+            test("positive infinity both arguments", () => {
+                expect(posInf.lessThanOrEqual(posInf)).toStrictEqual(true);
+            });
+            test("negative infinity both arguments", () => {
+                expect(negInf.lessThanOrEqual(negInf)).toStrictEqual(true);
+            });
+            test("compare number to positive infinity", () => {
+                expect(one.lessThanOrEqual(posInf)).toStrictEqual(true);
+            });
+            test("compare number to negative infinity", () => {
+                expect(one.lessThanOrEqual(negInf)).toStrictEqual(false);
+            });
         });
     });
 });

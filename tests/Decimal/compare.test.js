@@ -163,54 +163,54 @@ describe("zero", () => {
     test("compare negative to negative zero", () => {
         expect(one.negate().compare(zero)).toStrictEqual(-1);
     });
-});
 
-describe("normalization", () => {
-    let d1 = new Decimal("1.2");
-    let d2 = new Decimal("1.20");
-    let d3 = new Decimal("1.200");
-    test("compare normalized to normalized", () => {
-        expect(d1.compare(d2)).toStrictEqual(0);
+    describe("normalization", () => {
+        let d1 = new Decimal("1.2");
+        let d2 = new Decimal("1.20");
+        let d3 = new Decimal("1.200");
+        test("compare normalized to normalized", () => {
+            expect(d1.compare(d2)).toStrictEqual(0);
+        });
+        test("compare normalized to normalized", () => {
+            expect(d2.compare(d3)).toStrictEqual(0);
+        });
+        test("compare normalized to normalized", () => {
+            expect(d1.compare(d3)).toStrictEqual(0);
+        });
     });
-    test("compare normalized to normalized", () => {
-        expect(d2.compare(d3)).toStrictEqual(0);
-    });
-    test("compare normalized to normalized", () => {
-        expect(d1.compare(d3)).toStrictEqual(0);
-    });
-});
 
-describe("examples from the General Decimal Arithmetic specification", () => {
-    describe("compare", () => {
-        test("example one", () => {
-            expect(new Decimal("2.1").compare(new Decimal("3"))).toStrictEqual(
-                -1
-            );
-        });
-        test("example two", () => {
-            expect(
-                new Decimal("2.1").compare(new Decimal("2.1"))
-            ).toStrictEqual(0);
-        });
-        test("example three", () => {
-            expect(
-                new Decimal("2.1").compare(new Decimal("2.10"))
-            ).toStrictEqual(0);
-        });
-        test("example four", () => {
-            expect(new Decimal("3").compare(new Decimal("2.1"))).toStrictEqual(
-                1
-            );
-        });
-        test("example five", () => {
-            expect(new Decimal("2.1").compare(new Decimal("-3"))).toStrictEqual(
-                1
-            );
-        });
-        test("example six", () => {
-            expect(new Decimal("-3").compare(new Decimal("2.1"))).toStrictEqual(
-                -1
-            );
+    describe("examples from the General Decimal Arithmetic specification", () => {
+        describe("compare", () => {
+            test("example one", () => {
+                expect(
+                    new Decimal("2.1").compare(new Decimal("3"))
+                ).toStrictEqual(-1);
+            });
+            test("example two", () => {
+                expect(
+                    new Decimal("2.1").compare(new Decimal("2.1"))
+                ).toStrictEqual(0);
+            });
+            test("example three", () => {
+                expect(
+                    new Decimal("2.1").compare(new Decimal("2.10"))
+                ).toStrictEqual(0);
+            });
+            test("example four", () => {
+                expect(
+                    new Decimal("3").compare(new Decimal("2.1"))
+                ).toStrictEqual(1);
+            });
+            test("example five", () => {
+                expect(
+                    new Decimal("2.1").compare(new Decimal("-3"))
+                ).toStrictEqual(1);
+            });
+            test("example six", () => {
+                expect(
+                    new Decimal("-3").compare(new Decimal("2.1"))
+                ).toStrictEqual(-1);
+            });
         });
     });
 });

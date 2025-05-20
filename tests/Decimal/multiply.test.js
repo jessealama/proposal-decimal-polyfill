@@ -196,35 +196,35 @@ describe("multiply", () => {
             );
         });
     });
-});
 
-describe("examples from the General Decimal Arithmetic specification", () => {
-    test("example one", () => {
-        expect(
-            new Decimal("1.20").multiply(new Decimal("3")).toString()
-        ).toStrictEqual("3.6"); // would be 3.60 in official IEEE 754
-    });
-    test("example two", () => {
-        expect(
-            new Decimal("7").multiply(new Decimal("3")).toString()
-        ).toStrictEqual("21");
-    });
-    test("example three", () => {
-        expect(
-            new Decimal("0.9").multiply(new Decimal("0.8")).toString()
-        ).toStrictEqual("0.72");
-    });
-    test("example four", () => {
-        expect(
-            new Decimal("0.9").multiply(new Decimal("-0")).toString()
-        ).toStrictEqual("-0"); // would be -0.0 in official IEEE 754
-    });
-    test("example five", () => {
-        // slightly modified because we have more precision
-        expect(
-            new Decimal("654321")
-                .multiply(new Decimal("654321"))
-                .toExponential()
-        ).toStrictEqual("4.28135971041e+11");
+    describe("examples from the General Decimal Arithmetic specification", () => {
+        test("example one", () => {
+            expect(
+                new Decimal("1.20").multiply(new Decimal("3")).toString()
+            ).toStrictEqual("3.6"); // would be 3.60 in official IEEE 754
+        });
+        test("example two", () => {
+            expect(
+                new Decimal("7").multiply(new Decimal("3")).toString()
+            ).toStrictEqual("21");
+        });
+        test("example three", () => {
+            expect(
+                new Decimal("0.9").multiply(new Decimal("0.8")).toString()
+            ).toStrictEqual("0.72");
+        });
+        test("example four", () => {
+            expect(
+                new Decimal("0.9").multiply(new Decimal("-0")).toString()
+            ).toStrictEqual("-0"); // would be -0.0 in official IEEE 754
+        });
+        test("example five", () => {
+            // slightly modified because we have more precision
+            expect(
+                new Decimal("654321")
+                    .multiply(new Decimal("654321"))
+                    .toExponential()
+            ).toStrictEqual("4.28135971041e+11");
+        });
     });
 });

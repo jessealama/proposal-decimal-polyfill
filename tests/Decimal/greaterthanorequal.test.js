@@ -6,46 +6,45 @@ const zero = new Decimal("0");
 const negZero = new Decimal("-0");
 const one = new Decimal("1");
 
-describe("lessThan", () => {
+describe("greaterThanOrEqual", () => {
     let d1 = new Decimal("987.123");
     let d2 = new Decimal("123.456789");
     test("simple example", () => {
-        expect(d1.lessThan(d1)).toStrictEqual(false);
+        expect(d1.greaterThanOrEqual(d1)).toStrictEqual(true);
     });
     test("non-example", () => {
-        expect(d1.lessThan(d2)).toStrictEqual(false);
+        expect(d1.greaterThanOrEqual(d2)).toStrictEqual(true);
     });
     test("negative numbers", () => {
         let a = new Decimal("-123.456");
-        expect(a.lessThan(a)).toStrictEqual(false);
+        expect(a.greaterThanOrEqual(a)).toStrictEqual(true);
     });
     test("integer part is the same, decimal part is not", () => {
         let a = new Decimal("42.678");
         let b = new Decimal("42.6789");
-        expect(a.lessThan(b)).toStrictEqual(true);
+        expect(a.greaterThanOrEqual(b)).toStrictEqual(false);
     });
     test("negative and positive are different", () => {
         expect(
-            new Decimal("-123.456").lessThan(new Decimal("123.456"))
-        ).toStrictEqual(true);
+            new Decimal("-123.456").greaterThanOrEqual(new Decimal("123.456"))
+        ).toStrictEqual(false);
     });
     test("limit of significant digits", () => {
         expect(
-            new Decimal("0.4166666666666666666666666666666667").lessThan(
+            new Decimal(
+                "0.4166666666666666666666666666666667"
+            ).greaterThanOrEqual(
                 new Decimal("0.41666666666666666666666666666666666")
             )
-        ).toStrictEqual(false);
+        ).toStrictEqual(true);
     });
     test("beyond limit of significant digits", () => {
         expect(
-            new Decimal("0.41666666666666666666666666666666667").lessThan(
+            new Decimal(
+                "0.41666666666666666666666666666666667"
+            ).greaterThanOrEqual(
                 new Decimal("0.41666666666666666666666666666666666")
             )
-        ).toStrictEqual(false);
-    });
-    test("non-example", () => {
-        expect(
-            new Decimal("0.037").lessThan(new Decimal("0.037037037037"))
         ).toStrictEqual(true);
     });
 
@@ -54,96 +53,69 @@ describe("lessThan", () => {
             expect(
                 new Decimal(
                     "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS + 50)
-                ).lessThan(
+                ).greaterThanOrEqual(
                     new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
                 )
-            ).toStrictEqual(false);
+            ).toStrictEqual(true);
         });
         test("non-equality within limits", () => {
             expect(
                 new Decimal(
                     "0." + "4".repeat(MAX_SIGNIFICANT_DIGITS - 1)
-                ).lessThan(
+                ).greaterThanOrEqual(
                     new Decimal("0." + "4".repeat(MAX_SIGNIFICANT_DIGITS))
                 )
-            ).toStrictEqual(true);
+            ).toStrictEqual(false);
         });
         describe("NaN", () => {
             test("NaN lessThan NaN is false", () => {
-                expect(nan.lessThan(nan)).toStrictEqual(false);
+                expect(nan.greaterThanOrEqual(nan)).toStrictEqual(false);
             });
             test("number equals NaN is false", () => {
-                expect(one.lessThan(nan)).toStrictEqual(false);
+                expect(one.greaterThanOrEqual(nan)).toStrictEqual(false);
             });
             test("NaN equals number is false", () => {
-                expect(nan.lessThan(one)).toStrictEqual(false);
+                expect(nan.greaterThanOrEqual(one)).toStrictEqual(false);
             });
         });
         describe("minus zero", () => {
             test("left hand", () => {
-                expect(negZero.lessThan(zero)).toStrictEqual(false);
+                expect(negZero.greaterThanOrEqual(zero)).toStrictEqual(true);
             });
             test("right hand", () => {
-                expect(zero.lessThan(negZero)).toStrictEqual(false);
+                expect(zero.greaterThanOrEqual(negZero)).toStrictEqual(true);
             });
             test("both arguments", () => {
-                expect(negZero.lessThan(negZero)).toStrictEqual(false);
+                expect(negZero.greaterThanOrEqual(negZero)).toStrictEqual(true);
             });
         });
         describe("infinity", () => {
             let posInf = new Decimal("Infinity");
             let negInf = new Decimal("-Infinity");
             test("positive infinity vs number", () => {
-                expect(posInf.lessThan(one)).toStrictEqual(false);
+                expect(posInf.greaterThanOrEqual(one)).toStrictEqual(true);
             });
             test("negative infinity vs number", () => {
-                expect(negInf.lessThan(one)).toStrictEqual(true);
+                expect(negInf.greaterThanOrEqual(one)).toStrictEqual(false);
             });
             test("negative infintity vs positive infinity", () => {
-                expect(negInf.lessThan(posInf)).toStrictEqual(true);
+                expect(negInf.greaterThanOrEqual(posInf)).toStrictEqual(false);
             });
             test("positive infinity vs negative infinity", () => {
-                expect(posInf.lessThan(negInf)).toStrictEqual(false);
+                expect(posInf.greaterThanOrEqual(negInf)).toStrictEqual(true);
             });
             test("positive infinity both arguments", () => {
-                expect(posInf.lessThan(posInf)).toStrictEqual(false);
+                expect(posInf.greaterThanOrEqual(posInf)).toStrictEqual(true);
             });
             test("negative infinity both arguments", () => {
-                expect(negInf.lessThan(negInf)).toStrictEqual(false);
+                expect(negInf.greaterThanOrEqual(negInf)).toStrictEqual(true);
             });
             test("compare number to positive infinity", () => {
-                expect(one.lessThan(posInf)).toStrictEqual(true);
+                expect(one.greaterThanOrEqual(posInf)).toStrictEqual(false);
             });
             test("compare number to negative infinity", () => {
-                expect(one.lessThan(negInf)).toStrictEqual(false);
+                expect(one.greaterThanOrEqual(negInf)).toStrictEqual(true);
             });
-        });
-    });
-
-    describe("zero", () => {
-        test("positive zero", () => {
-            expect(zero.lessThan(zero)).toStrictEqual(false);
-        });
-        test("negative zero", () => {
-            expect(negZero.lessThan(negZero)).toStrictEqual(false);
-        });
-        test("negative zero vs zero", () => {
-            expect(negZero.lessThan(zero)).toStrictEqual(false);
-        });
-        test("compare zero to positive", () => {
-            expect(zero.lessThan(one)).toStrictEqual(true);
-        });
-        test("compare zero to negative", () => {
-            expect(zero.lessThan(one.negate())).toStrictEqual(false);
-        });
-        test("compare positive to zero", () => {
-            expect(one.lessThan(zero)).toStrictEqual(false);
-        });
-        test("compare negative to zero", () => {
-            expect(one.negate().lessThan(zero)).toStrictEqual(true);
-        });
-        test("compare positive to negative zero", () => {
-            expect(one.lessThan(zero)).toStrictEqual(false);
         });
     });
 });

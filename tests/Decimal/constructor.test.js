@@ -241,190 +241,200 @@ describe("constructor", () => {
             ).toStrictEqual("1.234567890123456789012345678901235e+49");
         });
     });
-});
 
-describe("NaN", () => {
-    describe("does not throw", () => {
-        expect(new Decimal("NaN")).toBeInstanceOf(Decimal);
+    describe("NaN", () => {
+        describe("does not throw", () => {
+            expect(new Decimal("NaN")).toBeInstanceOf(Decimal);
+        });
+        describe("minus NaN throws ", () => {
+            expect(() => new Decimal("-NaN")).toThrow(SyntaxError);
+        });
+        describe("lowercase throws", () => {
+            expect(() => new Decimal("nan")).toThrow(SyntaxError);
+        });
+        describe("weird case throws", () => {
+            expect(() => new Decimal("-nAN")).toThrow(SyntaxError);
+        });
     });
-    describe("minus NaN throws ", () => {
-        expect(() => new Decimal("-NaN")).toThrow(SyntaxError);
-    });
-    describe("lowercase throws", () => {
-        expect(() => new Decimal("nan")).toThrow(SyntaxError);
-    });
-    describe("weird case throws", () => {
-        expect(() => new Decimal("-nAN")).toThrow(SyntaxError);
-    });
-});
 
-describe("infinity", () => {
-    describe("inf", () => {
-        expect(() => new Decimal("inf")).toThrow(SyntaxError);
-    });
-    describe("-inf", () => {
-        expect(() => new Decimal("-inf")).toThrow(SyntaxError);
-    });
     describe("infinity", () => {
-        expect(() => new Decimal("infinity")).toThrow(SyntaxError);
-    });
-    describe("-infinity", () => {
-        expect(() => new Decimal("-infinity")).toThrow(SyntaxError);
-    });
-    describe("Infinity", () => {
-        expect(new Decimal("Infinity")).toBeInstanceOf(Decimal);
-    });
-    describe("-Infinity", () => {
-        expect(new Decimal("-Infinity")).toBeInstanceOf(Decimal);
-    });
-    describe("Inf", () => {
-        expect(() => new Decimal("Inf")).toThrow(SyntaxError);
-    });
-    describe("-Inf", () => {
-        expect(() => new Decimal("-Inf")).toThrow(SyntaxError);
-    });
-    describe("INFINITY", () => {
-        expect(() => new Decimal("INFINITY")).toThrow(SyntaxError);
-    });
-    describe("-INFINITY", () => {
-        expect(() => new Decimal("-INFINITY")).toThrow(SyntaxError);
-    });
-    describe("INF", () => {
-        expect(() => new Decimal("INF")).toThrow(SyntaxError);
-    });
-    describe("-INF", () => {
-        expect(() => new Decimal("-INF")).toThrow(SyntaxError);
-    });
-});
-
-describe("General Decimal Arithmetic specification", () => {
-    describe("decimal syntax", () => {
-        test("0", () => {
-            expect(new Decimal("0").toString()).toStrictEqual("0");
+        describe("inf", () => {
+            expect(() => new Decimal("inf")).toThrow(SyntaxError);
         });
-        test("12", () => {
-            expect(new Decimal("12").toString()).toStrictEqual("12");
+        describe("-inf", () => {
+            expect(() => new Decimal("-inf")).toThrow(SyntaxError);
         });
-        test("-76", () => {
-            expect(new Decimal("-76").toString()).toStrictEqual("-76");
+        describe("infinity", () => {
+            expect(() => new Decimal("infinity")).toThrow(SyntaxError);
         });
-        test("12.70", () => {
-            expect(new Decimal("12.70").toString()).toStrictEqual("12.7");
-        });
-        test("+0.003", () => {
-            expect(new Decimal("+0.003").toString()).toStrictEqual("0.003");
-        });
-        test("017.", () => {
-            expect(new Decimal("017.").toString()).toStrictEqual("17");
-        });
-        test(".5", () => {
-            expect(new Decimal(".5").toString()).toStrictEqual("0.5");
-        });
-        test("4E+9", () => {
-            expect(new Decimal("4E+9").toString()).toStrictEqual("4e+9");
-        });
-        test("Inf", () => {
-            expect(() => new Decimal("Inf")).toThrow(SyntaxError);
-        });
-        test("-infinity", () => {
+        describe("-infinity", () => {
             expect(() => new Decimal("-infinity")).toThrow(SyntaxError);
         });
+        describe("Infinity", () => {
+            expect(new Decimal("Infinity")).toBeInstanceOf(Decimal);
+        });
+        describe("-Infinity", () => {
+            expect(new Decimal("-Infinity")).toBeInstanceOf(Decimal);
+        });
+        describe("Inf", () => {
+            expect(() => new Decimal("Inf")).toThrow(SyntaxError);
+        });
+        describe("-Inf", () => {
+            expect(() => new Decimal("-Inf")).toThrow(SyntaxError);
+        });
+        describe("INFINITY", () => {
+            expect(() => new Decimal("INFINITY")).toThrow(SyntaxError);
+        });
+        describe("-INFINITY", () => {
+            expect(() => new Decimal("-INFINITY")).toThrow(SyntaxError);
+        });
+        describe("INF", () => {
+            expect(() => new Decimal("INF")).toThrow(SyntaxError);
+        });
+        describe("-INF", () => {
+            expect(() => new Decimal("-INF")).toThrow(SyntaxError);
+        });
+    });
+
+    describe("General Decimal Arithmetic specification", () => {
+        describe("decimal syntax", () => {
+            test("0", () => {
+                expect(new Decimal("0").toString()).toStrictEqual("0");
+            });
+            test("12", () => {
+                expect(new Decimal("12").toString()).toStrictEqual("12");
+            });
+            test("-76", () => {
+                expect(new Decimal("-76").toString()).toStrictEqual("-76");
+            });
+            test("12.70", () => {
+                expect(new Decimal("12.70").toString()).toStrictEqual("12.7");
+            });
+            test("+0.003", () => {
+                expect(new Decimal("+0.003").toString()).toStrictEqual("0.003");
+            });
+            test("017.", () => {
+                expect(new Decimal("017.").toString()).toStrictEqual("17");
+            });
+            test(".5", () => {
+                expect(new Decimal(".5").toString()).toStrictEqual("0.5");
+            });
+            test("4E+9", () => {
+                expect(new Decimal("4E+9").toString()).toStrictEqual("4e+9");
+            });
+            test("Inf", () => {
+                expect(() => new Decimal("Inf")).toThrow(SyntaxError);
+            });
+            test("-infinity", () => {
+                expect(() => new Decimal("-infinity")).toThrow(SyntaxError);
+            });
+            test("NaN", () => {
+                expect(new Decimal("NaN").toString()).toStrictEqual("NaN");
+            });
+            test("NaN8275 (diagnostic information discarded)", () => {
+                expect(() => new Decimal("NaN8275")).toThrow(SyntaxError);
+            });
+            test("period", () => {
+                expect(() => new Decimal(".")).toThrow(SyntaxError);
+            });
+            test("plus period", () => {
+                expect(() => new Decimal("+.")).toThrow(SyntaxError);
+            });
+            test("minus period", () => {
+                expect(() => new Decimal("-.")).toThrow(SyntaxError);
+            });
+            test("plus", () => {
+                expect(() => new Decimal("+")).toThrow(SyntaxError);
+            });
+            test("minus", () => {
+                expect(() => new Decimal("-")).toThrow(SyntaxError);
+            });
+        });
+    });
+
+    describe("number arguments", () => {
+        test("integer", () => {
+            expect(new Decimal(42).toString()).toStrictEqual("42");
+        });
+        test("non-integer number", () => {
+            expect(new Decimal(42.5).toString()).toStrictEqual("42.5");
+        });
         test("NaN", () => {
-            expect(new Decimal("NaN").toString()).toStrictEqual("NaN");
+            expect(new Decimal(NaN).toString()).toStrictEqual("NaN");
         });
-        test("NaN8275 (diagnostic information discarded)", () => {
-            expect(() => new Decimal("NaN8275")).toThrow(SyntaxError);
+        test("minus zero", () => {
+            expect(new Decimal(-0).toString()).toStrictEqual("-0");
         });
-        test("period", () => {
-            expect(() => new Decimal(".")).toThrow(SyntaxError);
-        });
-        test("plus period", () => {
-            expect(() => new Decimal("+.")).toThrow(SyntaxError);
-        });
-        test("minus period", () => {
-            expect(() => new Decimal("-.")).toThrow(SyntaxError);
-        });
-        test("plus", () => {
-            expect(() => new Decimal("+")).toThrow(SyntaxError);
-        });
-        test("minus", () => {
-            expect(() => new Decimal("-")).toThrow(SyntaxError);
+        test("very large value gets approximated", () => {
+            expect(
+                new Decimal(123456789012345678901234567890123456789).toString()
+            ).toStrictEqual("1.2345678901234568e+38");
         });
     });
-});
 
-describe("number arguments", () => {
-    test("integer", () => {
-        expect(new Decimal(42).toString()).toStrictEqual("42");
+    describe("bigint", () => {
+        test("simple", () => {
+            expect(new Decimal(42n).toString()).toStrictEqual("42");
+        });
+        test("too big, gets rounded", () => {
+            expect(
+                new Decimal(123456789012345678901234567890123456789n).toString()
+            ).toStrictEqual("1.234567890123456789012345678901235e+38");
+        });
     });
-    test("non-integer number", () => {
-        expect(new Decimal(42.5).toString()).toStrictEqual("42.5");
-    });
-    test("NaN", () => {
-        expect(new Decimal(NaN).toString()).toStrictEqual("NaN");
-    });
-    test("minus zero", () => {
-        expect(new Decimal(-0).toString()).toStrictEqual("-0");
-    });
-    test("very large value gets approximated", () => {
-        expect(
-            new Decimal(123456789012345678901234567890123456789).toString()
-        ).toStrictEqual("1.2345678901234568e+38");
-    });
-});
 
-describe("bigint", () => {
-    test("simple", () => {
-        expect(new Decimal(42n).toString()).toStrictEqual("42");
-    });
-    test("too big, gets rounded", () => {
-        expect(
-            new Decimal(123456789012345678901234567890123456789n).toString()
-        ).toStrictEqual("1.234567890123456789012345678901235e+38");
-    });
-});
-
-describe("rounding", () => {
-    test("ceil", () => {
-        let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "3";
-        expect(
-            new Decimal(s, { roundingMode: ROUNDING_MODE_CEILING }).toFixed({
-                digits: Infinity,
-            })
-        ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2");
-    });
-    test("floor", () => {
-        let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "9";
-        expect(
-            new Decimal(s, { roundingMode: ROUNDING_MODE_FLOOR }).toFixed({
-                digits: Infinity,
-            })
-        ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS));
-    });
-    test("trunc", () => {
-        let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "9";
-        expect(
-            new Decimal(s, { roundingMode: ROUNDING_MODE_TRUNCATE }).toFixed({
-                digits: Infinity,
-            })
-        ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS));
-    });
-    describe("halfEven", () => {
-        test("is the default rounding mode", () => {
-            let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "5";
-            let d1 = new Decimal(s);
-            let d2 = new Decimal(s, { roundingMode: ROUNDING_MODE_HALF_EVEN });
-            expect(d1.toFixed({ digits: Infinity })).toStrictEqual(
-                d2.toFixed({ digits: Infinity })
+    describe("rounding", () => {
+        test("ceil", () => {
+            let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "3";
+            expect(
+                new Decimal(s, { roundingMode: ROUNDING_MODE_CEILING }).toFixed(
+                    {
+                        digits: Infinity,
+                    }
+                )
+            ).toStrictEqual(
+                "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2"
             );
         });
-    });
-    test("halfExpand", () => {
-        let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "5";
-        expect(
-            new Decimal(s, { roundingMode: ROUNDING_MODE_HALF_EXPAND }).toFixed(
-                { digits: Infinity }
-            )
-        ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2");
+        test("floor", () => {
+            let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "9";
+            expect(
+                new Decimal(s, { roundingMode: ROUNDING_MODE_FLOOR }).toFixed({
+                    digits: Infinity,
+                })
+            ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS));
+        });
+        test("trunc", () => {
+            let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "9";
+            expect(
+                new Decimal(s, {
+                    roundingMode: ROUNDING_MODE_TRUNCATE,
+                }).toFixed({
+                    digits: Infinity,
+                })
+            ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS));
+        });
+        describe("halfEven", () => {
+            test("is the default rounding mode", () => {
+                let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "5";
+                let d1 = new Decimal(s);
+                let d2 = new Decimal(s, {
+                    roundingMode: ROUNDING_MODE_HALF_EVEN,
+                });
+                expect(d1.toFixed({ digits: Infinity })).toStrictEqual(
+                    d2.toFixed({ digits: Infinity })
+                );
+            });
+        });
+        test("halfExpand", () => {
+            let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "5";
+            expect(
+                new Decimal(s, {
+                    roundingMode: ROUNDING_MODE_HALF_EXPAND,
+                }).toFixed({ digits: Infinity })
+            ).toStrictEqual(
+                "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2"
+            );
+        });
     });
 });

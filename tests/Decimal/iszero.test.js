@@ -1,6 +1,6 @@
 import { Decimal } from "../../src/Decimal.mjs";
 
-describe("simple examples", () => {
+describe("isZero", () => {
     test("0", () => {
         expect(new Decimal("0").isZero()).toStrictEqual(true);
     });
