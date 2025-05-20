@@ -1,4 +1,11 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    ROUNDING_MODE_CEILING,
+    ROUNDING_MODE_FLOOR,
+    ROUNDING_MODE_TRUNCATE,
+    ROUNDING_MODE_HALF_EVEN,
+    ROUNDING_MODE_HALF_EXPAND,
+} from "../../src/common.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 
@@ -374,5 +381,50 @@ describe("bigint", () => {
         expect(
             new Decimal(123456789012345678901234567890123456789n).toString()
         ).toStrictEqual("1.234567890123456789012345678901235e+38");
+    });
+});
+
+describe("rounding", () => {
+    test("ceil", () => {
+        let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "3";
+        expect(
+            new Decimal(s, { roundingMode: ROUNDING_MODE_CEILING }).toFixed({
+                digits: Infinity,
+            })
+        ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2");
+    });
+    test("floor", () => {
+        let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "9";
+        expect(
+            new Decimal(s, { roundingMode: ROUNDING_MODE_FLOOR }).toFixed({
+                digits: Infinity,
+            })
+        ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS));
+    });
+    test("trunc", () => {
+        let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "9";
+        expect(
+            new Decimal(s, { roundingMode: ROUNDING_MODE_TRUNCATE }).toFixed({
+                digits: Infinity,
+            })
+        ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS));
+    });
+    describe("halfEven", () => {
+        test("is the default rounding mode", () => {
+            let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "5";
+            let d1 = new Decimal(s);
+            let d2 = new Decimal(s, { roundingMode: ROUNDING_MODE_HALF_EVEN });
+            expect(d1.toFixed({ digits: Infinity })).toStrictEqual(
+                d2.toFixed({ digits: Infinity })
+            );
+        });
+    });
+    test("halfExpand", () => {
+        let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "5";
+        expect(
+            new Decimal(s, { roundingMode: ROUNDING_MODE_HALF_EXPAND }).toFixed(
+                { digits: Infinity }
+            )
+        ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2");
     });
 });

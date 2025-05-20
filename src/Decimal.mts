@@ -103,13 +103,13 @@ function RoundToDecimal128Domain(
     return rounded.scale10(te);
 }
 
-function handleDecimalNotation(s: string): Decimal128Value {
+function handleDecimalNotation(s: string, mode: RoundingMode): Decimal128Value {
     if (s.match(/^[+]/)) {
-        return handleDecimalNotation(s.substring(1));
+        return handleDecimalNotation(s.substring(1), mode);
     }
 
     if (s.match(/_/)) {
-        return handleDecimalNotation(s.replace(/_/g, ""));
+        return handleDecimalNotation(s.replace(/_/g, ""), mode);
     }
 
     if ("" === s) {
@@ -146,7 +146,7 @@ function handleDecimalNotation(s: string): Decimal128Value {
         return "0";
     }
 
-    return RoundToDecimal128Domain(v);
+    return RoundToDecimal128Domain(v, mode);
 }
 
 export class Decimal {
@@ -162,7 +162,10 @@ export class Decimal {
     withFractionalDigits: any;
     withTrailingZeroes: any;
 
-    constructor(n: string | number | bigint) {
+    constructor(
+        n: string | number | bigint,
+        opts?: { roundingMode?: RoundingMode }
+    ) {
         let data;
         let s: string;
 
@@ -174,7 +177,16 @@ export class Decimal {
             s = n;
         }
 
-        data = handleDecimalNotation(s);
+        let mode = ROUNDING_MODE_HALF_EVEN;
+        if (
+            undefined !== opts &&
+            "object" === typeof opts &&
+            opts.roundingMode !== undefined
+        ) {
+            mode = opts.roundingMode;
+        }
+
+        data = handleDecimalNotation(s, mode as RoundingMode);
 
         if (data === "NaN") {
             this._isNaN = true;
@@ -651,8 +663,19 @@ export class Decimal {
      * Add this Decimal128 value to one or more Decimal128 values.
      *
      * @param x
+     * @param opts
      */
-    add(x: Decimal): Decimal {
+    add(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
+        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
+
+        if (
+            undefined !== opts &&
+            "object" === typeof opts &&
+            opts.roundingMode !== undefined
+        ) {
+            mode = opts.roundingMode;
+        }
+
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
         }
@@ -697,7 +720,7 @@ export class Decimal {
             return new Decimal("0");
         }
 
-        let rounded = RoundToDecimal128Domain(sum) as Rational;
+        let rounded = RoundToDecimal128Domain(sum, mode) as Rational;
 
         return new Decimal(rounded.toFixed(Infinity));
     }
@@ -706,8 +729,19 @@ export class Decimal {
      * Subtract another Decimal128 value from one or more Decimal128 values.
      *
      * @param x
+     * @param opts
      */
-    subtract(x: Decimal): Decimal {
+    subtract(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
+        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
+
+        if (
+            undefined !== opts &&
+            "object" === typeof opts &&
+            opts.roundingMode !== undefined
+        ) {
+            mode = opts.roundingMode;
+        }
+
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
         }
@@ -748,7 +782,7 @@ export class Decimal {
             return new Decimal("0");
         }
 
-        let rounded = RoundToDecimal128Domain(difference) as Rational;
+        let rounded = RoundToDecimal128Domain(difference, mode) as Rational;
 
         return new Decimal(rounded.toFixed(Infinity));
     }
@@ -759,8 +793,19 @@ export class Decimal {
      * If no arguments are given, return this value.
      *
      * @param x
+     * @param opts
      */
-    multiply(x: Decimal): Decimal {
+    multiply(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
+        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
+
+        if (
+            undefined !== opts &&
+            "object" === typeof opts &&
+            opts.roundingMode !== undefined
+        ) {
+            mode = opts.roundingMode;
+        }
+
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
         }
@@ -790,26 +835,26 @@ export class Decimal {
         }
 
         if (this.isNegative()) {
-            return this.negate().multiply(x).negate();
+            return this.negate().multiply(x, opts).negate();
         }
 
         if (x.isNegative()) {
-            return this.multiply(x.negate()).negate();
+            return this.multiply(x.negate(), opts).negate();
         }
 
         let ourCohort = this.d as Rational;
         let theirCohort = x.d as Rational;
 
         if (this.isZero()) {
-            return new Decimal(ourCohort.toString());
+            return this.clone();
         }
 
         if (x.isZero()) {
-            return new Decimal(theirCohort.toString());
+            return x.clone();
         }
 
         let product = ourCohort.multiply(theirCohort);
-        let rounded = RoundToDecimal128Domain(product) as Rational;
+        let rounded = RoundToDecimal128Domain(product, mode) as Rational;
 
         return new Decimal(rounded.toFixed(Infinity));
     }
@@ -838,8 +883,19 @@ export class Decimal {
      * Divide this Decimal128 value by another Decimal128 value.
      *
      * @param x
+     * @param opts
      */
-    divide(x: Decimal): Decimal {
+    divide(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
+        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
+
+        if (
+            undefined !== opts &&
+            "object" === typeof opts &&
+            opts.roundingMode !== undefined
+        ) {
+            mode = opts.roundingMode;
+        }
+
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
         }
@@ -877,17 +933,17 @@ export class Decimal {
         }
 
         if (this.isNegative()) {
-            return this.negate().divide(x).negate();
+            return this.negate().divide(x, opts).negate();
         }
 
         if (x.isNegative()) {
-            return this.divide(x.negate()).negate();
+            return this.divide(x.negate(), opts).negate();
         }
 
         let ourV = this.d as Rational;
         let theirV = x.d as Rational;
         let quotient = ourV.divide(theirV);
-        let rounded = RoundToDecimal128Domain(quotient) as Rational;
+        let rounded = RoundToDecimal128Domain(quotient, mode) as Rational;
 
         return new Decimal(rounded.toFixed(Infinity));
     }
