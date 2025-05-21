@@ -98,7 +98,7 @@ describe("greaterThanOrEqual", () => {
             test("negative infinity vs number", () => {
                 expect(negInf.greaterThanOrEqual(one)).toStrictEqual(false);
             });
-            test("negative infintity vs positive infinity", () => {
+            test("negative infinity vs positive infinity", () => {
                 expect(negInf.greaterThanOrEqual(posInf)).toStrictEqual(false);
             });
             test("positive infinity vs negative infinity", () => {
