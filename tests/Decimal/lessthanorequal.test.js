@@ -101,7 +101,7 @@ describe("lessThanOrEqual", () => {
             test("negative infinity vs number", () => {
                 expect(negInf.lessThanOrEqual(one)).toStrictEqual(true);
             });
-            test("negative infintity vs positive infinity", () => {
+            test("negative infinity vs positive infinity", () => {
                 expect(negInf.lessThanOrEqual(posInf)).toStrictEqual(true);
             });
             test("positive infinity vs negative infinity", () => {
