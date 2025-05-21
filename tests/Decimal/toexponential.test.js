@@ -1,35 +1,32 @@
 import { Decimal } from "../../src/Decimal.mjs";
 import { expectDecimal128 } from "./util.js";
 
-describe("NaN", () => {
-    test("works", () => {
-        expect(new Decimal("NaN").toExponential()).toStrictEqual("NaN");
+describe("toExponential", () => {
+    describe("NaN", () => {
+        test("works", () => {
+            expect(new Decimal("NaN").toExponential()).toStrictEqual("NaN");
+        });
     });
-});
-
-describe("zero", () => {
-    test("positive zero", () => {
-        expect(new Decimal("0").toExponential()).toStrictEqual("0e+0");
+    describe("zero", () => {
+        test("positive zero", () => {
+            expect(new Decimal("0").toExponential()).toStrictEqual("0e+0");
+        });
+        test("negative zero", () => {
+            expect(new Decimal("-0").toExponential()).toStrictEqual("-0e+0");
+        });
     });
-    test("negative zero", () => {
-        expect(new Decimal("-0").toExponential()).toStrictEqual("-0e+0");
+    describe("infinity", () => {
+        test("positive infinity", () => {
+            expect(new Decimal("Infinity").toExponential()).toStrictEqual(
+                "Infinity"
+            );
+        });
+        test("negative infinity", () => {
+            expect(new Decimal("-Infinity").toExponential()).toStrictEqual(
+                "-Infinity"
+            );
+        });
     });
-});
-
-describe("infinity", () => {
-    test("positive infinity", () => {
-        expect(new Decimal("Infinity").toExponential()).toStrictEqual(
-            "Infinity"
-        );
-    });
-    test("negative infinity", () => {
-        expect(new Decimal("-Infinity").toExponential()).toStrictEqual(
-            "-Infinity"
-        );
-    });
-});
-
-describe("toExponential", function () {
     const d = "123.456";
     const decimalD = new Decimal(d);
     test("no argument", () => {
@@ -88,9 +85,6 @@ describe("toExponential", function () {
             );
         });
     });
-});
-
-describe("to exponential string", () => {
     test("one", () => {
         expect(new Decimal("1").toExponential()).toStrictEqual("1e+0");
     });
@@ -119,24 +113,25 @@ describe("to exponential string", () => {
             "1.042e-2"
         );
     });
-});
-
-describe("scientific string syntax", () => {
-    test("1.23E+3", () => {
-        expect(new Decimal("1.23E+3").toString()).toStrictEqual("1230");
-    });
-    test("1.23E+5", () => {
-        expect(new Decimal("1.23E+5").toString()).toStrictEqual("123000");
-    });
-    test("1.23E-8", () => {
-        expect(new Decimal("1.23E-8").toString()).toStrictEqual("0.0000000123");
-    });
-    test("-1.23E-10", () => {
-        expect(new Decimal("-1.23E-10").toString()).toStrictEqual(
-            "-0.000000000123"
-        );
-    });
-    test("0E+2", () => {
-        expect(new Decimal("0E+2").toExponential()).toStrictEqual("0e+0");
+    describe("scientific string syntax", () => {
+        test("1.23E+3", () => {
+            expect(new Decimal("1.23E+3").toString()).toStrictEqual("1230");
+        });
+        test("1.23E+5", () => {
+            expect(new Decimal("1.23E+5").toString()).toStrictEqual("123000");
+        });
+        test("1.23E-8", () => {
+            expect(new Decimal("1.23E-8").toString()).toStrictEqual(
+                "0.0000000123"
+            );
+        });
+        test("-1.23E-10", () => {
+            expect(new Decimal("-1.23E-10").toString()).toStrictEqual(
+                "-0.000000000123"
+            );
+        });
+        test("0E+2", () => {
+            expect(new Decimal("0E+2").toExponential()).toStrictEqual("0e+0");
+        });
     });
 });

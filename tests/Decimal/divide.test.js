@@ -135,62 +135,62 @@ describe("division", () => {
             new Decimal("-42.6").divide(new Decimal("-2.0")).toString()
         ).toStrictEqual("21.3");
     });
-});
 
-describe("examples from the General Decimal Arithmetic Specification", () => {
-    // some examples have been tweaked because we are working with more precision in Decimal128
-    test("example one", () => {
-        expect(
-            new Decimal("1")
-                .divide(new Decimal("3"))
-                .toFixed({ digits: Infinity })
-        ).toStrictEqual("0.3333333333333333333333333333333333");
-    });
-    test("example two", () => {
-        expect(
-            new Decimal("2")
-                .divide(new Decimal("3"))
-                .toFixed({ digits: Infinity })
-        ).toStrictEqual("0.6666666666666666666666666666666667");
-    });
-    test("example three", () => {
-        expect(
-            new Decimal("5").divide(new Decimal("2")).toString()
-        ).toStrictEqual("2.5");
-    });
-    test("example four", () => {
-        expect(
-            new Decimal("1").divide(new Decimal("10")).toString()
-        ).toStrictEqual("0.1");
-    });
-    test("example five", () => {
-        expect(
-            new Decimal("12").divide(new Decimal("12")).toString()
-        ).toStrictEqual("1");
-    });
-    test("example six", () => {
-        expect(
-            new Decimal("8.00").divide(new Decimal("2")).toString()
-        ).toStrictEqual("4");
-    });
-    test("example seven", () => {
-        expect(
-            new Decimal("2.400").divide(new Decimal("2.0")).toString()
-        ).toStrictEqual("1.2"); // would be 1.20 in official IEEE 754
-    });
-    test("example eight", () => {
-        expect(
-            new Decimal("1000").divide(new Decimal("100")).toString()
-        ).toStrictEqual("10");
-    });
-    test("example nine", () => {
-        expect(
-            new Decimal("1000").divide(new Decimal("1")).toString()
-        ).toStrictEqual("1000");
-    });
-    test("example ten", () => {
-        expect(
-            new Decimal("2.40E+6").divide(new Decimal("2")).toExponential()
-        ).toStrictEqual("1.2e+6");
+    describe("examples from the General Decimal Arithmetic Specification", () => {
+        // some examples have been tweaked because we are working with more precision in Decimal128
+        test("example one", () => {
+            expect(
+                new Decimal("1")
+                    .divide(new Decimal("3"))
+                    .toFixed({ digits: Infinity })
+            ).toStrictEqual("0.3333333333333333333333333333333333");
+        });
+        test("example two", () => {
+            expect(
+                new Decimal("2")
+                    .divide(new Decimal("3"))
+                    .toFixed({ digits: Infinity })
+            ).toStrictEqual("0.6666666666666666666666666666666667");
+        });
+        test("example three", () => {
+            expect(
+                new Decimal("5").divide(new Decimal("2")).toString()
+            ).toStrictEqual("2.5");
+        });
+        test("example four", () => {
+            expect(
+                new Decimal("1").divide(new Decimal("10")).toString()
+            ).toStrictEqual("0.1");
+        });
+        test("example five", () => {
+            expect(
+                new Decimal("12").divide(new Decimal("12")).toString()
+            ).toStrictEqual("1");
+        });
+        test("example six", () => {
+            expect(
+                new Decimal("8.00").divide(new Decimal("2")).toString()
+            ).toStrictEqual("4");
+        });
+        test("example seven", () => {
+            expect(
+                new Decimal("2.400").divide(new Decimal("2.0")).toString()
+            ).toStrictEqual("1.2"); // would be 1.20 in official IEEE 754
+        });
+        test("example eight", () => {
+            expect(
+                new Decimal("1000").divide(new Decimal("100")).toString()
+            ).toStrictEqual("10");
+        });
+        test("example nine", () => {
+            expect(
+                new Decimal("1000").divide(new Decimal("1")).toString()
+            ).toStrictEqual("1000");
+        });
+        test("example ten", () => {
+            expect(
+                new Decimal("2.40E+6").divide(new Decimal("2")).toExponential()
+            ).toStrictEqual("1.2e+6");
+        });
     });
 });

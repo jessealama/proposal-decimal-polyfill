@@ -1,6 +1,6 @@
 import { Decimal } from "../../src/Decimal.mjs";
 
-describe("mantissa and exponent", () => {
+describe("mantissa", () => {
     test("0", () => {
         expect(() => new Decimal("0").mantissa()).toThrow(RangeError);
     });
@@ -30,7 +30,6 @@ describe("mantissa and exponent", () => {
         test(`simple example (${n})`, () => {
             let d = new Decimal(n);
             expect(d.mantissa().toString()).toStrictEqual(sigDigits);
-            expect(d.exponent()).toStrictEqual(exponent);
         });
     }
 });

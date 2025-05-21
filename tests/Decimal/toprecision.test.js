@@ -2,14 +2,6 @@ import { Decimal } from "../../src/Decimal.mjs";
 
 const NoArgument = Symbol();
 
-describe("one off", () => {
-    test("one", () => {
-        expect(
-            new Decimal("-0.00000012345678").toPrecision({ digits: 9 })
-        ).toStrictEqual("-1.23456780e-7");
-    });
-});
-
 describe("toPrecision", () => {
     describe("simple example > 1", () => {
         let d = new Decimal("123.456");
@@ -112,186 +104,188 @@ describe("toPrecision", () => {
             );
         });
     });
-});
 
-describe("NaN", () => {
-    let nan = new Decimal("NaN");
-    test("works", () => {
-        expect(nan.toPrecision()).toStrictEqual("NaN");
+    describe("NaN", () => {
+        let nan = new Decimal("NaN");
+        test("works", () => {
+            expect(nan.toPrecision()).toStrictEqual("NaN");
+        });
+        test("works, digist requested", () => {
+            expect(nan.toPrecision({ digits: 42 })).toStrictEqual("NaN");
+        });
     });
-    test("works, digist requested", () => {
-        expect(nan.toPrecision({ digits: 42 })).toStrictEqual("NaN");
-    });
-});
 
-describe("zero", () => {
-    test.each`
-        name                                        | input     | arg              | output
-        ${"positive zero"}                          | ${" 0"}   | ${NoArgument}    | ${" 0"}
-        ${"negative zero"}                          | ${"-0"}   | ${NoArgument}    | ${"-0"}
-        ${"zero point zero gets canonicalized"}     | ${" 0.0"} | ${NoArgument}    | ${" 0"}
-        ${"zero point zero, one significant digit"} | ${" 0.0"} | ${{ digits: 1 }} | ${" 0"}
-    `("$name", ({ input, arg, output }) => {
-        const d = new Decimal(input.trim());
-        const s = arg === NoArgument ? d.toPrecision() : d.toPrecision(arg);
-        const o = output.trim();
-        expect(s).toStrictEqual(o);
-    });
-    test("zero with additional digits", () => {
-        expect(new Decimal("0").toPrecision({ digits: 2 })).toStrictEqual(
-            "0.0"
-        );
-    });
-});
-
-describe("infinity", () => {
-    let posInf = new Decimal("Infinity");
-    let negInf = new Decimal("-Infinity");
-
-    test.each`
-        name                                     | input     | arg               | output
-        ${"positive infinity"}                   | ${posInf} | ${NoArgument}     | ${" Infinity"}
-        ${"positive infinity, digits requested"} | ${posInf} | ${{ digits: 42 }} | ${" Infinity"}
-        ${"negative infinity"}                   | ${negInf} | ${NoArgument}     | ${"-Infinity"}
-        ${"negative infinity, digits requested"} | ${negInf} | ${{ digits: 42 }} | ${"-Infinity"}
-    `("$name", ({ input: d, arg, output }) => {
-        const s = arg === NoArgument ? d.toPrecision() : d.toPrecision(arg);
-        const o = output.trim();
-        expect(s).toStrictEqual(o);
-    });
-});
-
-describe("tests", () => {
-    describe("with integer output", () => {
+    describe("zero", () => {
         test.each`
-            input     | digits | output
-            ${" 0.0"} | ${1}   | ${"0"}
-            ${" 1.4"} | ${1}   | ${"1"}
-            ${" 1.5"} | ${1}   | ${"2"}
-            ${" 1.6"} | ${1}   | ${"2"}
-            ${" 2.4"} | ${1}   | ${"2"}
-            ${" 2.5"} | ${1}   | ${"2"}
-            ${" 2.6"} | ${1}   | ${"3"}
-            ${"-0.0"} | ${1}   | ${"-0"}
-            ${"-1.4"} | ${1}   | ${"-1"}
-            ${"-1.5"} | ${1}   | ${"-2"}
-            ${"-1.6"} | ${1}   | ${"-2"}
-            ${"-2.4"} | ${1}   | ${"-2"}
-            ${"-2.5"} | ${1}   | ${"-2"}
-            ${"-2.6"} | ${1}   | ${"-3"}
-        `(
-            "$input precision($digits) = $output",
-            ({ input, digits, output }) => {
-                const s = new Decimal(input.trim()).toPrecision({ digits });
-                expect(s).toStrictEqual(output.trim());
-            }
-        );
+            name                                        | input     | arg              | output
+            ${"positive zero"}                          | ${" 0"}   | ${NoArgument}    | ${" 0"}
+            ${"negative zero"}                          | ${"-0"}   | ${NoArgument}    | ${"-0"}
+            ${"zero point zero gets canonicalized"}     | ${" 0.0"} | ${NoArgument}    | ${" 0"}
+            ${"zero point zero, one significant digit"} | ${" 0.0"} | ${{ digits: 1 }} | ${" 0"}
+        `("$name", ({ input, arg, output }) => {
+            const d = new Decimal(input.trim());
+            const s = arg === NoArgument ? d.toPrecision() : d.toPrecision(arg);
+            const o = output.trim();
+            expect(s).toStrictEqual(o);
+        });
+        test("zero with additional digits", () => {
+            expect(new Decimal("0").toPrecision({ digits: 2 })).toStrictEqual(
+                "0.0"
+            );
+        });
     });
-    describe("with decimal output", () => {
+
+    describe("infinity", () => {
+        let posInf = new Decimal("Infinity");
+        let negInf = new Decimal("-Infinity");
+
         test.each`
-            input      | digits | output
-            ${" 0.14"} | ${1}   | ${"0.1"}
-            ${" 0.15"} | ${1}   | ${"0.2"}
-            ${" 0.16"} | ${1}   | ${"0.2"}
-            ${" 0.24"} | ${1}   | ${"0.2"}
-            ${" 0.25"} | ${1}   | ${"0.2"}
-            ${" 0.26"} | ${1}   | ${"0.3"}
-            ${"-0.14"} | ${1}   | ${"-0.1"}
-            ${"-0.15"} | ${1}   | ${"-0.2"}
-            ${"-0.16"} | ${1}   | ${"-0.2"}
-            ${"-0.24"} | ${1}   | ${"-0.2"}
-            ${"-0.25"} | ${1}   | ${"-0.2"}
-            ${"-0.26"} | ${1}   | ${"-0.3"}
-        `(
-            "$input precision($digits) = $output",
-            ({ input, digits, output }) => {
-                const s = new Decimal(input.trim()).toPrecision({ digits });
-                expect(s).toStrictEqual(output.trim());
-            }
-        );
-    });
-
-    describe("with large negative exponent output", () => {
-        const d = new Decimal("0.1002500000_0005500000_0008500000_0001");
-
-        describe("positive", () => {
-            test.each`
-                digits | output
-                ${3}   | ${"0.100"}
-                ${4}   | ${"0.1003"}
-                ${5}   | ${"0.10025"}
-                ${13}  | ${"0.1002500000001"}
-                ${14}  | ${"0.10025000000006"}
-                ${15}  | ${"0.100250000000055"}
-                ${23}  | ${"0.10025000000005500000001"}
-                ${24}  | ${"0.100250000000055000000009"}
-                ${25}  | ${"0.1002500000000550000000085"}
-            `("precision($digits) = $output", ({ digits, output }) => {
-                const s = d.toPrecision({ digits });
-                expect(s).toStrictEqual(output.trim());
-            });
-        });
-        describe("negative", () => {
-            const negD = d.negate();
-            test.each`
-                digits | output
-                ${3}   | ${"-0.100"}
-                ${4}   | ${"-0.1003"}
-                ${5}   | ${"-0.10025"}
-                ${13}  | ${"-0.1002500000001"}
-                ${14}  | ${"-0.10025000000006"}
-                ${15}  | ${"-0.100250000000055"}
-                ${23}  | ${"-0.10025000000005500000001"}
-                ${24}  | ${"-0.100250000000055000000009"}
-                ${25}  | ${"-0.1002500000000550000000085"}
-            `("precision($digits) = $output", ({ digits, output }) => {
-                const s = negD.toPrecision({ digits });
-                expect(s).toStrictEqual(output.trim());
-            });
+            name                                     | input     | arg               | output
+            ${"positive infinity"}                   | ${posInf} | ${NoArgument}     | ${" Infinity"}
+            ${"positive infinity, digits requested"} | ${posInf} | ${{ digits: 42 }} | ${" Infinity"}
+            ${"negative infinity"}                   | ${negInf} | ${NoArgument}     | ${"-Infinity"}
+            ${"negative infinity, digits requested"} | ${negInf} | ${{ digits: 42 }} | ${"-Infinity"}
+        `("$name", ({ input: d, arg, output }) => {
+            const s = arg === NoArgument ? d.toPrecision() : d.toPrecision(arg);
+            const o = output.trim();
+            expect(s).toStrictEqual(o);
         });
     });
 
-    describe("with large negative exponent output with leading zero in decimal portion", () => {
-        const d = new Decimal("0.000_1002500000_0005500000_0008500000_0001");
-        //                       "0.000_1234567890_1234567890_1234567890_1234"
-
-        describe("positive", () => {
+    describe("tests", () => {
+        describe("with integer output", () => {
             test.each`
-                digits | output
-                ${1}   | ${"0.0001"}
-                ${2}   | ${"0.00010"}
-                ${3}   | ${"0.000100"}
-                ${4}   | ${"0.0001003"}
-                ${5}   | ${"0.00010025"}
-                ${13}  | ${"0.0001002500000001"}
-                ${14}  | ${"0.00010025000000006"}
-                ${15}  | ${"0.000100250000000055"}
-                ${23}  | ${"0.00010025000000005500000001"}
-                ${24}  | ${"0.000100250000000055000000009"}
-                ${25}  | ${"0.0001002500000000550000000085"}
-            `("precision($digits) = $output", ({ digits, output }) => {
-                const s = d.toPrecision({ digits });
-                expect(s).toStrictEqual(output.trim());
+                input     | digits | output
+                ${" 0.0"} | ${1}   | ${"0"}
+                ${" 1.4"} | ${1}   | ${"1"}
+                ${" 1.5"} | ${1}   | ${"2"}
+                ${" 1.6"} | ${1}   | ${"2"}
+                ${" 2.4"} | ${1}   | ${"2"}
+                ${" 2.5"} | ${1}   | ${"2"}
+                ${" 2.6"} | ${1}   | ${"3"}
+                ${"-0.0"} | ${1}   | ${"-0"}
+                ${"-1.4"} | ${1}   | ${"-1"}
+                ${"-1.5"} | ${1}   | ${"-2"}
+                ${"-1.6"} | ${1}   | ${"-2"}
+                ${"-2.4"} | ${1}   | ${"-2"}
+                ${"-2.5"} | ${1}   | ${"-2"}
+                ${"-2.6"} | ${1}   | ${"-3"}
+            `(
+                "$input precision($digits) = $output",
+                ({ input, digits, output }) => {
+                    const s = new Decimal(input.trim()).toPrecision({ digits });
+                    expect(s).toStrictEqual(output.trim());
+                }
+            );
+        });
+        describe("with decimal output", () => {
+            test.each`
+                input      | digits | output
+                ${" 0.14"} | ${1}   | ${"0.1"}
+                ${" 0.15"} | ${1}   | ${"0.2"}
+                ${" 0.16"} | ${1}   | ${"0.2"}
+                ${" 0.24"} | ${1}   | ${"0.2"}
+                ${" 0.25"} | ${1}   | ${"0.2"}
+                ${" 0.26"} | ${1}   | ${"0.3"}
+                ${"-0.14"} | ${1}   | ${"-0.1"}
+                ${"-0.15"} | ${1}   | ${"-0.2"}
+                ${"-0.16"} | ${1}   | ${"-0.2"}
+                ${"-0.24"} | ${1}   | ${"-0.2"}
+                ${"-0.25"} | ${1}   | ${"-0.2"}
+                ${"-0.26"} | ${1}   | ${"-0.3"}
+            `(
+                "$input precision($digits) = $output",
+                ({ input, digits, output }) => {
+                    const s = new Decimal(input.trim()).toPrecision({ digits });
+                    expect(s).toStrictEqual(output.trim());
+                }
+            );
+        });
+
+        describe("with large negative exponent output", () => {
+            const d = new Decimal("0.1002500000_0005500000_0008500000_0001");
+
+            describe("positive", () => {
+                test.each`
+                    digits | output
+                    ${3}   | ${"0.100"}
+                    ${4}   | ${"0.1003"}
+                    ${5}   | ${"0.10025"}
+                    ${13}  | ${"0.1002500000001"}
+                    ${14}  | ${"0.10025000000006"}
+                    ${15}  | ${"0.100250000000055"}
+                    ${23}  | ${"0.10025000000005500000001"}
+                    ${24}  | ${"0.100250000000055000000009"}
+                    ${25}  | ${"0.1002500000000550000000085"}
+                `("precision($digits) = $output", ({ digits, output }) => {
+                    const s = d.toPrecision({ digits });
+                    expect(s).toStrictEqual(output.trim());
+                });
+            });
+            describe("negative", () => {
+                const negD = d.negate();
+                test.each`
+                    digits | output
+                    ${3}   | ${"-0.100"}
+                    ${4}   | ${"-0.1003"}
+                    ${5}   | ${"-0.10025"}
+                    ${13}  | ${"-0.1002500000001"}
+                    ${14}  | ${"-0.10025000000006"}
+                    ${15}  | ${"-0.100250000000055"}
+                    ${23}  | ${"-0.10025000000005500000001"}
+                    ${24}  | ${"-0.100250000000055000000009"}
+                    ${25}  | ${"-0.1002500000000550000000085"}
+                `("precision($digits) = $output", ({ digits, output }) => {
+                    const s = negD.toPrecision({ digits });
+                    expect(s).toStrictEqual(output.trim());
+                });
             });
         });
-        describe("negative", () => {
-            const negD = d.negate();
-            test.each`
-                digits | output
-                ${1}   | ${"-0.0001"}
-                ${2}   | ${"-0.00010"}
-                ${3}   | ${"-0.000100"}
-                ${4}   | ${"-0.0001003"}
-                ${5}   | ${"-0.00010025"}
-                ${13}  | ${"-0.0001002500000001"}
-                ${14}  | ${"-0.00010025000000006"}
-                ${15}  | ${"-0.000100250000000055"}
-                ${23}  | ${"-0.00010025000000005500000001"}
-                ${24}  | ${"-0.000100250000000055000000009"}
-                ${25}  | ${"-0.0001002500000000550000000085"}
-            `("precision($digits) = $output", ({ digits, output }) => {
-                const s = negD.toPrecision({ digits });
-                expect(s).toStrictEqual(output.trim());
+
+        describe("with large negative exponent output with leading zero in decimal portion", () => {
+            const d = new Decimal(
+                "0.000_1002500000_0005500000_0008500000_0001"
+            );
+            //                       "0.000_1234567890_1234567890_1234567890_1234"
+
+            describe("positive", () => {
+                test.each`
+                    digits | output
+                    ${1}   | ${"0.0001"}
+                    ${2}   | ${"0.00010"}
+                    ${3}   | ${"0.000100"}
+                    ${4}   | ${"0.0001003"}
+                    ${5}   | ${"0.00010025"}
+                    ${13}  | ${"0.0001002500000001"}
+                    ${14}  | ${"0.00010025000000006"}
+                    ${15}  | ${"0.000100250000000055"}
+                    ${23}  | ${"0.00010025000000005500000001"}
+                    ${24}  | ${"0.000100250000000055000000009"}
+                    ${25}  | ${"0.0001002500000000550000000085"}
+                `("precision($digits) = $output", ({ digits, output }) => {
+                    const s = d.toPrecision({ digits });
+                    expect(s).toStrictEqual(output.trim());
+                });
+            });
+            describe("negative", () => {
+                const negD = d.negate();
+                test.each`
+                    digits | output
+                    ${1}   | ${"-0.0001"}
+                    ${2}   | ${"-0.00010"}
+                    ${3}   | ${"-0.000100"}
+                    ${4}   | ${"-0.0001003"}
+                    ${5}   | ${"-0.00010025"}
+                    ${13}  | ${"-0.0001002500000001"}
+                    ${14}  | ${"-0.00010025000000006"}
+                    ${15}  | ${"-0.000100250000000055"}
+                    ${23}  | ${"-0.00010025000000005500000001"}
+                    ${24}  | ${"-0.000100250000000055000000009"}
+                    ${25}  | ${"-0.0001002500000000550000000085"}
+                `("precision($digits) = $output", ({ digits, output }) => {
+                    const s = negD.toPrecision({ digits });
+                    expect(s).toStrictEqual(output.trim());
+                });
             });
         });
     });

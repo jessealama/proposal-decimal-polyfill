@@ -111,27 +111,25 @@ describe("addition", () => {
             );
         });
     });
-});
-
-describe("specify rounding mode", () => {
-    test("truncate rounding mode", () => {
-        expect(
-            new Decimal("1234567890123456789012345678901234")
-                .add(new Decimal("0.5"), { roundingMode: "trunc" })
-                .toString()
-        ).toStrictEqual("1.234567890123456789012345678901234e+33");
+    describe("specify rounding mode", () => {
+        test("truncate rounding mode", () => {
+            expect(
+                new Decimal("1234567890123456789012345678901234")
+                    .add(new Decimal("0.5"), { roundingMode: "trunc" })
+                    .toString()
+            ).toStrictEqual("1.234567890123456789012345678901234e+33");
+        });
     });
-});
-
-describe("examples from the General Decimal Arithmetic specification", () => {
-    test("example one", () => {
-        expect(
-            new Decimal("12").add(new Decimal("7.00")).toString()
-        ).toStrictEqual("19");
-    });
-    test("example two", () => {
-        expect(
-            new Decimal("1E+2").add(new Decimal("1E+4")).toExponential()
-        ).toStrictEqual("1.01e+4");
+    describe("examples from the General Decimal Arithmetic specification", () => {
+        test("example one", () => {
+            expect(
+                new Decimal("12").add(new Decimal("7.00")).toString()
+            ).toStrictEqual("19");
+        });
+        test("example two", () => {
+            expect(
+                new Decimal("1E+2").add(new Decimal("1E+4")).toExponential()
+            ).toStrictEqual("1.01e+4");
+        });
     });
 });

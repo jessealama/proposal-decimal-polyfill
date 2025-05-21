@@ -89,50 +89,49 @@ describe("remainder", () => {
             ).toStrictEqual("NaN");
         });
     });
-});
 
-describe("examples from the General Decimal Arithmetic Specification", () => {
-    test("example one", () => {
-        expect(
-            new Decimal("2.1").remainder(new Decimal("3")).toString()
-        ).toStrictEqual("2.1");
+    describe("examples from the General Decimal Arithmetic Specification", () => {
+        test("example one", () => {
+            expect(
+                new Decimal("2.1").remainder(new Decimal("3")).toString()
+            ).toStrictEqual("2.1");
+        });
+        test("example two", () => {
+            expect(
+                new Decimal("10").remainder(new Decimal("3")).toString()
+            ).toStrictEqual("1");
+        });
+        test("example three", () => {
+            expect(
+                new Decimal("-10").remainder(new Decimal("3")).toString()
+            ).toStrictEqual("-1");
+        });
+        test("example four", () => {
+            expect(
+                new Decimal("10.2").remainder(new Decimal("1")).toString()
+            ).toStrictEqual("0.2");
+        });
+        test("example five", () => {
+            expect(
+                new Decimal("10").remainder(new Decimal("0.3")).toString()
+            ).toStrictEqual("0.1");
+        });
+        test("example six", () => {
+            expect(
+                new Decimal("3.6").remainder(new Decimal("1.3")).toString()
+            ).toStrictEqual("1"); // would be 1.0 in official IEEE 754
+        });
     });
-    test("example two", () => {
-        expect(
-            new Decimal("10").remainder(new Decimal("3")).toString()
-        ).toStrictEqual("1");
-    });
-    test("example three", () => {
-        expect(
-            new Decimal("-10").remainder(new Decimal("3")).toString()
-        ).toStrictEqual("-1");
-    });
-    test("example four", () => {
-        expect(
-            new Decimal("10.2").remainder(new Decimal("1")).toString()
-        ).toStrictEqual("0.2");
-    });
-    test("example five", () => {
-        expect(
-            new Decimal("10").remainder(new Decimal("0.3")).toString()
-        ).toStrictEqual("0.1");
-    });
-    test("example six", () => {
-        expect(
-            new Decimal("3.6").remainder(new Decimal("1.3")).toString()
-        ).toStrictEqual("1"); // would be 1.0 in official IEEE 754
-    });
-});
-
-describe("not the same as IEEE 754 remainder", () => {
-    test("42 % 10", () => {
-        expect(
-            new Decimal("42").remainder(new Decimal("10")).toString()
-        ).toStrictEqual("2");
-    });
-    test("46 % 10", () => {
-        expect(
-            new Decimal("46").remainder(new Decimal("10")).toString()
-        ).toStrictEqual("6");
+    describe("not the same as IEEE 754 remainder", () => {
+        test("42 % 10", () => {
+            expect(
+                new Decimal("42").remainder(new Decimal("10")).toString()
+            ).toStrictEqual("2");
+        });
+        test("46 % 10", () => {
+            expect(
+                new Decimal("46").remainder(new Decimal("10")).toString()
+            ).toStrictEqual("6");
+        });
     });
 });
