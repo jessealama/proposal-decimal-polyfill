@@ -662,8 +662,13 @@ export class Decimal {
     /**
      * Add this Decimal128 value to one or more Decimal128 values.
      *
-     * @param x
-     * @param opts
+     * @param x The Decimal128 value to add to this value.
+     * @param opts Optional object containing additional options for the operation.
+     *   @property {RoundingMode} [roundingMode] Specifies the rounding mode to use
+     *   when performing the addition. Valid values are defined in the `RoundingMode`
+     *   enumeration, such as `ROUNDING_MODE_HALF_EVEN`, `ROUNDING_MODE_TRUNCATE`,
+     *   `ROUNDING_MODE_CEILING`, and `ROUNDING_MODE_FLOOR`. Defaults to
+     *   `ROUNDING_MODE_HALF_EVEN`.
      */
     add(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
         let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
