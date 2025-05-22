@@ -154,7 +154,6 @@ export class Decimal {
     private readonly _isNaN: boolean = false;
     private readonly _isFinite: boolean = true;
     private readonly _isNegative: boolean = false;
-    static Amount: any;
 
     // methods to be defined later
     toAmount: any;
@@ -1140,89 +1139,110 @@ export class Decimal {
     }
 }
 
-Decimal.Amount = class Amount {
-    private val: Decimal;
-    public readonly trailingZeroes: number;
-    public readonly significantDigits: number;
-    public readonly fractionalDigits: number;
+export namespace Decimal {
+    export class Amount {
+        private val: Decimal;
+        public readonly trailingZeroes: number;
+        public readonly significantDigits: number;
+        public readonly fractionalDigits: number;
+        public readonly quantum: Decimal;
 
-    static from(s: string): Amount {
-        // @todo handle exponential notation, too, not just decimal notation
-        let [intPart, fracPart] = s.split(/[.]/);
-        let numFractionDigits = undefined === fracPart ? 0 : fracPart.length;
-        return new Amount(s, numFractionDigits);
-    }
-
-    constructor(val: string, fractionalDigits: number) {
-        if ("string" !== typeof val) {
-            throw new TypeError("Digit string argument must be a string");
+        static from(s: string): Amount {
+            // @todo handle exponential notation, too, not just decimal notation
+            let [_, fracPart] = s.split(/[.]/);
+            let numFractionDigits =
+                undefined === fracPart ? 0 : fracPart.length;
+            return new Amount(s, numFractionDigits);
         }
 
-        if ("number" !== typeof fractionalDigits) {
-            throw new TypeError("Precision argument must be a number");
-        }
-
-        let d = new Decimal(val);
-
-        this.val = d; // might throw
-
-        // @todo handle exponential notation, too, not just decimal notation
-
-        let [intPart, fracPart] = d
-            .toFixed({ digits: fractionalDigits })
-            .split(/[.]/);
-
-        this.fractionalDigits = undefined === fracPart ? 0 : fracPart.length;
-
-        if (undefined === fracPart) {
-            this.trailingZeroes = 0;
-        } else {
-            let m = fracPart.match(/0+$/);
-            if (m) {
-                this.trailingZeroes = m[0].length;
-            } else {
-                this.trailingZeroes = 0;
+        constructor(val: string, fractionalDigits: number) {
+            if ("string" !== typeof val) {
+                throw new TypeError("Digit string argument must be a string");
             }
+
+            if ("number" !== typeof fractionalDigits) {
+                throw new TypeError("Precision argument must be a number");
+            }
+
+            let d = new Decimal(val);
+
+            this.val = d; // might throw
+
+            // @todo handle exponential notation, too, not just decimal notation
+
+            let [intPart, fracPart] = d
+                .toFixed({ digits: fractionalDigits })
+                .split(/[.]/);
+
+            this.fractionalDigits =
+                undefined === fracPart ? 0 : fracPart.length;
+
+            if (undefined === fracPart) {
+                this.trailingZeroes = 0;
+            } else {
+                let m = fracPart.match(/0+$/);
+                if (m) {
+                    this.trailingZeroes = m[0].length;
+                } else {
+                    this.trailingZeroes = 0;
+                }
+            }
+
+            this.significantDigits =
+                intPart.length + (undefined === fracPart ? 0 : fracPart.length);
+
+            this.quantum = new Decimal(1n).scale10(0 - this.fractionalDigits);
         }
 
-        this.significantDigits =
-            intPart.length + (undefined === fracPart ? 0 : fracPart.length);
-    }
-
-    toString(): string {
-        return this.val.toFixed({ digits: this.fractionalDigits });
-    }
-
-    toLocaleString(locale: string, options: Intl.NumberFormatOptions): string {
-        if (undefined === options) {
-            options = {};
+        toDecimal(): Decimal {
+            return this.val;
         }
 
-        options.minimumFractionDigits = this.fractionalDigits;
+        toString(): string {
+            return this.val.toFixed({ digits: this.fractionalDigits });
+        }
 
-        let formatter = new Intl.NumberFormat(locale, options);
-        // @ts-ignore
-        return formatter.format(this.toString());
-    }
+        toLocaleString(
+            locale: string,
+            options: Intl.NumberFormatOptions
+        ): string {
+            if (undefined === options) {
+                options = {};
+            }
 
-    withSignificantDigits(precision: number): Amount {
-        let s = this.val.toPrecision({ digits: precision });
-        let [intPart, fracPart] = s.split(/[.]/);
-        let numFractionDigits = undefined === fracPart ? 0 : fracPart.length;
-        return new Amount(s, numFractionDigits);
-    }
+            options.minimumFractionDigits = this.fractionalDigits;
 
-    withFractionalDigits(precision: number): Amount {
-        return new Amount(this.val.toFixed({ digits: Infinity }), precision);
-    }
+            let formatter = new Intl.NumberFormat(locale, options);
+            // @ts-ignore
+            return formatter.format(this.toString());
+        }
 
-    withTrailingZeroes(precision: number): Amount {
-        let s = this.val.toFixed({ digits: this.fractionalDigits + precision });
-        let [intPart, fracPart] = s.split(/[.]/);
-        let numFractionDigits = undefined === fracPart ? 0 : fracPart.length;
-        return new Amount(s, numFractionDigits);
+        withSignificantDigits(precision: number): Amount {
+            let s = this.val.toPrecision({ digits: precision });
+            let [intPart, fracPart] = s.split(/[.]/);
+            let numFractionDigits =
+                undefined === fracPart ? 0 : fracPart.length;
+            return new Amount(s, numFractionDigits);
+        }
+
+        withFractionalDigits(precision: number): Amount {
+            return new Amount(
+                this.val.toFixed({ digits: Infinity }),
+                precision
+            );
+        }
+
+        withTrailingZeroes(precision: number): Amount {
+            let s = this.val.toFixed({
+                digits: this.fractionalDigits + precision,
+            });
+            let [intPart, fracPart] = s.split(/[.]/);
+            let numFractionDigits =
+                undefined === fracPart ? 0 : fracPart.length;
+            return new Amount(s, numFractionDigits);
+        }
     }
-};
+}
 
 Decimal.prototype.toAmount = function () {
     return Decimal.Amount.from(this.toFixed({ digits: Infinity }));
