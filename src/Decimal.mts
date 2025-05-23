@@ -37,6 +37,8 @@ const NAN = "NaN";
 const POSITIVE_INFINITY = "Infinity";
 const NEGATIVE_INFINITY = "-Infinity";
 
+type PrecisionMode = "fractionDigit" | "significantDigit" | "trailingZero";
+
 function RoundToDecimal128Domain(
     v: Rational,
     mode: RoundingMode = ROUNDING_MODE_HALF_EVEN
@@ -157,9 +159,7 @@ export class Decimal {
 
     // methods to be defined later
     toAmount: any;
-    withSignificantDigits: any;
-    withFractionalDigits: any;
-    withTrailingZeroes: any;
+    with: any;
 
     constructor(
         n: string | number | bigint,
@@ -1217,7 +1217,21 @@ export namespace Decimal {
             return formatter.format(this.toString());
         }
 
-        withSignificantDigits(precision: number): Amount {
+        with(opts: { kind: PrecisionMode; digits: number }): Amount {
+            let kind = opts.kind;
+            let digits = opts.digits;
+            if (kind === "fractionDigit") {
+                return this.withFractionalDigits(digits);
+            } else if (kind === "significantDigit") {
+                return this.withSignificantDigits(digits);
+            } else if (kind === "trailingZero") {
+                return this.withTrailingZeroes(digits);
+            } else {
+                throw new TypeError(`Invalid kind "${kind}"`);
+            }
+        }
+
+        private withSignificantDigits(precision: number): Amount {
             let s = this.val.toPrecision({ digits: precision });
             let [intPart, fracPart] = s.split(/[.]/);
             let numFractionDigits =
@@ -1225,14 +1239,14 @@ export namespace Decimal {
             return new Amount(s, numFractionDigits);
         }
 
-        withFractionalDigits(precision: number): Amount {
+        private withFractionalDigits(precision: number): Amount {
             return new Amount(
                 this.val.toFixed({ digits: Infinity }),
                 precision
             );
         }
 
-        withTrailingZeroes(precision: number): Amount {
+        private withTrailingZeroes(precision: number): Amount {
             let s = this.val.toFixed({
                 digits: this.fractionalDigits + precision,
             });
@@ -1245,6 +1259,12 @@ export namespace Decimal {
 }
 
 Decimal.prototype.toAmount = function () {
+    if (this.isNaN()) {
+        throw new RangeError("NaN cannot be converted to an Amount");
+    }
+    if (!this.isFinite()) {
+        throw new RangeError("Infinity cannot be converted to an Amount");
+    }
     return Decimal.Amount.from(this.toFixed({ digits: Infinity }));
 };
 
@@ -1252,38 +1272,15 @@ Decimal.prototype.valueOf = function () {
     throw TypeError("Decimal.prototype.valueOf throws unconditionally");
 };
 
-Decimal.prototype.withSignificantDigits = function (n: number): object {
-    if (this.isNaN()) {
-        throw new RangeError("Cannot create an amount from NaN");
-    }
-    if (!this.isFinite()) {
-        throw new RangeError("Cannot create an amount from Infinity");
-    }
-    return Decimal.Amount.from(
-        this.toFixed({ digits: Infinity })
-    ).withSignificantDigits(n);
-};
-
-Decimal.prototype.withFractionalDigits = function (n: number): object {
-    if (this.isNaN()) {
-        throw new RangeError("Cannot create an amount from NaN");
-    }
-    if (!this.isFinite()) {
-        throw new RangeError("Cannot create an amount from Infinity");
-    }
-    return Decimal.Amount.from(
-        this.toFixed({ digits: Infinity })
-    ).withFractionalDigits(n);
-};
-
-Decimal.prototype.withTrailingZeroes = function (n: number): object {
-    if (this.isNaN()) {
-        throw new RangeError("Cannot create an amount from NaN");
-    }
-    if (!this.isFinite()) {
-        throw new RangeError("Cannot create an amount from Infinity");
-    }
-    return Decimal.Amount.from(
-        this.toFixed({ digits: Infinity })
-    ).withTrailingZeroes(n);
+/**
+ * Convert this Decimal to an Amount, specifying the why in which precision should be understood
+ * and the number of digits of precision.
+ *
+ * @param opts
+ */
+Decimal.prototype.with = function (opts: {
+    kind: PrecisionMode;
+    digits: number;
+}): Decimal.Amount {
+    return this.toAmount().with(opts);
 };
