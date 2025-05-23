@@ -1272,6 +1272,12 @@ Decimal.prototype.valueOf = function () {
     throw TypeError("Decimal.prototype.valueOf throws unconditionally");
 };
 
+/**
+ * Convert this Decimal to an Amount, specifying the why in which precision should be understood
+ * and the number of digits of precision.
+ *
+ * @param opts
+ */
 Decimal.prototype.with = function (opts: {
     kind: PrecisionMode;
     digits: number;
