@@ -1281,6 +1281,28 @@ export namespace Decimal {
                 undefined === fracPart ? 0 : fracPart.length;
             return new Amount(s, numFractionDigits);
         }
+
+        /**
+         * Check whether this Amount is equal to another Amount, which means that they
+         * have the same mathematical value as well as the same precision (same number
+         * of trailing zeroes, significant digits, and fractional digits).
+         * @param other
+         */
+        equals(other: Amount): boolean {
+            if (!this.toDecimal().equals(other.toDecimal())) {
+                return false;
+            }
+
+            if (this.trailingZeroes !== other.trailingZeroes) {
+                return false;
+            }
+
+            if (this.significantDigits !== other.significantDigits) {
+                return false;
+            }
+
+            return this.fractionalDigits === other.fractionalDigits;
+        }
     }
 }
 
