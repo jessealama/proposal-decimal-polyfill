@@ -1,6 +1,6 @@
 {
     "name": "proposal-decimal",
-    "version": "20250521.0.0",
+    "version": "20250528.0.0",
     "description": "Champion-maintained polyfill for the TC39 decimal proposal",
     "main": "src/Decimal.mjs",
     "scripts": {
