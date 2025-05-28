@@ -37,7 +37,10 @@ const NAN = "NaN";
 const POSITIVE_INFINITY = "Infinity";
 const NEGATIVE_INFINITY = "-Infinity";
 
-type PrecisionMode = "fractionDigit" | "significantDigit" | "trailingZero";
+type PrecisionSpecification =
+    | { fractionDigit: number }
+    | { significantDigit: number }
+    | { trailingZero: number };
 
 function RoundToDecimal128Domain(
     v: Rational,
@@ -1217,17 +1220,20 @@ export namespace Decimal {
             return formatter.format(this.toString());
         }
 
-        with(opts: { kind: PrecisionMode; digits: number }): Amount {
-            let kind = opts.kind;
-            let digits = opts.digits;
-            if (kind === "fractionDigit") {
-                return this.withFractionalDigits(digits);
-            } else if (kind === "significantDigit") {
-                return this.withSignificantDigits(digits);
-            } else if (kind === "trailingZero") {
-                return this.withTrailingZeroes(digits);
+        with(opts: PrecisionSpecification): Amount {
+            if (opts.hasOwnProperty("fractionDigit")) {
+                // @ts-ignore
+                return this.withFractionalDigits(opts.fractionDigit);
+            } else if (opts.hasOwnProperty("significantDigit")) {
+                // @ts-ignore
+                return this.withSignificantDigits(opts.significantDigit);
+            } else if (opts.hasOwnProperty("trailingZero")) {
+                // @ts-ignore
+                return this.withTrailingZeroes(opts.trailingZero);
             } else {
-                throw new TypeError(`Invalid kind "${kind}"`);
+                throw new TypeError(
+                    "Don't know how to handle precision specification"
+                );
             }
         }
 
@@ -1273,14 +1279,13 @@ Decimal.prototype.valueOf = function () {
 };
 
 /**
- * Convert this Decimal to an Amount, specifying the why in which precision should be understood
+ * Convert this Decimal to an Amount, specifying the way in which precision should be understood
  * and the number of digits of precision.
  *
  * @param opts
  */
-Decimal.prototype.with = function (opts: {
-    kind: PrecisionMode;
-    digits: number;
-}): Decimal.Amount {
+Decimal.prototype.with = function (
+    opts: PrecisionSpecification
+): Decimal.Amount {
     return this.toAmount().with(opts);
 };
