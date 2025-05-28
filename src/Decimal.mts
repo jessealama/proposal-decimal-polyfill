@@ -357,6 +357,16 @@ export class Decimal {
             throw new RangeError("Argument must be greater than or equal to 0");
         }
 
+        if (this.isNaN()) {
+            return NAN;
+        }
+
+        if (!this.isFinite()) {
+            return this.isNegative()
+                ? "-" + POSITIVE_INFINITY
+                : POSITIVE_INFINITY;
+        }
+
         if (n === Infinity) {
             return this.emitDecimal();
         }
@@ -1158,7 +1168,7 @@ export namespace Decimal {
             return new Amount(s, numFractionDigits);
         }
 
-        constructor(val: string, fractionalDigits: number) {
+        private constructor(val: string, fractionalDigits: number) {
             if ("string" !== typeof val) {
                 throw new TypeError("Digit string argument must be a string");
             }
@@ -1167,34 +1177,44 @@ export namespace Decimal {
                 throw new TypeError("Precision argument must be a number");
             }
 
-            let d = new Decimal(val);
+            let d = new Decimal(val); // might throw
 
-            this.val = d; // might throw
+            this.val = d;
 
             // @todo handle exponential notation, too, not just decimal notation
 
-            let [intPart, fracPart] = d
-                .toFixed({ digits: fractionalDigits })
-                .split(/[.]/);
-
-            this.fractionalDigits =
-                undefined === fracPart ? 0 : fracPart.length;
-
-            if (undefined === fracPart) {
+            if (d.isNaN() || !d.isFinite()) {
+                this.fractionalDigits = 0;
                 this.trailingZeroes = 0;
+                this.significantDigits = 0;
+                this.quantum = new Decimal("0");
             } else {
-                let m = fracPart.match(/0+$/);
-                if (m) {
-                    this.trailingZeroes = m[0].length;
-                } else {
+                let [intPart, fracPart] = d
+                    .toFixed({ digits: fractionalDigits })
+                    .split(/[.]/);
+
+                this.fractionalDigits =
+                    undefined === fracPart ? 0 : fracPart.length;
+
+                if (undefined === fracPart) {
                     this.trailingZeroes = 0;
+                } else {
+                    let m = fracPart.match(/0+$/);
+                    if (m) {
+                        this.trailingZeroes = m[0].length;
+                    } else {
+                        this.trailingZeroes = 0;
+                    }
                 }
+
+                this.significantDigits =
+                    intPart.length +
+                    (undefined === fracPart ? 0 : fracPart.length);
+
+                this.quantum = new Decimal(1n).scale10(
+                    0 - this.fractionalDigits
+                );
             }
-
-            this.significantDigits =
-                intPart.length + (undefined === fracPart ? 0 : fracPart.length);
-
-            this.quantum = new Decimal(1n).scale10(0 - this.fractionalDigits);
         }
 
         toDecimal(): Decimal {
@@ -1265,12 +1285,6 @@ export namespace Decimal {
 }
 
 Decimal.prototype.toAmount = function () {
-    if (this.isNaN()) {
-        throw new RangeError("NaN cannot be converted to an Amount");
-    }
-    if (!this.isFinite()) {
-        throw new RangeError("Infinity cannot be converted to an Amount");
-    }
     return Decimal.Amount.from(this.toFixed({ digits: Infinity }));
 };
 

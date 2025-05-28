@@ -2,23 +2,27 @@ import { Decimal } from "../../src/Decimal.mjs";
 
 describe("with", () => {
     describe("fractiondigit", () => {
-        test("NaN throws", () => {
-            expect(() => new Decimal("NaN").with({ fractionDigit: 5 })).toThrow(
-                RangeError
-            );
+        test("NaN works", () => {
+            expect(
+                new Decimal("NaN").with({ fractionDigit: 5 }).toString()
+            ).toStrictEqual("NaN");
         });
         describe("infinity", () => {
-            test("positive throws", () => {
-                expect(() =>
-                    new Decimal("Infinity").with({ fractionDigit: 5 })
-                ).toThrow(RangeError);
+            test("positive works", () => {
+                expect(
+                    new Decimal("Infinity")
+                        .with({ fractionDigit: 5 })
+                        .toString()
+                ).toStrictEqual("Infinity");
             });
-            test("negative throws", () => {
-                expect(() =>
-                    new Decimal("-Infinity").with({
-                        fractionDigit: 5,
-                    })
-                ).toThrow(RangeError);
+            test("negative works", () => {
+                expect(
+                    new Decimal("-Infinity")
+                        .with({
+                            fractionDigit: 5,
+                        })
+                        .toString()
+                ).toStrictEqual("-Infinity");
             });
         });
         describe("-0", () => {
@@ -30,25 +34,29 @@ describe("with", () => {
         });
     });
     describe("significantdigit", () => {
-        test("NaN throws", () => {
-            expect(() =>
-                new Decimal("NaN").with({ significantDigit: 2 })
-            ).toThrow(RangeError);
+        test("NaN works", () => {
+            expect(
+                new Decimal("NaN").with({ significantDigit: 2 }).toString()
+            ).toStrictEqual("NaN");
         });
         describe("infinity", () => {
-            test("positive throws", () => {
-                expect(() =>
-                    new Decimal("Infinity").with({
-                        significantDigit: 2,
-                    })
-                ).toThrow(RangeError);
+            test("positive works", () => {
+                expect(
+                    new Decimal("Infinity")
+                        .with({
+                            significantDigit: 2,
+                        })
+                        .toString()
+                ).toStrictEqual("Infinity");
             });
-            test("negative throws", () => {
-                expect(() =>
-                    new Decimal("-Infinity").with({
-                        significantDigit: 2,
-                    })
-                ).toThrow(RangeError);
+            test("negative works", () => {
+                expect(
+                    new Decimal("-Infinity")
+                        .with({
+                            significantDigit: 2,
+                        })
+                        .toString()
+                ).toStrictEqual("-Infinity");
             });
         });
         describe("-0", () => {
@@ -60,25 +68,29 @@ describe("with", () => {
         });
     });
     describe("trailingzero", () => {
-        test("NaN throws", () => {
-            expect(() => new Decimal("NaN").with({ trailingZero: 5 })).toThrow(
-                RangeError
-            );
+        test("NaN works", () => {
+            expect(
+                new Decimal("NaN").with({ trailingZero: 5 }).toString()
+            ).toStrictEqual("NaN");
         });
         describe("infinity", () => {
-            test("positive throws", () => {
-                expect(() =>
-                    new Decimal("Infinity").with({
-                        trailingZero: 5,
-                    })
-                ).toThrow(RangeError);
+            test("positive works", () => {
+                expect(
+                    new Decimal("Infinity")
+                        .with({
+                            trailingZero: 5,
+                        })
+                        .toString()
+                ).toStrictEqual("Infinity");
             });
-            test("negative throws", () => {
-                expect(() =>
-                    new Decimal("-Infinity").with({
-                        trailingZero: 5,
-                    })
-                ).toThrow(RangeError);
+            test("negative works", () => {
+                expect(
+                    new Decimal("-Infinity")
+                        .with({
+                            trailingZero: 5,
+                        })
+                        .toString()
+                ).toStrictEqual("-Infinity");
             });
         });
         describe("-0", () => {
