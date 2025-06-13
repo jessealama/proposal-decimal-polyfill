@@ -138,14 +138,26 @@ describe("constructor", () => {
 
     describe("infinity", () => {
         test("valid infinity forms", () => {
-            expect(new Decimal("Infinity").toString()).toStrictEqual("Infinity");
-            expect(new Decimal("-Infinity").toString()).toStrictEqual("-Infinity");
+            expect(new Decimal("Infinity").toString()).toStrictEqual(
+                "Infinity"
+            );
+            expect(new Decimal("-Infinity").toString()).toStrictEqual(
+                "-Infinity"
+            );
         });
         test("invalid infinity case variations throw", () => {
             // Test various case variations that should all throw
             const invalidForms = [
-                "inf", "-inf", "Inf", "-Inf", "INF", "-INF",
-                "infinity", "-infinity", "INFINITY", "-INFINITY"
+                "inf",
+                "-inf",
+                "Inf",
+                "-Inf",
+                "INF",
+                "-INF",
+                "infinity",
+                "-infinity",
+                "INFINITY",
+                "-INFINITY",
             ];
             for (const form of invalidForms) {
                 expect(() => new Decimal(form)).toThrow(SyntaxError);

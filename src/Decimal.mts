@@ -38,12 +38,7 @@ const ROUNDING_MODE_TRUNCATE = "trunc";
 const ROUNDING_MODE_HALF_EVEN = "halfEven";
 const ROUNDING_MODE_HALF_EXPAND = "halfExpand";
 
-type RoundingMode =
-    | "ceil"
-    | "floor"
-    | "trunc"
-    | "halfEven"
-    | "halfExpand";
+type RoundingMode = "ceil" | "floor" | "trunc" | "halfEven" | "halfExpand";
 
 const ROUNDING_MODES: RoundingMode[] = [
     ROUNDING_MODE_CEILING,
@@ -57,7 +52,10 @@ const ROUNDING_MODES: RoundingMode[] = [
  * Apply a rounding mode to a positive CoefficientExponent value
  * This is an internal helper function corresponding to the spec's abstract operation
  */
-function ApplyRoundingModeToPositive(value: CoefficientExponent, mode: RoundingMode): CoefficientExponent {
+function ApplyRoundingModeToPositive(
+    value: CoefficientExponent,
+    mode: RoundingMode
+): CoefficientExponent {
     // Validate rounding mode
     if (!ROUNDING_MODES.includes(mode)) {
         throw new RangeError(`Invalid rounding mode: ${mode}`);
@@ -126,7 +124,11 @@ class CoefficientExponent {
      * @throws {RangeError} If coefficient is negative
      * @throws {TypeError} If exponent is not an integer
      */
-    constructor(coefficient: bigint, exponent: number, isNegative: boolean = false) {
+    constructor(
+        coefficient: bigint,
+        exponent: number,
+        isNegative: boolean = false
+    ) {
         if (coefficient < 0n) {
             throw new RangeError("Coefficient must be non-negative");
         }
@@ -193,7 +195,11 @@ class CoefficientExponent {
         if (this.isZero()) {
             return this;
         }
-        return new CoefficientExponent(this._coefficient, this._exponent, !this._isNegative);
+        return new CoefficientExponent(
+            this._coefficient,
+            this._exponent,
+            !this._isNegative
+        );
     }
 
     /**
@@ -202,7 +208,11 @@ class CoefficientExponent {
      */
     abs(): CoefficientExponent {
         if (this._isNegative) {
-            return new CoefficientExponent(this._coefficient, this._exponent, false);
+            return new CoefficientExponent(
+                this._coefficient,
+                this._exponent,
+                false
+            );
         }
         return this;
     }
@@ -261,7 +271,11 @@ class CoefficientExponent {
         if (!Number.isSafeInteger(newExponent)) {
             throw new RangeError("Exponent overflow");
         }
-        return new CoefficientExponent(this._coefficient, newExponent, this._isNegative);
+        return new CoefficientExponent(
+            this._coefficient,
+            newExponent,
+            this._isNegative
+        );
     }
 
     /**
@@ -410,14 +424,14 @@ class CoefficientExponent {
         if (exp1 > exp2) {
             // this has larger exponent, so scale this coefficient up
             const diff = exp1 - exp2;
-            const scaledThisCoeff = this._coefficient * (10n ** BigInt(diff));
+            const scaledThisCoeff = this._coefficient * 10n ** BigInt(diff);
             if (scaledThisCoeff < other._coefficient) return -1;
             if (scaledThisCoeff > other._coefficient) return 1;
             return 0;
         } else {
             // other has larger exponent, so scale other coefficient up
             const diff = exp2 - exp1;
-            const scaledOtherCoeff = other._coefficient * (10n ** BigInt(diff));
+            const scaledOtherCoeff = other._coefficient * 10n ** BigInt(diff);
             if (this._coefficient < scaledOtherCoeff) return -1;
             if (this._coefficient > scaledOtherCoeff) return 1;
             return 0;
@@ -461,10 +475,14 @@ class CoefficientExponent {
 
         // Align to the smaller exponent
         const minExp = Math.min(exp1, exp2);
-        const coeff1 = this._coefficient * (10n ** BigInt(exp1 - minExp));
-        const coeff2 = other._coefficient * (10n ** BigInt(exp2 - minExp));
+        const coeff1 = this._coefficient * 10n ** BigInt(exp1 - minExp);
+        const coeff2 = other._coefficient * 10n ** BigInt(exp2 - minExp);
 
-        return new CoefficientExponent(coeff1 + coeff2, minExp, this._isNegative);
+        return new CoefficientExponent(
+            coeff1 + coeff2,
+            minExp,
+            this._isNegative
+        );
     }
 
     /**
@@ -495,13 +513,21 @@ class CoefficientExponent {
 
         // Align to the smaller exponent
         const minExp = Math.min(exp1, exp2);
-        const coeff1 = this._coefficient * (10n ** BigInt(exp1 - minExp));
-        const coeff2 = other._coefficient * (10n ** BigInt(exp2 - minExp));
+        const coeff1 = this._coefficient * 10n ** BigInt(exp1 - minExp);
+        const coeff2 = other._coefficient * 10n ** BigInt(exp2 - minExp);
 
         if (coeff1 >= coeff2) {
-            return new CoefficientExponent(coeff1 - coeff2, minExp, this._isNegative);
+            return new CoefficientExponent(
+                coeff1 - coeff2,
+                minExp,
+                this._isNegative
+            );
         } else {
-            return new CoefficientExponent(coeff2 - coeff1, minExp, !this._isNegative);
+            return new CoefficientExponent(
+                coeff2 - coeff1,
+                minExp,
+                !this._isNegative
+            );
         }
     }
 
@@ -540,7 +566,7 @@ class CoefficientExponent {
         // To get an exact result, we need to scale up the dividend
         // We'll use a large scale factor to ensure precision
         const scaleFactor = 100; // This gives us 100 extra decimal places
-        const scaledDividend = this._coefficient * (10n ** BigInt(scaleFactor));
+        const scaledDividend = this._coefficient * 10n ** BigInt(scaleFactor);
 
         const quotient = scaledDividend / other._coefficient;
         const remainder = scaledDividend % other._coefficient;
@@ -604,9 +630,14 @@ class CoefficientExponent {
      * @returns {CoefficientExponent} The rounded value
      * @throws {RangeError} If numSignificantDigits is not positive
      */
-    roundToSignificantDigits(numSignificantDigits: number, mode: RoundingMode): CoefficientExponent {
+    roundToSignificantDigits(
+        numSignificantDigits: number,
+        mode: RoundingMode
+    ): CoefficientExponent {
         if (numSignificantDigits <= 0) {
-            throw new RangeError("Number of significant digits must be positive");
+            throw new RangeError(
+                "Number of significant digits must be positive"
+            );
         }
 
         if (this.isZero()) {
@@ -628,11 +659,22 @@ class CoefficientExponent {
         let newCoefficient = quotient;
         if (remainder !== 0n) {
             // Create a fractional value to determine rounding
-            const fraction = new CoefficientExponent(remainder, -digitsToRemove, false);
-            const halfUnit = new CoefficientExponent(5n * (10n ** BigInt(digitsToRemove - 1)), -digitsToRemove, false);
+            const fraction = new CoefficientExponent(
+                remainder,
+                -digitsToRemove,
+                false
+            );
+            const halfUnit = new CoefficientExponent(
+                5n * 10n ** BigInt(digitsToRemove - 1),
+                -digitsToRemove,
+                false
+            );
 
             const shouldRoundUp = (() => {
-                if (mode === ROUNDING_MODE_FLOOR || mode === ROUNDING_MODE_TRUNCATE) {
+                if (
+                    mode === ROUNDING_MODE_FLOOR ||
+                    mode === ROUNDING_MODE_TRUNCATE
+                ) {
                     return false;
                 }
                 if (mode === ROUNDING_MODE_CEILING) {
@@ -674,9 +716,14 @@ class CoefficientExponent {
      * @returns {CoefficientExponent} The rounded value
      * @throws {RangeError} If numFractionalDigits is negative or invalid rounding mode
      */
-    round(numFractionalDigits: number, mode: RoundingMode): CoefficientExponent {
+    round(
+        numFractionalDigits: number,
+        mode: RoundingMode
+    ): CoefficientExponent {
         if (numFractionalDigits < 0) {
-            throw new RangeError("Cannot round to negative number of decimal places");
+            throw new RangeError(
+                "Cannot round to negative number of decimal places"
+            );
         }
 
         // Validate rounding mode
@@ -697,7 +744,10 @@ class CoefficientExponent {
             }
 
             const absScaled = scaled.abs();
-            const rounded = ApplyRoundingModeToPositive(absScaled, adjustedMode);
+            const rounded = ApplyRoundingModeToPositive(
+                absScaled,
+                adjustedMode
+            );
             const result = rounded.scale10(-BigInt(numFractionalDigits));
             return result.negate();
         } else {
@@ -731,7 +781,10 @@ class CoefficientExponent {
         }
 
         // Round to the specified number of significant digits
-        const rounded = this.roundToSignificantDigits(digits, ROUNDING_MODE_HALF_EVEN);
+        const rounded = this.roundToSignificantDigits(
+            digits,
+            ROUNDING_MODE_HALF_EVEN
+        );
 
         // Calculate the effective exponent (where decimal point would be after first digit)
         const coeffStr = rounded._coefficient.toString();
@@ -765,7 +818,11 @@ class CoefficientExponent {
                     const totalSignificantDigits = coeffStr.length;
                     if (totalSignificantDigits < digits) {
                         // Need trailing zeros
-                        return sign + result + "0".repeat(digits - totalSignificantDigits);
+                        return (
+                            sign +
+                            result +
+                            "0".repeat(digits - totalSignificantDigits)
+                        );
                     }
                     return sign + result;
                 } else {
@@ -776,7 +833,11 @@ class CoefficientExponent {
                     const totalSignificantDigits = coeffStr.length;
                     if (totalSignificantDigits < digits) {
                         // Need trailing zeros
-                        return sign + result + "0".repeat(digits - totalSignificantDigits);
+                        return (
+                            sign +
+                            result +
+                            "0".repeat(digits - totalSignificantDigits)
+                        );
                     }
                     return sign + result;
                 }
@@ -793,7 +854,9 @@ class CoefficientExponent {
                     return sign + coeffStr + expStr;
                 } else {
                     // Need decimal point and trailing zeros
-                    return sign + coeffStr + "." + "0".repeat(digits - 1) + expStr;
+                    return (
+                        sign + coeffStr + "." + "0".repeat(digits - 1) + expStr
+                    );
                 }
             } else {
                 // Multiple digit coefficient
@@ -804,14 +867,20 @@ class CoefficientExponent {
 
                 if (fracPart.length < digits - 1) {
                     // Need trailing zeros
-                    return sign + intPart + "." + fracPart + "0".repeat(digits - 1 - fracPart.length) + expStr;
+                    return (
+                        sign +
+                        intPart +
+                        "." +
+                        fracPart +
+                        "0".repeat(digits - 1 - fracPart.length) +
+                        expStr
+                    );
                 } else {
                     return sign + intPart + "." + fracPart + expStr;
                 }
             }
         }
     }
-
 }
 
 function RoundToDecimal128Domain(
@@ -953,7 +1022,7 @@ export class Decimal {
 
     /**
      * Creates a new Decimal128 value.
-     * 
+     *
      * @param n The value to convert to a Decimal128. Can be a string, number, bigint, or CoefficientExponent.
      *   - String values can be in decimal notation (e.g., "123.45") or scientific notation (e.g., "1.23e+2")
      *   - Special string values "NaN", "Infinity", and "-Infinity" are supported
@@ -965,7 +1034,7 @@ export class Decimal {
      *   Defaults to "halfEven".
      * @throws {SyntaxError} If the string format is invalid
      * @throws {RangeError} If the value cannot be represented as a Decimal128
-     * 
+     *
      * @example
      * new Decimal("123.45")      // 123.45
      * new Decimal("1.23e+2")     // 123
@@ -1028,7 +1097,7 @@ export class Decimal {
 
     /**
      * Checks if this Decimal128 value is NaN (Not a Number).
-     * 
+     *
      * @returns {boolean} True if this value is NaN, false otherwise
      */
     public isNaN(): boolean {
@@ -1037,7 +1106,7 @@ export class Decimal {
 
     /**
      * Checks if this Decimal128 value is finite (not NaN, Infinity, or -Infinity).
-     * 
+     *
      * @returns {boolean} True if this value is finite, false otherwise
      */
     public isFinite(): boolean {
@@ -1047,7 +1116,7 @@ export class Decimal {
     /**
      * Checks if this Decimal128 value is negative.
      * Note that -0 is considered negative, and NaN returns false.
-     * 
+     *
      * @returns {boolean} True if this value is negative (including -0 and -Infinity), false otherwise
      */
     public isNegative(): boolean {
@@ -1069,7 +1138,7 @@ export class Decimal {
     /**
      * Returns the mantissa (significand) of this Decimal128 value.
      * The mantissa is normalized to be in the range [1, 10).
-     * 
+     *
      * @returns {Decimal} The mantissa as a Decimal value in the range [1, 10)
      * @throws {RangeError} If this value is zero (zero has no mantissa)
      */
@@ -1095,7 +1164,7 @@ export class Decimal {
         // We know the mantissa will be in the form "d.ddd..." where d is 1-9
         let mantissaStr: string;
         if (numDigits === 1) {
-            mantissaStr = coefficientStr;  // Single digit, already in [1, 9]
+            mantissaStr = coefficientStr; // Single digit, already in [1, 9]
         } else {
             // Insert decimal point after first digit
             mantissaStr = coefficientStr[0] + "." + coefficientStr.slice(1);
@@ -1107,7 +1176,7 @@ export class Decimal {
     /**
      * Scales this Decimal128 value by 10^n.
      * This operation multiplies the value by 10 raised to the power of n.
-     * 
+     *
      * @param {number} n The power of 10 to scale by (must be an integer)
      * @returns {Decimal} A new Decimal value equal to this * 10^n
      * @throws {RangeError} If this value is NaN
@@ -1168,7 +1237,7 @@ export class Decimal {
      * Returns a string representation of this Decimal128 value.
      * Uses decimal notation for values with exponents between -6 and 20 (inclusive),
      * and exponential notation otherwise.
-     * 
+     *
      * @returns {string} The string representation of this value
      */
     toString(): string {
@@ -1197,7 +1266,7 @@ export class Decimal {
 
     /**
      * Returns a string representation of this Decimal128 value in fixed-point notation.
-     * 
+     *
      * @param {Object} [opts] Optional configuration object
      * @param {number} [opts.digits] The number of digits to appear after the decimal point.
      *   Must be an integer >= 0. If not specified, uses the default toString() behavior.
@@ -1275,7 +1344,7 @@ export class Decimal {
 
     /**
      * Returns a string representation of this Decimal128 value with a specified number of significant digits.
-     * 
+     *
      * @param {Object} [opts] Optional configuration object
      * @param {number} [opts.digits] The number of significant digits. Must be a positive integer.
      * @returns {string} The string representation with the specified precision
@@ -1331,7 +1400,7 @@ export class Decimal {
 
     /**
      * Returns a string representation of this Decimal128 value in exponential notation.
-     * 
+     *
      * @param {Object} [opts] Optional configuration object
      * @param {number} [opts.digits] The number of digits after the decimal point in the mantissa.
      *   Must be a positive integer.
@@ -1398,7 +1467,7 @@ export class Decimal {
     /**
      * Converts this Decimal128 value to a BigInt.
      * The value must be an integer (no fractional part).
-     * 
+     *
      * @returns {bigint} The BigInt representation of this value
      * @throws {RangeError} If this value is NaN
      * @throws {RangeError} If this value is infinite
@@ -1425,7 +1494,7 @@ export class Decimal {
     /**
      * Converts this Decimal128 value to a JavaScript number.
      * Note that this may lose precision as JavaScript numbers are 64-bit floats.
-     * 
+     *
      * @returns {number} The JavaScript number representation of this value
      */
     toNumber(): number {
@@ -1446,7 +1515,7 @@ export class Decimal {
 
     /**
      * Compares this Decimal128 value with another Decimal128 value.
-     * 
+     *
      * @param {Decimal} x The value to compare with
      * @returns {number} Returns:
      *   - NaN if either value is NaN
@@ -1500,7 +1569,7 @@ export class Decimal {
     /**
      * Checks if this Decimal128 value is equal to another Decimal128 value.
      * NaN is not equal to any value, including itself.
-     * 
+     *
      * @param {Decimal} other The value to compare with
      * @returns {boolean} True if the values are mathematically equal, false otherwise
      */
@@ -1527,7 +1596,7 @@ export class Decimal {
     /**
      * Checks if this Decimal128 value is not equal to another Decimal128 value.
      * Note that NaN.notEquals(NaN) returns false, as NaN comparisons always return false.
-     * 
+     *
      * @param {Decimal} other The value to compare with
      * @returns {boolean} True if the values are not mathematically equal, false if equal or if either is NaN
      */
@@ -1541,7 +1610,7 @@ export class Decimal {
 
     /**
      * Checks if this Decimal128 value is less than another Decimal128 value.
-     * 
+     *
      * @param {Decimal} x The value to compare with
      * @returns {boolean} True if this < x, false otherwise (including when either value is NaN)
      */
@@ -1551,7 +1620,7 @@ export class Decimal {
 
     /**
      * Checks if this Decimal128 value is less than or equal to another Decimal128 value.
-     * 
+     *
      * @param {Decimal} x The value to compare with
      * @returns {boolean} True if this <= x, false otherwise (including when either value is NaN)
      */
@@ -1567,7 +1636,7 @@ export class Decimal {
 
     /**
      * Checks if this Decimal128 value is greater than another Decimal128 value.
-     * 
+     *
      * @param {Decimal} x The value to compare with
      * @returns {boolean} True if this > x, false otherwise (including when either value is NaN)
      */
@@ -1577,7 +1646,7 @@ export class Decimal {
 
     /**
      * Checks if this Decimal128 value is greater than or equal to another Decimal128 value.
-     * 
+     *
      * @param {Decimal} x The value to compare with
      * @returns {boolean} True if this >= x, false otherwise (including when either value is NaN)
      */
@@ -1593,7 +1662,7 @@ export class Decimal {
 
     /**
      * Returns the absolute value of this Decimal128 value.
-     * 
+     *
      * @returns {Decimal} A new Decimal value that is the absolute value of this value
      */
     abs(): Decimal {
@@ -1748,7 +1817,10 @@ export class Decimal {
             return new Decimal("0");
         }
 
-        let rounded = RoundToDecimal128Domain(difference, mode) as CoefficientExponent;
+        let rounded = RoundToDecimal128Domain(
+            difference,
+            mode
+        ) as CoefficientExponent;
 
         return new Decimal(rounded);
     }
@@ -1822,7 +1894,10 @@ export class Decimal {
         }
 
         let product = ourCohort.multiply(theirCohort);
-        let rounded = RoundToDecimal128Domain(product, mode) as CoefficientExponent;
+        let rounded = RoundToDecimal128Domain(
+            product,
+            mode
+        ) as CoefficientExponent;
 
         return new Decimal(rounded);
     }
@@ -1916,7 +1991,10 @@ export class Decimal {
         let ourV = this.d as CoefficientExponent;
         let theirV = x.d as CoefficientExponent;
         let quotient = ourV.divide(theirV);
-        let rounded = RoundToDecimal128Domain(quotient, mode) as CoefficientExponent;
+        let rounded = RoundToDecimal128Domain(
+            quotient,
+            mode
+        ) as CoefficientExponent;
 
         return new Decimal(rounded);
     }
