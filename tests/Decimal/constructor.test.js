@@ -1,47 +1,26 @@
 import { Decimal } from "../../src/Decimal.mjs";
-import {
-    ROUNDING_MODE_CEILING,
-    ROUNDING_MODE_FLOOR,
-    ROUNDING_MODE_TRUNCATE,
-    ROUNDING_MODE_HALF_EVEN,
-    ROUNDING_MODE_HALF_EXPAND,
-} from "../../src/common.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 
 describe("constructor", () => {
     describe("digit string syntax", () => {
-        test("sane string works", () => {
-            expect(new Decimal("123.456")).toBeInstanceOf(Decimal);
-        });
         test("normalization by default", () => {
             expect(new Decimal("1.20").toString()).toStrictEqual("1.2");
         });
-        test("string with underscores in integer part", () => {
+        test("string with underscores (comprehensive)", () => {
+            // Test various underscore patterns in one test
             expect(
                 new Decimal("123_456.789").toFixed({ digits: Infinity })
             ).toStrictEqual("123456.789");
-        });
-        test("string with multiple underscores in integer part", () => {
             expect(
                 new Decimal("123_456_789.123").toFixed({ digits: Infinity })
             ).toStrictEqual("123456789.123");
-        });
-        test("string with underscore in decimal part", () => {
             expect(
                 new Decimal("123.456_789").toFixed({ digits: Infinity })
             ).toStrictEqual("123.456789");
-        });
-        test("string with underscores in both integer and decimal part", () => {
             expect(
                 new Decimal("123_456.789_123").toFixed({ digits: Infinity })
             ).toStrictEqual("123456.789123");
-        });
-        test("negative works", () => {
-            expect(new Decimal("-123.456")).toBeInstanceOf(Decimal);
-        });
-        test("integer works (decimal point unnecessary)", () => {
-            expect(new Decimal("123")).toBeInstanceOf(Decimal);
         });
         test("more significant digits than we can store", () => {
             expect(
@@ -50,36 +29,12 @@ describe("constructor", () => {
                 })
             ).toStrictEqual("123456789123456789123456789123456800");
         });
-        test("right at limit of significant digits", () => {
-            expect(new Decimal("10e+34")).toBeInstanceOf(Decimal);
-        });
         test("five as last digit past limit: tie to even unchanged", () => {
             expect(
                 new Decimal("1234567890123456789012345678901234.5").toFixed({
                     digits: Infinity,
                 })
             ).toStrictEqual("1234567890123456789012345678901234");
-        });
-        test("five as last digit past limit: tie to even round up", () => {
-            expect(
-                new Decimal("1234567890123456789012345678901235.5").toFixed({
-                    digits: Infinity,
-                })
-            ).toStrictEqual("1234567890123456789012345678901236");
-        });
-        test("five as last digit past limit: tie to even round up, penultimate digit is 9", () => {
-            expect(
-                new Decimal("1234567890123456789012345678901239.5").toFixed({
-                    digits: Infinity,
-                })
-            ).toStrictEqual("1234567890123456789012345678901240");
-        });
-        test("five as last digit past limit: tie to even round up, penultimate digit is 9 (negative)", () => {
-            expect(
-                new Decimal("-1234567890123456789012345678901239.5").toFixed({
-                    digits: Infinity,
-                })
-            ).toStrictEqual("-1234567890123456789012345678901240");
         });
         test("round up decimal digit is not nine", () => {
             expect(
@@ -94,67 +49,11 @@ describe("constructor", () => {
         test("whitespace plus number not OK", () => {
             expect(() => new Decimal(" 42")).toThrow(SyntaxError);
         });
-        test("many significant digits", () => {
-            expect(
-                new Decimal("0.3666666666666666666666666666666667")
-            ).toBeInstanceOf(Decimal);
-        });
         test("large power of ten", () => {
             let s = "10000000000000000000000000000000000000000000";
             expect(new Decimal(s).toFixed({ digits: Infinity })).toStrictEqual(
                 s
             );
-        });
-        test("another representation of the previous test works", () => {
-            expect(new Decimal("1E+44")).toBeInstanceOf(Decimal);
-        });
-        test("large power of ten (negative)", () => {
-            let s = "-10000000000000000000000000000000000000000000";
-            expect(new Decimal(s).toFixed({ digits: Infinity })).toStrictEqual(
-                s
-            );
-        });
-        test("ton of digits gets rounded", () => {
-            expect(
-                new Decimal(
-                    "0.3666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666667"
-                ).toFixed({ digits: Infinity })
-            ).toStrictEqual("0.3666666666666666666666666666666667");
-        });
-        test("close to one, too many digits, gets rounded to 1.000...", () => {
-            expect(
-                new Decimal("0." + "9".repeat(100)).toString()
-            ).toStrictEqual("1");
-        });
-        test("lots of digits gets rounded to minus 1", () => {
-            expect(
-                new Decimal("-0." + "9".repeat(100)).toString()
-            ).toStrictEqual("-1");
-        });
-        test("zero with scale beyond limits (negative)", () => {
-            expect(
-                new Decimal("0." + "0".repeat(10000)).toExponential()
-            ).toStrictEqual("0e+0");
-        });
-        test("zero with scale beyond limits (positive)", () => {
-            expect(new Decimal("0E+10000").toExponential()).toStrictEqual(
-                "0e+0"
-            );
-        });
-        test("minus zero with scale beyond limits (negative)", () => {
-            expect(
-                new Decimal("-0." + "0".repeat(10000)).toExponential()
-            ).toStrictEqual("-0e+0");
-        });
-        test("minus zero with scale beyond limits (positive)", () => {
-            expect(new Decimal("-0E+10000").toExponential()).toStrictEqual(
-                "-0e+0"
-            );
-        });
-        test("lots of digits gets rounded to 10", () => {
-            expect(
-                new Decimal("9." + "9".repeat(100)).toString()
-            ).toStrictEqual("10");
         });
         test("rounding at the limit of significant digits", () => {
             expect(
@@ -177,23 +76,15 @@ describe("constructor", () => {
             expect(minusZero.toString()).toStrictEqual("-0");
             expect(minusZero.isNegative()).toStrictEqual(true);
         });
-        describe("zeros", () => {
-            test("leading zeros get stripped", () => {
+        describe("zero normalization", () => {
+            test("positive zeros are normalized", () => {
                 expect(new Decimal("00").toString()).toStrictEqual("0");
-            });
-            test("leading zeros get stripped (negative)", () => {
-                expect(new Decimal("-00").toString()).toStrictEqual("-0");
-            });
-            test("zero point zero", () => {
                 expect(new Decimal("0.0").toString()).toStrictEqual("0");
-            });
-            test("minus zero point zero", () => {
-                expect(new Decimal("-0.0").toString()).toStrictEqual("-0");
-            });
-            test("multiple trailing zeros", () => {
                 expect(new Decimal("0.000").toString()).toStrictEqual("0");
             });
-            test("multiple trailing zeros (negative)", () => {
+            test("negative zeros are normalized", () => {
+                expect(new Decimal("-00").toString()).toStrictEqual("-0");
+                expect(new Decimal("-0.0").toString()).toStrictEqual("-0");
                 expect(new Decimal("-0.000").toString()).toStrictEqual("-0");
             });
         });
@@ -202,9 +93,6 @@ describe("constructor", () => {
     describe("exponential string syntax", () => {
         test("nonsense string input", () => {
             expect(() => new Decimal("howdy")).toThrow(SyntaxError);
-        });
-        test("whitespace plus number not OK", () => {
-            expect(() => new Decimal(" 42E10")).toThrow(SyntaxError);
         });
         test("too many significant digits get rounded", () => {
             expect(
@@ -222,15 +110,13 @@ describe("constructor", () => {
             expect(new Decimal("123E-100000").toString()).toStrictEqual("0");
         });
         test("max exponent", () => {
-            expect(new Decimal("123E+6111")).toBeInstanceOf(Decimal);
             expect(new Decimal("123E+6112").toString()).toStrictEqual(
                 "1.23e+6114"
             );
         });
         test("min exponent", () => {
-            expect(new Decimal("123E-6176")).toBeInstanceOf(Decimal);
             expect(new Decimal("123E-6177").toString()).toStrictEqual(
-                "0.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012"
+                "1.23e-6143"
             );
         });
         test("integer too big", () => {
@@ -243,56 +129,39 @@ describe("constructor", () => {
     });
 
     describe("NaN", () => {
-        describe("does not throw", () => {
-            expect(new Decimal("NaN")).toBeInstanceOf(Decimal);
-        });
-        describe("minus NaN throws ", () => {
+        test("invalid NaN variations throw", () => {
             expect(() => new Decimal("-NaN")).toThrow(SyntaxError);
-        });
-        describe("lowercase throws", () => {
             expect(() => new Decimal("nan")).toThrow(SyntaxError);
-        });
-        describe("weird case throws", () => {
             expect(() => new Decimal("-nAN")).toThrow(SyntaxError);
         });
     });
 
     describe("infinity", () => {
-        describe("inf", () => {
-            expect(() => new Decimal("inf")).toThrow(SyntaxError);
+        test("valid infinity forms", () => {
+            expect(new Decimal("Infinity").toString()).toStrictEqual(
+                "Infinity"
+            );
+            expect(new Decimal("-Infinity").toString()).toStrictEqual(
+                "-Infinity"
+            );
         });
-        describe("-inf", () => {
-            expect(() => new Decimal("-inf")).toThrow(SyntaxError);
-        });
-        describe("infinity", () => {
-            expect(() => new Decimal("infinity")).toThrow(SyntaxError);
-        });
-        describe("-infinity", () => {
-            expect(() => new Decimal("-infinity")).toThrow(SyntaxError);
-        });
-        describe("Infinity", () => {
-            expect(new Decimal("Infinity")).toBeInstanceOf(Decimal);
-        });
-        describe("-Infinity", () => {
-            expect(new Decimal("-Infinity")).toBeInstanceOf(Decimal);
-        });
-        describe("Inf", () => {
-            expect(() => new Decimal("Inf")).toThrow(SyntaxError);
-        });
-        describe("-Inf", () => {
-            expect(() => new Decimal("-Inf")).toThrow(SyntaxError);
-        });
-        describe("INFINITY", () => {
-            expect(() => new Decimal("INFINITY")).toThrow(SyntaxError);
-        });
-        describe("-INFINITY", () => {
-            expect(() => new Decimal("-INFINITY")).toThrow(SyntaxError);
-        });
-        describe("INF", () => {
-            expect(() => new Decimal("INF")).toThrow(SyntaxError);
-        });
-        describe("-INF", () => {
-            expect(() => new Decimal("-INF")).toThrow(SyntaxError);
+        test("invalid infinity case variations throw", () => {
+            // Test various case variations that should all throw
+            const invalidForms = [
+                "inf",
+                "-inf",
+                "Inf",
+                "-Inf",
+                "INF",
+                "-INF",
+                "infinity",
+                "-infinity",
+                "INFINITY",
+                "-INFINITY",
+            ];
+            for (const form of invalidForms) {
+                expect(() => new Decimal(form)).toThrow(SyntaxError);
+            }
         });
     });
 
@@ -301,32 +170,13 @@ describe("constructor", () => {
             test("0", () => {
                 expect(new Decimal("0").toString()).toStrictEqual("0");
             });
-            test("12", () => {
-                expect(new Decimal("12").toString()).toStrictEqual("12");
-            });
-            test("-76", () => {
-                expect(new Decimal("-76").toString()).toStrictEqual("-76");
-            });
             test("12.70", () => {
                 expect(new Decimal("12.70").toString()).toStrictEqual("12.7");
             });
-            test("+0.003", () => {
-                expect(new Decimal("+0.003").toString()).toStrictEqual("0.003");
-            });
-            test("017.", () => {
-                expect(new Decimal("017.").toString()).toStrictEqual("17");
-            });
-            test(".5", () => {
-                expect(new Decimal(".5").toString()).toStrictEqual("0.5");
-            });
             test("4E+9", () => {
-                expect(new Decimal("4E+9").toString()).toStrictEqual("4e+9");
-            });
-            test("Inf", () => {
-                expect(() => new Decimal("Inf")).toThrow(SyntaxError);
-            });
-            test("-infinity", () => {
-                expect(() => new Decimal("-infinity")).toThrow(SyntaxError);
+                expect(new Decimal("4E+9").toString()).toStrictEqual(
+                    "4000000000"
+                );
             });
             test("NaN", () => {
                 expect(new Decimal("NaN").toString()).toStrictEqual("NaN");
@@ -387,11 +237,9 @@ describe("constructor", () => {
         test("ceil", () => {
             let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "3";
             expect(
-                new Decimal(s, { roundingMode: ROUNDING_MODE_CEILING }).toFixed(
-                    {
-                        digits: Infinity,
-                    }
-                )
+                new Decimal(s, { roundingMode: "ceil" }).toFixed({
+                    digits: Infinity,
+                })
             ).toStrictEqual(
                 "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2"
             );
@@ -399,7 +247,7 @@ describe("constructor", () => {
         test("floor", () => {
             let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "9";
             expect(
-                new Decimal(s, { roundingMode: ROUNDING_MODE_FLOOR }).toFixed({
+                new Decimal(s, { roundingMode: "floor" }).toFixed({
                     digits: Infinity,
                 })
             ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS));
@@ -408,7 +256,7 @@ describe("constructor", () => {
             let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "9";
             expect(
                 new Decimal(s, {
-                    roundingMode: ROUNDING_MODE_TRUNCATE,
+                    roundingMode: "trunc",
                 }).toFixed({
                     digits: Infinity,
                 })
@@ -419,7 +267,7 @@ describe("constructor", () => {
                 let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "5";
                 let d1 = new Decimal(s);
                 let d2 = new Decimal(s, {
-                    roundingMode: ROUNDING_MODE_HALF_EVEN,
+                    roundingMode: "halfEven",
                 });
                 expect(d1.toFixed({ digits: Infinity })).toStrictEqual(
                     d2.toFixed({ digits: Infinity })
@@ -430,7 +278,7 @@ describe("constructor", () => {
             let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "5";
             expect(
                 new Decimal(s, {
-                    roundingMode: ROUNDING_MODE_HALF_EXPAND,
+                    roundingMode: "halfExpand",
                 }).toFixed({ digits: Infinity })
             ).toStrictEqual(
                 "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2"

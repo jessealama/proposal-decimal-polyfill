@@ -23,7 +23,7 @@ describe("division", () => {
             new Decimal("0.00000000000000000000000000000000000001")
                 .divide(new Decimal("2"))
                 .toString()
-        ).toStrictEqual("0.000000000000000000000000000000000000005");
+        ).toStrictEqual("5e-39");
     });
     test("one third", () => {
         expect(
@@ -191,6 +191,209 @@ describe("division", () => {
             expect(
                 new Decimal("2.40E+6").divide(new Decimal("2")).toExponential()
             ).toStrictEqual("1.2e+6");
+        });
+    });
+
+    describe("edge cases for Decimal128 limits", () => {
+        describe("division causing overflow", () => {
+            test("divide large value by small value overflows", () => {
+                const large = new Decimal("1E+6144");
+                const small = new Decimal("1E-10");
+                // 1E+6144 / 1E-10 = 1E+6154, which overflows
+                expect(large.divide(small).toString()).toStrictEqual(
+                    "Infinity"
+                );
+            });
+
+            test("divide maximum by tiny value", () => {
+                const max = new Decimal(
+                    "9.999999999999999999999999999999999E+6144"
+                );
+                const tiny = new Decimal("1E-100");
+                // Would produce approximately 1E+6244
+                expect(max.divide(tiny).toString()).toStrictEqual("Infinity");
+            });
+
+            test("divide near overflow boundary", () => {
+                const dividend = new Decimal("1E+6140");
+                const divisor = new Decimal("1E-5");
+                // 1E+6140 / 1E-5 = 1E+6145, which overflows
+                expect(dividend.divide(divisor).toString()).toStrictEqual(
+                    "Infinity"
+                );
+            });
+
+            test("negative overflow in division", () => {
+                const large = new Decimal("-5E+6144");
+                const small = new Decimal("1E-10");
+                expect(large.divide(small).toString()).toStrictEqual(
+                    "-Infinity"
+                );
+            });
+        });
+
+        describe("division causing underflow", () => {
+            test("divide small by large underflows to zero", () => {
+                const small = new Decimal("1E-6100");
+                const large = new Decimal("1E+100");
+                // 1E-6100 / 1E+100 = 1E-6200, which underflows
+                expect(small.divide(large).toString()).toStrictEqual("0");
+            });
+
+            test("divide at underflow boundary", () => {
+                const small = new Decimal("1E-6143");
+                const large = new Decimal("1E+34");
+                // 1E-6143 / 1E+34 = 1E-6177, which underflows
+                expect(small.divide(large).toString()).toStrictEqual("0");
+            });
+
+            test("divide subnormal by normal", () => {
+                const subnormal = new Decimal("1E-6150");
+                const normal = new Decimal("10");
+                // Result normalizes to E-6143
+                expect(subnormal.divide(normal).toString()).toStrictEqual(
+                    "1e-6143"
+                );
+            });
+
+            test("negative underflow to negative zero", () => {
+                const small = new Decimal("-1E-6100");
+                const large = new Decimal("1E+100");
+                expect(small.divide(large).toString()).toStrictEqual("-0");
+            });
+        });
+
+        describe("extreme quotients", () => {
+            test("maximum divided by minimum", () => {
+                const max = new Decimal(
+                    "9.999999999999999999999999999999999E+6144"
+                );
+                const min = new Decimal("1E-6176");
+                // Would produce approximately 1E+6321, massive overflow
+                expect(max.divide(min).toString()).toStrictEqual("Infinity");
+            });
+
+            test("minimum divided by maximum", () => {
+                const min = new Decimal("1E-6176");
+                const max = new Decimal(
+                    "9.999999999999999999999999999999999E+6144"
+                );
+                // Would produce approximately 1E-6321, massive underflow
+                expect(min.divide(max).toString()).toStrictEqual("0");
+            });
+
+            test("divide values with extreme exponent difference", () => {
+                const val1 = new Decimal("1E+3000");
+                const val2 = new Decimal("1E-3000");
+                // 1E+3000 / 1E-3000 = 1E+6000, still within range
+                expect(val1.divide(val2).toString()).toStrictEqual("1e+6000");
+            });
+        });
+
+        describe("precision at extremes", () => {
+            test("divide with full precision near max", () => {
+                const dividend = new Decimal(
+                    "9.999999999999999999999999999999999E+6144"
+                );
+                const divisor = new Decimal(
+                    "3.333333333333333333333333333333333"
+                );
+                // Should maintain precision
+                expect(dividend.divide(divisor).toString()).toStrictEqual(
+                    "3e+6144"
+                );
+            });
+
+            test("divide maintaining 34 significant digits", () => {
+                const val1 = new Decimal(
+                    "1.234567890123456789012345678901234E+6000"
+                );
+                const val2 = new Decimal(
+                    "1.111111111111111111111111111111111E+100"
+                );
+                // Should preserve significant digits
+                expect(val1.divide(val2).toString()).toStrictEqual(
+                    "1.111111101111111110111111111011111e+5900"
+                );
+            });
+
+            test("division creating repeating decimal at extreme", () => {
+                const val1 = new Decimal("1E+6144");
+                const val2 = new Decimal("3");
+                // 1E+6144 / 3 = 3.333...E+6143
+                expect(val1.divide(val2).toString()).toStrictEqual(
+                    "3.333333333333333333333333333333333e+6143"
+                );
+            });
+        });
+
+        describe("special division patterns", () => {
+            test("divide by values very close to 1", () => {
+                const max = new Decimal(
+                    "9.999999999999999999999999999999999E+6144"
+                );
+                const nearOne = new Decimal(
+                    "1.000000000000000000000000000000001"
+                );
+                // Should be very close to max
+                expect(max.divide(nearOne).toString()).toStrictEqual(
+                    "9.999999999999999999999999999999989e+6144"
+                );
+            });
+
+            test("reciprocal of maximum value", () => {
+                const max = new Decimal(
+                    "9.999999999999999999999999999999999E+6144"
+                );
+                const one = new Decimal("1");
+                // 1 / max normalizes to 1E-6143
+                expect(one.divide(max).toString()).toStrictEqual("1e-6143");
+            });
+
+            test("reciprocal of minimum normal", () => {
+                const minNormal = new Decimal("1E-6143");
+                const one = new Decimal("1");
+                // 1 / 1E-6143 = 1E+6143
+                expect(one.divide(minNormal).toString()).toStrictEqual(
+                    "1e+6143"
+                );
+            });
+
+            test("self-division at extremes", () => {
+                const extreme = new Decimal(
+                    "9.999999999999999999999999999999999E+6144"
+                );
+                expect(extreme.divide(extreme).toString()).toStrictEqual("1");
+            });
+        });
+
+        describe("rounding modes at extremes", () => {
+            test("division with truncate rounding", () => {
+                const val1 = new Decimal(
+                    "9.999999999999999999999999999999999E+6144"
+                );
+                const val2 = new Decimal("3");
+                expect(
+                    val1.divide(val2, { roundingMode: "trunc" }).toString()
+                ).toStrictEqual("3.333333333333333333333333333333333e+6144");
+            });
+
+            test("division with ceiling rounding near overflow", () => {
+                const val1 = new Decimal("3E+6144");
+                const val2 = new Decimal("0.3");
+                // 3E+6144 / 0.3 = 1E+6145, which overflows
+                expect(
+                    val1.divide(val2, { roundingMode: "ceil" }).toString()
+                ).toStrictEqual("Infinity");
+            });
+
+            test("division with floor rounding", () => {
+                const val1 = new Decimal("1E+6144");
+                const val2 = new Decimal("3");
+                expect(
+                    val1.divide(val2, { roundingMode: "floor" }).toString()
+                ).toStrictEqual("3.333333333333333333333333333333333e+6143");
+            });
         });
     });
 });

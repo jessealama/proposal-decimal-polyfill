@@ -121,13 +121,11 @@ describe("toExponential", () => {
             expect(new Decimal("1.23E+5").toString()).toStrictEqual("123000");
         });
         test("1.23E-8", () => {
-            expect(new Decimal("1.23E-8").toString()).toStrictEqual(
-                "0.0000000123"
-            );
+            expect(new Decimal("1.23E-8").toString()).toStrictEqual("1.23e-8");
         });
         test("-1.23E-10", () => {
             expect(new Decimal("-1.23E-10").toString()).toStrictEqual(
-                "-0.000000000123"
+                "-1.23e-10"
             );
         });
         test("0E+2", () => {

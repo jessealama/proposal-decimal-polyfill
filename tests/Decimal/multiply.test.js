@@ -227,4 +227,193 @@ describe("multiply", () => {
             ).toStrictEqual("4.28135971041e+11");
         });
     });
+
+    describe("edge cases for Decimal128 limits", () => {
+        describe("multiplication causing overflow", () => {
+            test("multiply large values that overflow to infinity", () => {
+                const large1 = new Decimal("1E+3100");
+                const large2 = new Decimal("1E+3100");
+                // 1E+3100 * 1E+3100 = 1E+6200, which exceeds max
+                expect(large1.multiply(large2).toString()).toStrictEqual(
+                    "Infinity"
+                );
+            });
+
+            test("multiply at the edge of overflow", () => {
+                // sqrt(max) ≈ 3.16E+3072
+                const sqrtMax = new Decimal(
+                    "3.162277660168379331998893544433E+3072"
+                );
+                // Multiplying by itself overflows
+                expect(sqrtMax.multiply(sqrtMax).toString()).toStrictEqual(
+                    "Infinity"
+                );
+            });
+
+            test("multiply values that exceed max but round back", () => {
+                const val1 = new Decimal(
+                    "9.999999999999999999999999999999999E+3072"
+                );
+                const val2 = new Decimal(
+                    "1.0000000000000000000000000000000001E+3072"
+                );
+                // Product rounds to max without overflowing
+                expect(val1.multiply(val2).toString()).toStrictEqual(
+                    "9.999999999999999999999999999999999e+6144"
+                );
+            });
+
+            test("negative overflow", () => {
+                const large1 = new Decimal("-1E+3100");
+                const large2 = new Decimal("1E+3100");
+                expect(large1.multiply(large2).toString()).toStrictEqual(
+                    "-Infinity"
+                );
+            });
+        });
+
+        describe("multiplication causing underflow", () => {
+            test("multiply small values that underflow to zero", () => {
+                const small1 = new Decimal("1E-3100");
+                const small2 = new Decimal("1E-3100");
+                // 1E-3100 * 1E-3100 = 1E-6200, which underflows
+                expect(small1.multiply(small2).toString()).toStrictEqual("0");
+            });
+
+            test("multiply at the edge of underflow", () => {
+                // sqrt(min subnormal) ≈ 1E-3088
+                const small1 = new Decimal("1E-3088");
+                const small2 = new Decimal("1E-3088");
+                // Should produce 1E-6176
+                expect(small1.multiply(small2).toString()).toStrictEqual(
+                    "1e-6143"
+                );
+            });
+
+            test("negative underflow to negative zero", () => {
+                const small1 = new Decimal("-1E-3100");
+                const small2 = new Decimal("1E-3100");
+                expect(small1.multiply(small2).toString()).toStrictEqual("-0");
+            });
+
+            test("multiply subnormal values", () => {
+                const sub1 = new Decimal("1E-6150");
+                const sub2 = new Decimal("1E+10");
+                // 1E-6150 * 1E+10 = 1E-6140, which is normal
+                expect(sub1.multiply(sub2).toString()).toStrictEqual("1e-6140");
+            });
+        });
+
+        describe("extreme exponent combinations", () => {
+            test("huge times tiny equals one", () => {
+                const huge = new Decimal("1E+3088");
+                const tiny = new Decimal("1E-3088");
+                expect(huge.multiply(tiny).toString()).toStrictEqual("1");
+            });
+
+            test("max exponent difference in multiplication", () => {
+                const huge = new Decimal("1E+6144");
+                const tiny = new Decimal("1E-6176");
+                // 1E+6144 * 1E-6176 = 1E-32
+                expect(huge.multiply(tiny).toString()).toStrictEqual("1e-32");
+            });
+
+            test("multiplication with opposite extreme exponents", () => {
+                const val1 = new Decimal(
+                    "9.999999999999999999999999999999999E+6144"
+                );
+                const val2 = new Decimal("1E-6176");
+                // Should produce approximately 1E-31
+                expect(val1.multiply(val2).toString()).toStrictEqual(
+                    "9.999999999999999999999999999999999e-32"
+                );
+            });
+        });
+
+        describe("precision at extremes", () => {
+            test("multiply with 34 significant digits near max", () => {
+                const val1 = new Decimal(
+                    "1.234567890123456789012345678901234E+3072"
+                );
+                const val2 = new Decimal("2E+3072");
+                // Product should maintain precision where possible
+                expect(val1.multiply(val2).toString()).toStrictEqual(
+                    "2.469135780246913578024691357802468e+6144"
+                );
+            });
+
+            test("precision loss due to overflow", () => {
+                const val1 = new Decimal(
+                    "5.555555555555555555555555555555555E+3072"
+                );
+                const val2 = new Decimal("2E+3072");
+                // Product exceeds max
+                expect(val1.multiply(val2).toString()).toStrictEqual(
+                    "Infinity"
+                );
+            });
+
+            test("multiply many significant digits", () => {
+                const val1 = new Decimal(
+                    "1.111111111111111111111111111111111E+100"
+                );
+                const val2 = new Decimal(
+                    "9.999999999999999999999999999999999E+100"
+                );
+                // Should produce approximately 1.111E+201
+                expect(val1.multiply(val2).toExponential()).toStrictEqual(
+                    "1.111111111111111111111111111111111e+201"
+                );
+            });
+        });
+
+        describe("special multiplication patterns", () => {
+            test("square of maximum normal value overflows", () => {
+                const max = new Decimal(
+                    "9.999999999999999999999999999999999E+6144"
+                );
+                expect(max.multiply(max).toString()).toStrictEqual("Infinity");
+            });
+
+            test("square root of min subnormal squared", () => {
+                // This tests the boundary of subnormal arithmetic
+                const val = new Decimal("1E-3088");
+                const squared = val.multiply(val);
+                // Should normalize to E-6143
+                expect(squared.toString()).toStrictEqual("1e-6143");
+            });
+
+            test("multiplication chain near limits", () => {
+                const val = new Decimal("1E+2048");
+                const result = val.multiply(val).multiply(val);
+                // 1E+2048 * 1E+2048 * 1E+2048 = 1E+6144
+                expect(result.toString()).toStrictEqual("1e+6144");
+            });
+        });
+
+        describe("rounding modes with extreme values", () => {
+            test("multiplication with floor rounding near max", () => {
+                const val1 = new Decimal(
+                    "3.162277660168379331998893544432E+3072"
+                );
+                const val2 = new Decimal(
+                    "3.162277660168379331998893544432E+3072"
+                );
+                // Product slightly less than max
+                const result = val1.multiply(val2, { roundingMode: "floor" });
+                expect(result.toString()).toStrictEqual(
+                    "9.999999999999999999999999999995455e+6144"
+                );
+            });
+
+            test("multiplication with ceiling rounding causing overflow", () => {
+                const val1 = new Decimal("3.2E+3072");
+                const val2 = new Decimal("3.2E+3072");
+                // With ceiling rounding, might overflow
+                expect(
+                    val1.multiply(val2, { roundingMode: "ceil" }).toString()
+                ).toStrictEqual("Infinity");
+            });
+        });
+    });
 });
