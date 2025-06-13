@@ -8,7 +8,7 @@
         "format": "prettier . --write",
         "lint": "prettier . --check",
         "coverage": "npx c8 npx jest",
-        "build": "mkdir dist && esbuild src/Decimal.mjs --bundle --esm --outfile=dist/Decimal.mjs"
+        "build": "mkdir -p dist && esbuild src/Decimal.mjs --bundle --format=esm --outfile=dist/Decimal.mjs"
     },
     "prettier": {
         "trailingComma": "es5",

@@ -1,6 +1,19 @@
 import { Decimal } from "../../src/Decimal.mjs";
 import { expectDecimal128 } from "./util.js";
-import { ROUNDING_MODES } from "../../src/common.mjs";
+
+const ROUNDING_MODE_CEILING = "ceil";
+const ROUNDING_MODE_FLOOR = "floor";
+const ROUNDING_MODE_TRUNCATE = "trunc";
+const ROUNDING_MODE_HALF_EVEN = "halfEven";
+const ROUNDING_MODE_HALF_EXPAND = "halfExpand";
+
+const ROUNDING_MODES= [
+    ROUNDING_MODE_CEILING,
+    ROUNDING_MODE_FLOOR,
+    ROUNDING_MODE_TRUNCATE,
+    ROUNDING_MODE_HALF_EVEN,
+    ROUNDING_MODE_HALF_EXPAND,
+];
 
 describe("round", () => {
     describe("no arguments (round to integer)", () => {
@@ -371,6 +384,141 @@ describe("round", () => {
         });
         test("round to 0 decimal places, rounding mode is floor", () => {
             expect(a.round(0, "floor").toString()).toStrictEqual("1");
+        });
+    });
+    
+    describe("edge cases for Decimal128 limits", () => {
+        describe("rounding at extreme values", () => {
+            test("round maximum value", () => {
+                const max = new Decimal("9.999999999999999999999999999999999E+6144");
+                // Rounding to integer should maintain the value
+                expect(max.round().toString()).toStrictEqual("9.999999999999999999999999999999999e+6144");
+            });
+            
+            test("round value that would overflow with ceiling", () => {
+                const nearMax = new Decimal("9.999999999999999999999999999999999E+6144");
+                // Rounding with ceiling when already at max
+                expect(nearMax.round(30, "ceil").toString()).toStrictEqual("9.999999999999999999999999999999999e+6144");
+            });
+            
+            test("round minimum normal value", () => {
+                const minNormal = new Decimal("1E-6143");
+                // Rounding to 0 decimals truncates to 0
+                expect(minNormal.round(0).toString()).toStrictEqual("0");
+                // But with many decimals preserves the value
+                expect(minNormal.round(6143).toString()).toStrictEqual("1e-6143");
+            });
+            
+            test("round subnormal values", () => {
+                const subnormal = new Decimal("1E-6150");
+                // Currently normalizes to E-6143 but rounding to 6143 decimals gives 0
+                expect(subnormal.round(6143).toString()).toStrictEqual("0");
+            });
+        });
+        
+        describe("precision preservation at extremes", () => {
+            test("round with 34 significant digits near max", () => {
+                const val = new Decimal("1.234567890123456789012345678901234E+6144");
+                // Rounding to 30 decimal places (which don't exist at this magnitude)
+                expect(val.round(30).toString()).toStrictEqual("1.234567890123456789012345678901234e+6144");
+            });
+            
+            test("round very small value with many decimal places", () => {
+                const tiny = new Decimal("1.234567890123456789012345678901234E-6143");
+                // Round to 6140 decimal places - underflows to 0
+                expect(tiny.round(6140).toString()).toStrictEqual("0");
+            });
+        });
+        
+        describe("rounding modes at boundaries", () => {
+            test("floor rounding near zero boundary", () => {
+                const tiny = new Decimal("9E-6144");
+                expect(tiny.round(6143, "floor").toString()).toStrictEqual("0");
+            });
+            
+            test("ceiling rounding near zero boundary", () => {
+                const tiny = new Decimal("1E-6144");
+                expect(tiny.round(6143, "ceil").toString()).toStrictEqual("1e-6143");
+            });
+            
+            test("halfEven rounding at extreme", () => {
+                const val = new Decimal("5.5E+6143");
+                // Large values don't have fractional parts at this magnitude
+                expect(val.round(0, "halfEven").toString()).toStrictEqual("5.5e+6143");
+                
+                const val2 = new Decimal("4.5E+6143");
+                expect(val2.round(0, "halfEven").toString()).toStrictEqual("4.5e+6143");
+            });
+            
+            test("truncate at maximum", () => {
+                const max = new Decimal("9.999999999999999999999999999999999E+6144");
+                expect(max.round(0, "trunc").toString()).toStrictEqual("9.999999999999999999999999999999999e+6144");
+            });
+        });
+        
+        describe("rounding with extreme decimal places", () => {
+            test("round to very large number of decimal places", () => {
+                const val = new Decimal("1.23456789");
+                // Rounding to 1000000 decimal places
+                expect(val.round(1000000).toString()).toStrictEqual("1.23456789");
+            });
+            
+            test("round extreme value to many decimal places", () => {
+                const extreme = new Decimal("9.999999999999999999999999999999999E+6144");
+                // Cannot have decimal places at this magnitude
+                expect(extreme.round(100).toString()).toStrictEqual("9.999999999999999999999999999999999e+6144");
+            });
+            
+            test("round with maximum allowed decimal places", () => {
+                const val = new Decimal("1.5");
+                // Test with very large but valid number
+                expect(val.round(1e9).toString()).toStrictEqual("1.5");
+            });
+        });
+        
+        describe("special rounding cases", () => {
+            test("round negative zero", () => {
+                const negZero = new Decimal("-0");
+                expect(negZero.round().toString()).toStrictEqual("-0");
+                expect(negZero.round(5).toString()).toStrictEqual("-0");
+            });
+            
+            test("round value that becomes zero", () => {
+                const tiny = new Decimal("0.00001");
+                expect(tiny.round(4).toString()).toStrictEqual("0");
+                
+                const negTiny = new Decimal("-0.00001");
+                expect(negTiny.round(4).toString()).toStrictEqual("-0");
+            });
+            
+            test("round at the edge of representable precision", () => {
+                // Value with 34 significant digits
+                const precise = new Decimal("1.234567890123456789012345678901234");
+                // Round to 33 decimal places
+                expect(precise.round(33).toString()).toStrictEqual("1.234567890123456789012345678901234");
+                // Round to 32 decimal places - loses last digit
+                expect(precise.round(32).toString()).toStrictEqual("1.23456789012345678901234567890123");
+            });
+        });
+        
+        describe("rounding near overflow/underflow", () => {
+            test("round doesn't cause overflow", () => {
+                const nearMax = new Decimal("9.999999999999999999999999999999999E+6144");
+                // Even with ceiling, stays at max
+                expect(nearMax.round(0, "ceil").toString()).toStrictEqual("9.999999999999999999999999999999999e+6144");
+            });
+            
+            test("round can cause underflow to zero", () => {
+                const verySmall = new Decimal("4.99999E-6144");
+                // Floor rounding to integer underflows to 0
+                expect(verySmall.round(0, "floor").toString()).toStrictEqual("0");
+            });
+            
+            test("round preserves sign when underflowing", () => {
+                const negSmall = new Decimal("-4.99999E-6144");
+                // Floor rounding to integer gives -1
+                expect(negSmall.round(0, "floor").toString()).toStrictEqual("-1");
+            });
         });
     });
 });

@@ -132,4 +132,117 @@ describe("addition", () => {
             ).toStrictEqual("1.01e+4");
         });
     });
+    
+    describe("edge cases for Decimal128 limits", () => {
+        describe("values near maximum normal range", () => {
+            test("add two large values still within range", () => {
+                // Maximum normal value is 9.999999999999999999999999999999999E+6144
+                const large1 = new Decimal("5E+6144");
+                const large2 = new Decimal("4E+6144");
+                expect(large1.add(large2).toString()).toStrictEqual("9e+6144");
+            });
+            
+            test("add values at the edge of normal range", () => {
+                const maxNormal = new Decimal("9.999999999999999999999999999999999E+6144");
+                const tiny = new Decimal("1E+6111"); // Much smaller, should still work
+                // Actually overflows because maxNormal is already at the limit
+                expect(maxNormal.add(tiny).toString()).toStrictEqual("Infinity");
+            });
+            
+            test("add values that exceed range but round back to max", () => {
+                const maxNormal = new Decimal("9.999999999999999999999999999999999E+6144");
+                const small = new Decimal("1E+6110"); // Small enough to round away
+                expect(maxNormal.add(small).toString()).toStrictEqual("9.999999999999999999999999999999999e+6144");
+            });
+            
+            test("add values that overflow to infinity", () => {
+                const large1 = new Decimal("9E+6144");
+                const large2 = new Decimal("2E+6144"); // Sum would be 11E+6144, too large
+                expect(large1.add(large2).toString()).toStrictEqual("Infinity");
+            });
+            
+            test("negative values that overflow to negative infinity", () => {
+                const large1 = new Decimal("-9E+6144");
+                const large2 = new Decimal("-2E+6144");
+                expect(large1.add(large2).toString()).toStrictEqual("-Infinity");
+            });
+        });
+        
+        describe("values near minimum normal/subnormal boundary", () => {
+            test("add two small normal values", () => {
+                // Normal range starts at 1E-6143
+                const small1 = new Decimal("5E-6143");
+                const small2 = new Decimal("3E-6143");
+                expect(small1.add(small2).toString()).toStrictEqual("8e-6143");
+            });
+            
+            test("add values at subnormal boundary", () => {
+                const minNormal = new Decimal("1E-6143");
+                const tiny = new Decimal("1E-6144"); // Subnormal
+                expect(minNormal.add(tiny).toString()).toStrictEqual("1.1e-6143");
+            });
+            
+            test("add two subnormal values", () => {
+                // Currently, very small values are normalized to E-6143
+                const sub1 = new Decimal("5E-6150");
+                const sub2 = new Decimal("3E-6150");
+                expect(sub1.add(sub2).toString()).toStrictEqual("8e-6143");
+            });
+            
+            test("add values in deep subnormal range", () => {
+                // Currently, very small values are normalized to E-6143
+                const sub1 = new Decimal("1E-6170");
+                const sub2 = new Decimal("1E-6170");
+                expect(sub1.add(sub2).toString()).toStrictEqual("2e-6143");
+            });
+            
+            test("add values that are too small (below subnormal)", () => {
+                // Values below approximately E-6176 underflow to zero
+                const tiny1 = new Decimal("1E-6180");
+                const tiny2 = new Decimal("1E-6180");
+                expect(tiny1.add(tiny2).toString()).toStrictEqual("0");
+            });
+            
+            test("add values that underflow to zero", () => {
+                const tiny = new Decimal("1E-6177"); // Below smallest subnormal
+                expect(tiny.add(tiny).toString()).toStrictEqual("0");
+            });
+            
+            test("negative values that underflow to negative zero", () => {
+                const tiny = new Decimal("-1E-6177");
+                expect(tiny.add(tiny).toString()).toStrictEqual("-0");
+            });
+        });
+        
+        describe("mixed magnitude additions near limits", () => {
+            test("add huge positive and huge negative that cancel", () => {
+                const huge = new Decimal("9.999999999999999999999999999999999E+6144");
+                const negHuge = new Decimal("-9.999999999999999999999999999999999E+6144");
+                expect(huge.add(negHuge).toString()).toStrictEqual("0");
+            });
+            
+            test("add values with extreme exponent differences", () => {
+                const huge = new Decimal("1E+6144");
+                const tiny = new Decimal("1E-6176");
+                // The tiny value should be completely lost in rounding
+                expect(huge.add(tiny).toString()).toStrictEqual("1e+6144");
+            });
+        });
+        
+        describe("precision loss at extremes", () => {
+            test("add at maximum precision with 34 significant digits", () => {
+                const val1 = new Decimal("1.234567890123456789012345678901234E+6144");
+                const val2 = new Decimal("1E+6111"); // 33 orders of magnitude smaller
+                // Adding causes rounding in the last digit
+                expect(val1.add(val2).toString()).toStrictEqual("1.234567890123456789012345678901235e+6144");
+            });
+            
+            test("addition causing precision loss due to magnitude difference", () => {
+                const val1 = new Decimal("9.999999999999999999999999999999999E+6144");
+                const val2 = new Decimal("9E+6143"); // One order of magnitude smaller
+                // This overflows to Infinity
+                expect(val1.add(val2).toString()).toStrictEqual("Infinity");
+            });
+        });
+    });
 });

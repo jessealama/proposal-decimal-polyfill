@@ -1,0 +1,37 @@
+
+Test Suite Performance Benchmark
+================================
+Date: 2025-06-12T11:43:42.917Z
+Iterations: 5
+
+
+Branch: main
+-----------------
+Average: 15.17s
+Median: 15.15s
+Min: 15.00s
+Max: 15.36s
+Std Dev: 0.12s
+All times: 15.36s, 15.13s, 15.15s, 15.21s, 15.00s
+
+
+Branch: coefficient-exponent-optimization
+-----------------
+Average: 27.66s
+Median: 27.54s
+Min: 27.51s
+Max: 28.06s
+Std Dev: 0.21s
+All times: 28.06s, 27.68s, 27.51s, 27.54s, 27.53s
+
+
+COMPARISON
+----------
+Average time difference: 12.49s
+Performance change: -82.4% slower
+Median difference: -12.38s
+
+CONCLUSION
+----------
+The coefficient-exponent-optimization branch is SLOWER than main by 82.4%.
+This is a significant difference.

@@ -1,0 +1,37 @@
+
+Test Suite Performance Benchmark
+================================
+Date: 2025-06-12T11:39:41.060Z
+Iterations: 5
+
+
+Branch: main
+-----------------
+Average: 14.59s
+Median: 14.61s
+Min: 14.34s
+Max: 14.74s
+Std Dev: 0.14s
+All times: 14.61s, 14.34s, 14.57s, 14.74s, 14.68s
+
+
+Branch: main
+-----------------
+Average: 15.11s
+Median: 15.12s
+Min: 14.96s
+Max: 15.23s
+Std Dev: 0.09s
+All times: 15.19s, 14.96s, 15.23s, 15.12s, 15.07s
+
+
+COMPARISON
+----------
+Average time difference: 0.53s
+Performance change: -3.6% slower
+Median difference: -0.51s
+
+CONCLUSION
+----------
+The main branch is SLOWER than main by 3.6%.
+This is a relatively minor difference.
