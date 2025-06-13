@@ -56,11 +56,6 @@ function ApplyRoundingModeToPositive(
     value: CoefficientExponent,
     mode: RoundingMode
 ): CoefficientExponent {
-    // Validate rounding mode
-    if (!ROUNDING_MODES.includes(mode)) {
-        throw new RangeError(`Invalid rounding mode: ${mode}`);
-    }
-
     const mLow = value.floor();
     const fraction = value.subtract(mLow);
 
@@ -121,29 +116,21 @@ class CoefficientExponent {
      * @param {bigint} coefficient - The coefficient value (must be non-negative)
      * @param {number} exponent - The power of 10 exponent (must be an integer)
      * @param {boolean} [isNegative=false] - Whether the number is negative
-     * @throws {RangeError} If coefficient is negative
-     * @throws {TypeError} If exponent is not an integer
      */
     constructor(
         coefficient: bigint,
         exponent: number,
         isNegative: boolean = false
     ) {
-        if (coefficient < 0n) {
-            throw new RangeError("Coefficient must be non-negative");
-        }
-        if (!Number.isInteger(exponent)) {
-            throw new TypeError("Exponent must be an integer");
-        }
-
         // Normalize: remove trailing zeros
         let c = coefficient;
         let e = exponent;
 
+        this._isNegative = isNegative;
+
         if (c === 0n) {
             this._coefficient = 0n;
             this._exponent = 0;
-            this._isNegative = isNegative; // Preserve sign for -0
         } else {
             while (c % 10n === 0n) {
                 c = c / 10n;
@@ -151,7 +138,6 @@ class CoefficientExponent {
             }
             this._coefficient = c;
             this._exponent = e;
-            this._isNegative = isNegative;
         }
     }
 
@@ -207,14 +193,11 @@ class CoefficientExponent {
      * @returns {CoefficientExponent} A new instance with positive sign
      */
     abs(): CoefficientExponent {
-        if (this._isNegative) {
-            return new CoefficientExponent(
-                this._coefficient,
-                this._exponent,
-                false
-            );
-        }
-        return this;
+        return new CoefficientExponent(
+            this._coefficient,
+            this._exponent,
+            false
+        );
     }
 
     /**
@@ -224,10 +207,6 @@ class CoefficientExponent {
     static from(s: string): CoefficientExponent {
         // Remove underscores and leading plus
         s = s.replace(/_/g, "").replace(/^\+/, "");
-
-        if (s === "") {
-            throw new SyntaxError("Empty string");
-        }
 
         // Handle sign
         let isNegative = false;
@@ -268,9 +247,6 @@ class CoefficientExponent {
             return this;
         }
         const newExponent = this._exponent + Number(n);
-        if (!Number.isSafeInteger(newExponent)) {
-            throw new RangeError("Exponent overflow");
-        }
         return new CoefficientExponent(
             this._coefficient,
             newExponent,
@@ -286,10 +262,6 @@ class CoefficientExponent {
      * new CoefficientExponent(5n, 3).toString() // "5000"
      */
     toString(): string {
-        if (this.isZero()) {
-            return this._isNegative ? "-0" : "0";
-        }
-
         const sign = this._isNegative ? "-" : "";
         const coeffStr = this._coefficient.toString();
         const exp = this._exponent;
@@ -314,92 +286,20 @@ class CoefficientExponent {
     }
 
     /**
-     * Formats this value with a fixed number of decimal places.
-     * @param {number} digits - The number of decimal places to display
-     * @returns {string} The formatted string
-     * @throws {RangeError} If digits is NaN, negative infinity, or negative
-     */
-    toFixed(digits: number): string {
-        if (Number.isNaN(digits)) {
-            throw new RangeError("NaN is not a valid argument");
-        }
-
-        if (digits === -Infinity) {
-            throw new RangeError("Negative infinity is not a valid argument");
-        }
-
-        if (digits === Infinity) {
-            // Return full decimal representation
-            return this.toString();
-        }
-
-        if (!Number.isInteger(digits) || digits < 0) {
-            throw new RangeError("Invalid digits");
-        }
-
-        if (this.isZero()) {
-            const sign = this._isNegative ? "-" : "";
-            if (digits === 0) {
-                return sign + "0";
-            }
-            return sign + "0." + "0".repeat(digits);
-        }
-
-        const str = this.toString();
-        const dotIndex = str.indexOf(".");
-
-        if (dotIndex === -1) {
-            // Integer
-            if (digits === 0) {
-                return str;
-            }
-            return str + "." + "0".repeat(digits);
-        }
-
-        const currentDigits = str.length - dotIndex - 1;
-        if (currentDigits === digits) {
-            return str;
-        } else if (currentDigits < digits) {
-            return str + "0".repeat(digits - currentDigits);
-        } else {
-            // Need to round
-            return str.substring(0, dotIndex + 1 + digits);
-        }
-    }
-
-    /**
      * Compare two CoefficientExponent values.
      * @param {CoefficientExponent} other - The value to compare with
      * @returns {-1|0|1} -1 if this < other, 0 if equal, 1 if this > other
      */
     cmp(other: CoefficientExponent): -1 | 0 | 1 {
-        // Handle zeros
-        if (this.isZero() && other.isZero()) {
-            return 0;
-        }
-        if (this.isZero()) {
-            return other._isNegative ? 1 : -1;
-        }
-        if (other.isZero()) {
-            return this._isNegative ? -1 : 1;
-        }
-
-        // Handle different signs
         if (this._isNegative && !other._isNegative) {
             return -1;
         }
+
         if (!this._isNegative && other._isNegative) {
             return 1;
         }
 
-        // Same sign, compare magnitudes
-        const cmpMag = this.compareMagnitude(other);
-
-        // If negative, reverse the comparison
-        if (this._isNegative) {
-            return cmpMag === -1 ? 1 : cmpMag === 1 ? -1 : 0;
-        }
-        return cmpMag;
+        return this.compareMagnitude(other);
     }
 
     /**
@@ -425,26 +325,21 @@ class CoefficientExponent {
             // this has larger exponent, so scale this coefficient up
             const diff = exp1 - exp2;
             const scaledThisCoeff = this._coefficient * 10n ** BigInt(diff);
-            if (scaledThisCoeff < other._coefficient) return -1;
-            if (scaledThisCoeff > other._coefficient) return 1;
-            return 0;
+            if (scaledThisCoeff < other._coefficient) {
+                return -1;
+            }
+
+            return 1;
         } else {
             // other has larger exponent, so scale other coefficient up
             const diff = exp2 - exp1;
             const scaledOtherCoeff = other._coefficient * 10n ** BigInt(diff);
-            if (this._coefficient < scaledOtherCoeff) return -1;
-            if (this._coefficient > scaledOtherCoeff) return 1;
-            return 0;
-        }
-    }
+            if (this._coefficient < scaledOtherCoeff) {
+                return -1;
+            }
 
-    /**
-     * Checks if this CoefficientExponent equals another.
-     * @param {CoefficientExponent} other - The value to compare with
-     * @returns {boolean} True if the values are equal
-     */
-    equals(other: CoefficientExponent): boolean {
-        return this.cmp(other) === 0;
+            return 1;
+        }
     }
 
     /**
@@ -456,9 +351,6 @@ class CoefficientExponent {
         // Handle zeros
         if (this.isZero()) {
             return other;
-        }
-        if (other.isZero()) {
-            return this;
         }
 
         // Handle different signs
@@ -495,16 +387,10 @@ class CoefficientExponent {
         if (other.isZero()) {
             return this;
         }
-        if (this.isZero()) {
-            return other.negate();
-        }
 
         // Convert to addition if signs differ
         if (this._isNegative && !other._isNegative) {
             return this.negate().add(other).negate();
-        }
-        if (!this._isNegative && other._isNegative) {
-            return this.add(other.negate());
         }
 
         // Same sign subtraction
@@ -537,10 +423,6 @@ class CoefficientExponent {
      * @returns {CoefficientExponent} The product of the two values
      */
     multiply(other: CoefficientExponent): CoefficientExponent {
-        if (this.isZero() || other.isZero()) {
-            return new CoefficientExponent(0n, 0, false);
-        }
-
         const coefficient = this._coefficient * other._coefficient;
         const exponent = this._exponent + other._exponent;
         const isNegative = this._isNegative !== other._isNegative;
@@ -553,16 +435,8 @@ class CoefficientExponent {
      * This returns an exact result, which may have many decimal places.
      * @param {CoefficientExponent} other - The divisor
      * @returns {CoefficientExponent} The quotient
-     * @throws {RangeError} If dividing by zero
      */
     divide(other: CoefficientExponent): CoefficientExponent {
-        if (other.isZero()) {
-            throw new RangeError("Division by zero");
-        }
-        if (this.isZero()) {
-            return new CoefficientExponent(0n, 0, false);
-        }
-
         // To get an exact result, we need to scale up the dividend
         // We'll use a large scale factor to ensure precision
         const scaleFactor = 100; // This gives us 100 extra decimal places
@@ -600,11 +474,6 @@ class CoefficientExponent {
         const divisor = 10n ** BigInt(fracDigits);
         const truncatedCoeff = this._coefficient / divisor;
 
-        if (this._isNegative && this._coefficient % divisor !== 0n) {
-            // For negative numbers, floor means going more negative
-            return new CoefficientExponent(truncatedCoeff + 1n, 0, true);
-        }
-
         return new CoefficientExponent(truncatedCoeff, 0, this._isNegative);
     }
 
@@ -628,22 +497,11 @@ class CoefficientExponent {
      * @param {number} numSignificantDigits - The number of significant digits to keep
      * @param {RoundingMode} mode - The rounding mode to use
      * @returns {CoefficientExponent} The rounded value
-     * @throws {RangeError} If numSignificantDigits is not positive
      */
     roundToSignificantDigits(
         numSignificantDigits: number,
         mode: RoundingMode
     ): CoefficientExponent {
-        if (numSignificantDigits <= 0) {
-            throw new RangeError(
-                "Number of significant digits must be positive"
-            );
-        }
-
-        if (this.isZero()) {
-            return this;
-        }
-
         const currentDigits = this._coefficient.toString().length;
         if (currentDigits <= numSignificantDigits) {
             return this;
@@ -714,23 +572,11 @@ class CoefficientExponent {
      * @param {number} numFractionalDigits - The number of decimal places to keep
      * @param {RoundingMode} mode - The rounding mode to use
      * @returns {CoefficientExponent} The rounded value
-     * @throws {RangeError} If numFractionalDigits is negative or invalid rounding mode
      */
     round(
         numFractionalDigits: number,
         mode: RoundingMode
     ): CoefficientExponent {
-        if (numFractionalDigits < 0) {
-            throw new RangeError(
-                "Cannot round to negative number of decimal places"
-            );
-        }
-
-        // Validate rounding mode
-        if (!ROUNDING_MODES.includes(mode)) {
-            throw new RangeError(`Invalid rounding mode: ${mode}`);
-        }
-
         // Scale up to have numFractionalDigits after the decimal point
         const scaled = this.scale10(BigInt(numFractionalDigits));
 
@@ -764,29 +610,12 @@ class CoefficientExponent {
      * @throws {RangeError} If digits is not positive or not an integer
      */
     toPrecision(digits: number): string {
-        if (digits <= 0) {
-            throw new RangeError("Precision must be positive");
-        }
-
-        if (!Number.isInteger(digits)) {
-            throw new RangeError("Precision must be an integer");
-        }
-
-        if (this.isZero()) {
-            const sign = this._isNegative ? "-" : "";
-            if (digits === 1) {
-                return sign + "0";
-            }
-            return sign + "0." + "0".repeat(digits - 1);
-        }
-
-        // Round to the specified number of significant digits
         const rounded = this.roundToSignificantDigits(
             digits,
             ROUNDING_MODE_HALF_EVEN
         );
 
-        // Calculate the effective exponent (where decimal point would be after first digit)
+        // Calculate the effective exponent (where decimal point would be after the first digit)
         const coeffStr = rounded._coefficient.toString();
         const effectiveExponent = rounded._exponent + coeffStr.length - 1;
 
@@ -799,15 +628,7 @@ class CoefficientExponent {
             if (rounded._exponent >= 0) {
                 // No decimal point needed
                 const totalDigits = coeffStr.length + rounded._exponent;
-                if (totalDigits === digits) {
-                    // Exact match, no decimal point
-                    return sign + coeffStr + "0".repeat(rounded._exponent);
-                } else {
-                    // Need to add decimal point and trailing zeros
-                    const result = coeffStr + "0".repeat(rounded._exponent);
-                    const zerosToAdd = digits - result.length;
-                    return sign + result + "." + "0".repeat(zerosToAdd);
-                }
+                return sign + coeffStr + "0".repeat(rounded._exponent);
             } else {
                 // Need decimal point
                 const absExp = -rounded._exponent;
@@ -850,14 +671,7 @@ class CoefficientExponent {
                 // Single digit coefficient
                 const expSign = effectiveExponent >= 0 ? "+" : "";
                 const expStr = "e" + expSign + effectiveExponent;
-                if (digits === 1) {
-                    return sign + coeffStr + expStr;
-                } else {
-                    // Need decimal point and trailing zeros
-                    return (
-                        sign + coeffStr + "." + "0".repeat(digits - 1) + expStr
-                    );
-                }
+                return sign + coeffStr + expStr;
             } else {
                 // Multiple digit coefficient
                 const intPart = coeffStr.charAt(0);
@@ -1156,17 +970,13 @@ export class Decimal {
         const coefficientStr = ce.coefficient.toString();
         const numDigits = coefficientStr.length;
 
-        // To get mantissa in range [1, 10), we need to scale by -(numDigits - 1)
-        // For example: 123 with 3 digits needs to be scaled by -2 to get 1.23
-        const scaleAmount = -(numDigits - 1);
-
         // Create a Decimal directly with the mantissa value
         // We know the mantissa will be in the form "d.ddd..." where d is 1-9
         let mantissaStr: string;
         if (numDigits === 1) {
             mantissaStr = coefficientStr; // Single digit, already in [1, 9]
         } else {
-            // Insert decimal point after first digit
+            // Insert decimal point after the first digit
             mantissaStr = coefficientStr[0] + "." + coefficientStr.slice(1);
         }
 
@@ -1690,7 +1500,7 @@ export class Decimal {
      *
      * @param x The Decimal128 value to add to this value.
      * @param opts Optional object containing additional options for the operation.
-     *   @property {RoundingMode} [roundingMode] Specifies the rounding mode to use
+     *   @property {roundingMode} Specifies the rounding mode to use
      *   when performing the addition. Valid values are defined in the `RoundingMode`
      *   enumeration, such as `ROUNDING_MODE_HALF_EVEN`, `ROUNDING_MODE_TRUNCATE`,
      *   `ROUNDING_MODE_CEILING`, and `ROUNDING_MODE_FLOOR`. Defaults to
@@ -2239,7 +2049,7 @@ export class Decimal {
 
 export namespace Decimal {
     export class Amount {
-        private val: Decimal;
+        private readonly val: Decimal;
         public readonly trailingZeroes: number;
         public readonly significantDigits: number;
         public readonly fractionalDigits: number;
@@ -2344,7 +2154,7 @@ export namespace Decimal {
 
         private withSignificantDigits(precision: number): Amount {
             let s = this.val.toPrecision({ digits: precision });
-            let [intPart, fracPart] = s.split(/[.]/);
+            let [_, fracPart] = s.split(/[.]/);
             let numFractionDigits =
                 undefined === fracPart ? 0 : fracPart.length;
             return new Amount(s, numFractionDigits);
@@ -2361,7 +2171,7 @@ export namespace Decimal {
             let s = this.val.toFixed({
                 digits: this.fractionalDigits + precision,
             });
-            let [intPart, fracPart] = s.split(/[.]/);
+            let [_, fracPart] = s.split(/[.]/);
             let numFractionDigits =
                 undefined === fracPart ? 0 : fracPart.length;
             return new Amount(s, numFractionDigits);
