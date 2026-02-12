@@ -35,8 +35,9 @@ describe("BigInt.Decimal conversions", () => {
     });
 
     describe("valueOf", () => {
-        test("throws TypeError", () => {
-            expect(() => BigInt.Decimal("42").valueOf()).toThrow(TypeError);
+        test("returns the BigDecimalValue itself", () => {
+            const d = BigInt.Decimal("42");
+            expect(d.valueOf()).toBe(d);
         });
     });
 });

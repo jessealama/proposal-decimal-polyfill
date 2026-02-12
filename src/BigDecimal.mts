@@ -96,10 +96,8 @@ class BigDecimalValue {
         }
     }
 
-    valueOf(): never {
-        throw TypeError(
-            "BigDecimalValue.prototype.valueOf throws unconditionally"
-        );
+    valueOf(): this {
+        return this;
     }
 
     equals(other: BigDecimalValue): boolean {
