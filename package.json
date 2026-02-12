@@ -2,13 +2,13 @@
     "name": "proposal-decimal",
     "version": "20250613.0.0",
     "description": "Champion-maintained polyfill for the TC39 decimal proposal",
-    "main": "src/Decimal.mjs",
+    "main": "src/BigDecimal.mjs",
     "scripts": {
         "test": "jest",
         "format": "prettier . --write",
         "lint": "prettier . --check",
         "coverage": "npx c8 npx jest",
-        "build": "mkdir -p dist && esbuild src/Decimal.mjs --bundle --format=esm --outfile=dist/Decimal.mjs"
+        "build": "mkdir -p dist && esbuild src/BigDecimal.mjs --bundle --format=esm --outfile=dist/BigDecimal.mjs"
     },
     "prettier": {
         "trailingComma": "es5",

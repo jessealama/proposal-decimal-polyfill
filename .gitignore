@@ -10,3 +10,6 @@ src/*.d.mts
 /examples/*.js
 /examples/*.map
 /src/*.mjs.map
+/tests/BigDecimal/*.js
+/tests/BigDecimal/*.js.map
+/tests/BigDecimal/*.d.ts
