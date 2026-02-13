@@ -8,7 +8,7 @@
  * @author Jesse Alama <jesse@igalia.com>
  */
 
-const MAX_FRACTION_DIGITS = 100;
+const MAX_DIGITS = 100;
 
 type RoundingMode = "ceil" | "floor" | "trunc" | "halfEven" | "halfExpand";
 
@@ -20,7 +20,6 @@ const ROUNDING_MODES: RoundingMode[] = [
     "halfExpand",
 ];
 
-// Symbol used to brand BigDecimalValue instances
 const BIG_DECIMAL_BRAND = Symbol("BigDecimal");
 
 /**
@@ -28,7 +27,7 @@ const BIG_DECIMAL_BRAND = Symbol("BigDecimal");
  * inner is a signed bigint, scale is a non-negative integer.
  * Trailing fractional zeros are stripped on construction.
  */
-class BigDecimalValue {
+class BigDecimal {
     readonly #inner: bigint;
     readonly #scale: number;
     readonly [BIG_DECIMAL_BRAND] = true;
@@ -38,21 +37,19 @@ class BigDecimalValue {
             throw new RangeError("Scale must be a non-negative integer");
         }
 
-        if (scale > MAX_FRACTION_DIGITS) {
+        if (scale > MAX_DIGITS) {
             throw new RangeError(
-                `Scale exceeds maximum of ${MAX_FRACTION_DIGITS} fraction digits`
+                `Scale exceeds maximum of ${MAX_DIGITS} fraction digits`
             );
         }
 
-        // Normalize: strip trailing zeros only while scale > 0
         let c = inner;
         let s = scale;
         while (s > 0 && c !== 0n && c % 10n === 0n) {
-            c = c / 10n;
-            s = s - 1;
+            c /= 10n;
+            s--;
         }
 
-        // If inner is 0, set scale to 0
         if (c === 0n) {
             s = 0;
         }
@@ -83,13 +80,11 @@ class BigDecimalValue {
             return sign + digits;
         }
 
-        // scale > 0: insert decimal point
         if (this.#scale >= digits.length) {
             // Need leading zeros: e.g. inner=5, scale=3 -> "0.005"
             const leadingZeros = this.#scale - digits.length;
             return sign + "0." + "0".repeat(leadingZeros) + digits;
         } else {
-            // Insert decimal point within digits
             const intPart = digits.slice(0, digits.length - this.#scale);
             const fracPart = digits.slice(digits.length - this.#scale);
             return sign + intPart + "." + fracPart;
@@ -100,12 +95,11 @@ class BigDecimalValue {
         return this;
     }
 
-    equals(other: BigDecimalValue): boolean {
+    equals(other: BigDecimal): boolean {
         return this.#inner === other.#inner && this.#scale === other.#scale;
     }
 
-    compare(other: BigDecimalValue): -1 | 0 | 1 {
-        // Align scales
+    compare(other: BigDecimal): -1 | 0 | 1 {
         const s1 = this.#scale;
         const s2 = other.#scale;
 
@@ -151,6 +145,9 @@ class BigDecimalValue {
         if (!Number.isInteger(digits) || digits < 0) {
             throw new RangeError("Argument must be a non-negative integer");
         }
+        if (digits > MAX_DIGITS) {
+            throw new RangeError(`Argument must be at most ${MAX_DIGITS}`);
+        }
 
         const rounded = roundToFractionDigits(this, digits, roundingMode);
         return formatFixed(rounded, digits);
@@ -162,6 +159,9 @@ class BigDecimalValue {
     ): string {
         if (!Number.isInteger(digits) || digits <= 0) {
             throw new RangeError("Argument must be a positive integer");
+        }
+        if (digits > MAX_DIGITS) {
+            throw new RangeError(`Argument must be at most ${MAX_DIGITS}`);
         }
 
         const rounded = roundToSignificantDigits(this, digits, roundingMode);
@@ -175,19 +175,120 @@ class BigDecimalValue {
         if (!Number.isInteger(fractionDigits) || fractionDigits < 0) {
             throw new RangeError("Argument must be a non-negative integer");
         }
+        if (fractionDigits > MAX_DIGITS) {
+            throw new RangeError(`Argument must be at most ${MAX_DIGITS}`);
+        }
 
         // Round to fractionDigits + 1 significant digits
         const sigDigits = fractionDigits + 1;
         const rounded = roundToSignificantDigits(this, sigDigits, roundingMode);
         return formatExponential(rounded, fractionDigits);
     }
+
+    // ---- Static methods ----
+
+    static add(a: BigDecimal, b: BigDecimal): BigDecimal {
+        ensureBigDecimal(a);
+        ensureBigDecimal(b);
+        return addBigDecimal(a, b);
+    }
+
+    static subtract(a: BigDecimal, b: BigDecimal): BigDecimal {
+        ensureBigDecimal(a);
+        ensureBigDecimal(b);
+        return subtractBigDecimal(a, b);
+    }
+
+    static multiply(a: BigDecimal, b: BigDecimal): BigDecimal {
+        ensureBigDecimal(a);
+        ensureBigDecimal(b);
+        return multiplyBigDecimal(a, b);
+    }
+
+    static divide(
+        a: BigDecimal,
+        b: BigDecimal,
+        opts?: { maximumFractionDigits?: number }
+    ): BigDecimal {
+        ensureBigDecimal(a);
+        ensureBigDecimal(b);
+        const maxFrac = opts?.maximumFractionDigits ?? MAX_DIGITS;
+        if (!Number.isInteger(maxFrac) || maxFrac < 0 || maxFrac > MAX_DIGITS) {
+            throw new RangeError(
+                `maximumFractionDigits must be between 0 and ${MAX_DIGITS}`
+            );
+        }
+        return divideBigDecimal(a, b, maxFrac);
+    }
+
+    static remainder(a: BigDecimal, b: BigDecimal): BigDecimal {
+        ensureBigDecimal(a);
+        ensureBigDecimal(b);
+        return remainderBigDecimal(a, b);
+    }
+
+    static abs(a: BigDecimal): BigDecimal {
+        ensureBigDecimal(a);
+        if (a.inner < 0n) {
+            return new BigDecimal(-a.inner, a.scale);
+        }
+        return a;
+    }
+
+    static negate(a: BigDecimal): BigDecimal {
+        ensureBigDecimal(a);
+        return new BigDecimal(-a.inner, a.scale);
+    }
+
+    static compare(a: BigDecimal, b: BigDecimal): -1 | 0 | 1 {
+        ensureBigDecimal(a);
+        ensureBigDecimal(b);
+        return a.compare(b);
+    }
+
+    static equals(a: BigDecimal, b: BigDecimal): boolean {
+        ensureBigDecimal(a);
+        ensureBigDecimal(b);
+        return a.equals(b);
+    }
+
+    static round(
+        a: BigDecimal,
+        fractionDigits: number = 0,
+        roundingMode: RoundingMode = "halfEven"
+    ): BigDecimal {
+        ensureBigDecimal(a);
+        if (!Number.isInteger(fractionDigits) || fractionDigits < 0) {
+            throw new RangeError(
+                "fractionDigits must be a non-negative integer"
+            );
+        }
+        if (fractionDigits > MAX_DIGITS) {
+            throw new RangeError(
+                `fractionDigits must be at most ${MAX_DIGITS}`
+            );
+        }
+        if (!ROUNDING_MODES.includes(roundingMode)) {
+            throw new RangeError(`Invalid rounding mode "${roundingMode}"`);
+        }
+        return roundToFractionDigits(a, fractionDigits, roundingMode);
+    }
+
+    static isBigDecimal(value: unknown): value is BigDecimal {
+        return (
+            value !== null &&
+            typeof value === "object" &&
+            BIG_DECIMAL_BRAND in value &&
+            (value as Record<symbol, unknown>)[BIG_DECIMAL_BRAND] === true
+        );
+    }
 }
 
 // ---- Parsing ----
 
-function parseBigDecimal(value: string | number | bigint): BigDecimalValue {
+function parseBigDecimal(value: string | number | bigint): BigDecimal {
     if (typeof value === "bigint") {
-        return new BigDecimalValue(value, 0);
+        return new BigDecimal(value, 0);
     }
 
     if (typeof value === "number") {
@@ -195,12 +296,11 @@ function parseBigDecimal(value: string | number | bigint): BigDecimalValue {
             throw new RangeError("BigDecimal does not support Infinity or NaN");
         }
         if (Object.is(value, -0)) {
-            return new BigDecimalValue(0n, 0);
+            return new BigDecimal(0n, 0);
         }
         return parseBigDecimal(value.toString());
     }
 
-    // string
     if (typeof value !== "string") {
         throw new TypeError("Argument must be a string, number, or bigint");
     }
@@ -211,7 +311,6 @@ function parseBigDecimal(value: string | number | bigint): BigDecimalValue {
         throw new SyntaxError("Empty string not permitted");
     }
 
-    // Handle sign
     let isNegative = false;
     if (s.startsWith("-")) {
         isNegative = true;
@@ -224,7 +323,6 @@ function parseBigDecimal(value: string | number | bigint): BigDecimalValue {
         throw new SyntaxError("Invalid decimal string");
     }
 
-    // Match decimal number pattern with optional exponent
     const match = s.match(/^(\d*)(?:\.(\d*))?(?:[eE]([-+]?\d+))?$/);
     if (!match || (match[1] === "" && (!match[2] || match[2] === ""))) {
         throw new SyntaxError("Invalid decimal string");
@@ -236,7 +334,6 @@ function parseBigDecimal(value: string | number | bigint): BigDecimalValue {
         throw new SyntaxError("Invalid decimal string");
     }
 
-    // Combine integer and fractional parts
     const allDigits = intPart + fracPart;
     const trimmedDigits = allDigits.replace(/^0+/, "") || "0";
 
@@ -247,11 +344,9 @@ function parseBigDecimal(value: string | number | bigint): BigDecimalValue {
     let scale: number;
 
     if (exponent >= 0) {
-        // Integer or scale up
         inner = coefficient * 10n ** BigInt(exponent);
         scale = 0;
     } else {
-        // Fractional
         scale = -exponent;
         inner = coefficient;
     }
@@ -260,9 +355,8 @@ function parseBigDecimal(value: string | number | bigint): BigDecimalValue {
         inner = -inner;
     }
 
-    if (scale > MAX_FRACTION_DIGITS) {
-        // Round to MAX_FRACTION_DIGITS
-        const excess = scale - MAX_FRACTION_DIGITS;
+    if (scale > MAX_DIGITS) {
+        const excess = scale - MAX_DIGITS;
         const divisor = 10n ** BigInt(excess);
         const absInner = inner < 0n ? -inner : inner;
         const quot = absInner / divisor;
@@ -284,24 +378,23 @@ function parseBigDecimal(value: string | number | bigint): BigDecimalValue {
         }
 
         inner = inner < 0n ? -rounded : rounded;
-        scale = MAX_FRACTION_DIGITS;
+        scale = MAX_DIGITS;
     }
 
-    return new BigDecimalValue(inner, scale);
+    return new BigDecimal(inner, scale);
 }
 
 // ---- Rounding helpers ----
 
 function roundToFractionDigits(
-    v: BigDecimalValue,
+    v: BigDecimal,
     digits: number,
     mode: RoundingMode
-): BigDecimalValue {
+): BigDecimal {
     if (v.scale <= digits) {
         return v;
     }
 
-    // Need to remove (v.scale - digits) digits from the fractional part
     const excess = v.scale - digits;
     const divisor = 10n ** BigInt(excess);
     const absInner = v.inner < 0n ? -v.inner : v.inner;
@@ -313,14 +406,14 @@ function roundToFractionDigits(
     const rounded = applyRounding(quot, rem, divisor, isNeg, mode);
     const newInner = isNeg ? -rounded : rounded;
 
-    return new BigDecimalValue(newInner, digits);
+    return new BigDecimal(newInner, digits);
 }
 
 function roundToSignificantDigits(
-    v: BigDecimalValue,
+    v: BigDecimal,
     digits: number,
     mode: RoundingMode
-): BigDecimalValue {
+): BigDecimal {
     if (v.inner === 0n) {
         return v;
     }
@@ -341,18 +434,17 @@ function roundToSignificantDigits(
 
     const rounded = applyRounding(quot, rem, divisor, isNeg, mode);
 
-    // New scale decreases by excess, but can't go below 0
     const newScale = Math.max(0, v.scale - excess);
 
     // If scale went to 0 but we removed fewer scale digits, multiply up
     if (v.scale < excess) {
         const extra = excess - v.scale;
         const newInner = isNeg ? -rounded : rounded;
-        return new BigDecimalValue(newInner * 10n ** BigInt(extra), 0);
+        return new BigDecimal(newInner * 10n ** BigInt(extra), 0);
     }
 
     const newInner = isNeg ? -rounded : rounded;
-    return new BigDecimalValue(newInner, newScale);
+    return new BigDecimal(newInner, newScale);
 }
 
 function applyRounding(
@@ -390,7 +482,7 @@ function applyRounding(
 
 // ---- Formatting helpers ----
 
-function formatFixed(v: BigDecimalValue, digits: number): string {
+function formatFixed(v: BigDecimal, digits: number): string {
     const isNeg = v.inner < 0n;
     const sign = isNeg ? "-" : "";
     const absInner = isNeg ? -v.inner : v.inner;
@@ -399,7 +491,6 @@ function formatFixed(v: BigDecimalValue, digits: number): string {
         return sign + absInner.toString();
     }
 
-    // Pad inner to have at least `digits` fractional positions
     let paddedInner = absInner;
     let currentScale = v.scale;
     if (currentScale < digits) {
@@ -419,7 +510,7 @@ function formatFixed(v: BigDecimalValue, digits: number): string {
     return sign + (intPart || "0") + "." + fracPart;
 }
 
-function formatPrecision(v: BigDecimalValue, digits: number): string {
+function formatPrecision(v: BigDecimal, digits: number): string {
     if (v.inner === 0n) {
         if (digits === 1) return "0";
         return "0." + "0".repeat(digits - 1);
@@ -486,7 +577,7 @@ function formatPrecision(v: BigDecimalValue, digits: number): string {
     return sign + intDigit + "." + fracDigits + expStr;
 }
 
-function formatExponential(v: BigDecimalValue, fractionDigits: number): string {
+function formatExponential(v: BigDecimal, fractionDigits: number): string {
     if (v.inner === 0n) {
         if (fractionDigits === 0) return "0e+0";
         return "0." + "0".repeat(fractionDigits) + "e+0";
@@ -519,67 +610,50 @@ function formatExponential(v: BigDecimalValue, fractionDigits: number): string {
 
 // ---- Arithmetic ----
 
-function addBigDecimal(
-    a: BigDecimalValue,
-    b: BigDecimalValue
-): BigDecimalValue {
-    const s1 = a.scale;
-    const s2 = b.scale;
-    const maxScale = Math.max(s1, s2);
-
-    const v1 = a.inner * 10n ** BigInt(maxScale - s1);
-    const v2 = b.inner * 10n ** BigInt(maxScale - s2);
-
-    return new BigDecimalValue(v1 + v2, maxScale);
+function alignScales(a: BigDecimal, b: BigDecimal): [bigint, bigint, number] {
+    const maxScale = Math.max(a.scale, b.scale);
+    return [
+        a.inner * 10n ** BigInt(maxScale - a.scale),
+        b.inner * 10n ** BigInt(maxScale - b.scale),
+        maxScale,
+    ];
 }
 
-function subtractBigDecimal(
-    a: BigDecimalValue,
-    b: BigDecimalValue
-): BigDecimalValue {
-    const s1 = a.scale;
-    const s2 = b.scale;
-    const maxScale = Math.max(s1, s2);
-
-    const v1 = a.inner * 10n ** BigInt(maxScale - s1);
-    const v2 = b.inner * 10n ** BigInt(maxScale - s2);
-
-    return new BigDecimalValue(v1 - v2, maxScale);
+function addBigDecimal(a: BigDecimal, b: BigDecimal): BigDecimal {
+    const [v1, v2, scale] = alignScales(a, b);
+    return new BigDecimal(v1 + v2, scale);
 }
 
-function multiplyBigDecimal(
-    a: BigDecimalValue,
-    b: BigDecimalValue
-): BigDecimalValue {
+function subtractBigDecimal(a: BigDecimal, b: BigDecimal): BigDecimal {
+    const [v1, v2, scale] = alignScales(a, b);
+    return new BigDecimal(v1 - v2, scale);
+}
+
+function multiplyBigDecimal(a: BigDecimal, b: BigDecimal): BigDecimal {
     const newScale = a.scale + b.scale;
     const newInner = a.inner * b.inner;
 
-    if (newScale > MAX_FRACTION_DIGITS) {
-        // Round down to MAX_FRACTION_DIGITS
+    if (newScale > MAX_DIGITS) {
         return roundToFractionDigits(
-            new BigDecimalValue(newInner, Math.min(newScale, newScale)),
-            MAX_FRACTION_DIGITS,
+            new BigDecimal(newInner, newScale),
+            MAX_DIGITS,
             "halfEven"
         );
     }
 
-    return new BigDecimalValue(newInner, newScale);
+    return new BigDecimal(newInner, newScale);
 }
 
 function divideBigDecimal(
-    a: BigDecimalValue,
-    b: BigDecimalValue,
-    maximumFractionDigits: number = MAX_FRACTION_DIGITS
-): BigDecimalValue {
+    a: BigDecimal,
+    b: BigDecimal,
+    maximumFractionDigits: number = MAX_DIGITS
+): BigDecimal {
     if (b.inner === 0n) {
         throw new RangeError("Division by zero");
     }
 
-    // Scale up dividend to get desired precision
-    // We want maximumFractionDigits fractional digits in the result
-    // Result scale starts at a.scale - b.scale, we need to add extra
-    const targetScale = maximumFractionDigits;
-    const extraScale = targetScale + b.scale - a.scale;
+    const extraScale = maximumFractionDigits + b.scale - a.scale;
 
     let dividend: bigint;
     if (extraScale >= 0) {
@@ -599,14 +673,12 @@ function divideBigDecimal(
     if (rem === 0n) {
         resultInner = quot;
     } else {
-        // Apply halfEven rounding
         const doubleRem = rem * 2n;
         if (doubleRem > absDivisor) {
             resultInner = quot + 1n;
         } else if (doubleRem < absDivisor) {
             resultInner = quot;
         } else {
-            // Exact half - round to even
             resultInner = quot % 2n === 0n ? quot : quot + 1n;
         }
     }
@@ -616,189 +688,76 @@ function divideBigDecimal(
     }
 
     const actualScale =
-        extraScale >= 0 ? targetScale : targetScale + -extraScale;
-    return new BigDecimalValue(resultInner, Math.max(0, actualScale));
+        extraScale >= 0
+            ? maximumFractionDigits
+            : maximumFractionDigits - extraScale;
+    return new BigDecimal(resultInner, Math.max(0, actualScale));
 }
 
-function remainderBigDecimal(
-    a: BigDecimalValue,
-    b: BigDecimalValue
-): BigDecimalValue {
+function remainderBigDecimal(a: BigDecimal, b: BigDecimal): BigDecimal {
     if (b.inner === 0n) {
         throw new RangeError("Division by zero");
     }
 
-    // a % b = a - trunc(a/b) * b
-    // Align scales
-    const s1 = a.scale;
-    const s2 = b.scale;
-    const maxScale = Math.max(s1, s2);
-
-    const v1 = a.inner * 10n ** BigInt(maxScale - s1);
-    const v2 = b.inner * 10n ** BigInt(maxScale - s2);
-
-    // Integer remainder at aligned scale
-    const quot = v1 / v2; // truncating division (BigInt truncates toward zero)
+    const [v1, v2, scale] = alignScales(a, b);
+    const quot = v1 / v2;
     const rem = v1 - quot * v2;
 
-    return new BigDecimalValue(rem, maxScale);
+    return new BigDecimal(rem, scale);
 }
 
 // ---- BigInt.Decimal monkey-patching ----
 
-function ensureBigDecimal(v: unknown): BigDecimalValue {
-    if (
-        v !== null &&
-        typeof v === "object" &&
-        BIG_DECIMAL_BRAND in v &&
-        v[BIG_DECIMAL_BRAND] === true
-    ) {
-        return v as BigDecimalValue;
-    }
+function ensureBigDecimal(v: unknown): BigDecimal {
+    if (BigDecimal.isBigDecimal(v)) return v;
     throw new TypeError("Argument must be a BigDecimal value");
 }
 
 interface BigDecimalConstructor {
-    (value: string | number | bigint): BigDecimalValue;
-    add(a: BigDecimalValue, b: BigDecimalValue): BigDecimalValue;
-    subtract(a: BigDecimalValue, b: BigDecimalValue): BigDecimalValue;
-    multiply(a: BigDecimalValue, b: BigDecimalValue): BigDecimalValue;
+    (value: string | number | bigint): BigDecimal;
+    add(a: BigDecimal, b: BigDecimal): BigDecimal;
+    subtract(a: BigDecimal, b: BigDecimal): BigDecimal;
+    multiply(a: BigDecimal, b: BigDecimal): BigDecimal;
     divide(
-        a: BigDecimalValue,
-        b: BigDecimalValue,
+        a: BigDecimal,
+        b: BigDecimal,
         opts?: { maximumFractionDigits?: number }
-    ): BigDecimalValue;
-    remainder(a: BigDecimalValue, b: BigDecimalValue): BigDecimalValue;
-    abs(a: BigDecimalValue): BigDecimalValue;
-    negate(a: BigDecimalValue): BigDecimalValue;
-    compare(a: BigDecimalValue, b: BigDecimalValue): -1 | 0 | 1;
-    equals(a: BigDecimalValue, b: BigDecimalValue): boolean;
+    ): BigDecimal;
+    remainder(a: BigDecimal, b: BigDecimal): BigDecimal;
+    abs(a: BigDecimal): BigDecimal;
+    negate(a: BigDecimal): BigDecimal;
+    compare(a: BigDecimal, b: BigDecimal): -1 | 0 | 1;
+    equals(a: BigDecimal, b: BigDecimal): boolean;
     round(
-        a: BigDecimalValue,
+        a: BigDecimal,
         fractionDigits?: number,
         roundingMode?: RoundingMode
-    ): BigDecimalValue;
-    isBigDecimal(value: unknown): value is BigDecimalValue;
+    ): BigDecimal;
+    isBigDecimal(value: unknown): value is BigDecimal;
 }
 
-const DecimalFactory = function Decimal(
-    value: string | number | bigint
-): BigDecimalValue {
+const Decimal = function Decimal(value: string | number | bigint): BigDecimal {
+    if (new.target) {
+        throw new TypeError("BigInt.Decimal is not a constructor");
+    }
     return parseBigDecimal(value);
 } as BigDecimalConstructor;
 
-DecimalFactory.add = function (
-    a: BigDecimalValue,
-    b: BigDecimalValue
-): BigDecimalValue {
-    ensureBigDecimal(a);
-    ensureBigDecimal(b);
-    return addBigDecimal(a, b);
-};
-
-DecimalFactory.subtract = function (
-    a: BigDecimalValue,
-    b: BigDecimalValue
-): BigDecimalValue {
-    ensureBigDecimal(a);
-    ensureBigDecimal(b);
-    return subtractBigDecimal(a, b);
-};
-
-DecimalFactory.multiply = function (
-    a: BigDecimalValue,
-    b: BigDecimalValue
-): BigDecimalValue {
-    ensureBigDecimal(a);
-    ensureBigDecimal(b);
-    return multiplyBigDecimal(a, b);
-};
-
-DecimalFactory.divide = function (
-    a: BigDecimalValue,
-    b: BigDecimalValue,
-    opts?: { maximumFractionDigits?: number }
-): BigDecimalValue {
-    ensureBigDecimal(a);
-    ensureBigDecimal(b);
-    const maxFrac = opts?.maximumFractionDigits ?? MAX_FRACTION_DIGITS;
-    if (
-        !Number.isInteger(maxFrac) ||
-        maxFrac < 0 ||
-        maxFrac > MAX_FRACTION_DIGITS
-    ) {
-        throw new RangeError(
-            `maximumFractionDigits must be between 0 and ${MAX_FRACTION_DIGITS}`
-        );
-    }
-    return divideBigDecimal(a, b, maxFrac);
-};
-
-DecimalFactory.remainder = function (
-    a: BigDecimalValue,
-    b: BigDecimalValue
-): BigDecimalValue {
-    ensureBigDecimal(a);
-    ensureBigDecimal(b);
-    return remainderBigDecimal(a, b);
-};
-
-DecimalFactory.abs = function (a: BigDecimalValue): BigDecimalValue {
-    ensureBigDecimal(a);
-    if (a.inner < 0n) {
-        return new BigDecimalValue(-a.inner, a.scale);
-    }
-    return a;
-};
-
-DecimalFactory.negate = function (a: BigDecimalValue): BigDecimalValue {
-    ensureBigDecimal(a);
-    return new BigDecimalValue(-a.inner, a.scale);
-};
-
-DecimalFactory.compare = function (
-    a: BigDecimalValue,
-    b: BigDecimalValue
-): -1 | 0 | 1 {
-    ensureBigDecimal(a);
-    ensureBigDecimal(b);
-    return a.compare(b);
-};
-
-DecimalFactory.equals = function (
-    a: BigDecimalValue,
-    b: BigDecimalValue
-): boolean {
-    ensureBigDecimal(a);
-    ensureBigDecimal(b);
-    return a.equals(b);
-};
-
-DecimalFactory.round = function (
-    a: BigDecimalValue,
-    fractionDigits: number = 0,
-    roundingMode: RoundingMode = "halfEven"
-): BigDecimalValue {
-    ensureBigDecimal(a);
-    if (!Number.isInteger(fractionDigits) || fractionDigits < 0) {
-        throw new RangeError("fractionDigits must be a non-negative integer");
-    }
-    if (!ROUNDING_MODES.includes(roundingMode)) {
-        throw new RangeError(`Invalid rounding mode "${roundingMode}"`);
-    }
-    return roundToFractionDigits(a, fractionDigits, roundingMode);
-};
-
-DecimalFactory.isBigDecimal = function (
-    value: unknown
-): value is BigDecimalValue {
-    return (
-        value !== null &&
-        typeof value === "object" &&
-        BIG_DECIMAL_BRAND in value &&
-        (value as Record<symbol, unknown>)[BIG_DECIMAL_BRAND] === true
-    );
-};
+for (const key of [
+    "add",
+    "subtract",
+    "multiply",
+    "divide",
+    "remainder",
+    "abs",
+    "negate",
+    "compare",
+    "equals",
+    "round",
+    "isBigDecimal",
+] as const) {
+    (Decimal as any)[key] = (BigDecimal as any)[key];
+}
 
 // ---- Global augmentation ----
 
@@ -809,8 +768,7 @@ declare global {
     }
 }
 
-// Monkey-patch BigInt
-(BigInt as unknown as Record<string, unknown>).Decimal = DecimalFactory;
+(BigInt as unknown as Record<string, unknown>).Decimal = Decimal;
 
 const originalIsInteger = (BigInt as unknown as Record<string, unknown>)
     .isInteger as ((value: unknown) => boolean) | undefined;
@@ -818,22 +776,9 @@ const originalIsInteger = (BigInt as unknown as Record<string, unknown>)
 (BigInt as unknown as Record<string, unknown>).isInteger = function (
     value: unknown
 ): boolean {
-    if (typeof value === "bigint") {
-        return true;
-    }
-    if (DecimalFactory.isBigDecimal(value)) {
-        const bd = value as BigDecimalValue;
-        if (bd.scale === 0) {
-            return true;
-        }
-        // Check if the fractional part is zero after normalization
-        // Since we normalize in constructor, if scale > 0, it's not an integer
-        return false;
-    }
-    if (originalIsInteger) {
-        return originalIsInteger(value);
-    }
-    return false;
+    if (typeof value === "bigint") return true;
+    if (Decimal.isBigDecimal(value)) return (value as BigDecimal).scale === 0;
+    return originalIsInteger ? originalIsInteger(value) : false;
 };
 
-export { BigDecimalValue, DecimalFactory };
+export { BigDecimal };
