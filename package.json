@@ -3,6 +3,10 @@
     "version": "20250613.0.0",
     "description": "Champion-maintained polyfill for the TC39 decimal proposal",
     "main": "src/BigDecimal.mjs",
+    "exports": {
+        ".": "./src/BigDecimal.mjs",
+        "./babel-plugin": "./src/babel-plugin.cjs"
+    },
     "scripts": {
         "test": "jest",
         "format": "prettier . --write",
@@ -33,9 +37,14 @@
         "url": "https://github.com/jessealama/proposal-decimal-polyfill/issues"
     },
     "homepage": "https://github.com/jessealama/proposal-decimal-polyfill#readme",
+    "dependencies": {
+        "@babel/helper-plugin-utils": "^7.28.6"
+    },
+    "peerDependencies": {
+        "@babel/core": "^7.0.0"
+    },
     "devDependencies": {
         "@babel/core": "^7.29.0",
-        "@babel/helper-plugin-utils": "^7.28.6",
         "@babel/plugin-syntax-decimal": "^7.24.7",
         "bignumber.js": "^9.1.2",
         "c8": "^10.1.2",

@@ -1,12 +1,8 @@
+.claude/
 .idea/
 coverage/
 node_modules/
 tests/
-examples/*.map
-examples/*.js
-examples/*.mjs
-examples/*.d.ts
-examples/*.d.mts
 .github/
 .prettierignore
 jest.config.cjs

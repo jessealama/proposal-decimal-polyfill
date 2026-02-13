@@ -1,7 +1,7 @@
 const babel = require("@babel/core");
 const path = require("path");
 
-const pluginPath = path.resolve(__dirname, "../../babel-plugin-bigdecimal");
+const pluginPath = path.resolve(__dirname, "../../src/babel-plugin.cjs");
 
 // Load the BigDecimal polyfill
 require("../../src/BigDecimal.mjs");
