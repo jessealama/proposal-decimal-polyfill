@@ -51,6 +51,14 @@ describe("BigInt.Decimal arithmetic", () => {
                 ).toString()
             ).toBe("3.75");
         });
+        test("0.3 + 0.7 normalizes to 1, not 1.0", () => {
+            expect(
+                BigInt.Decimal.add(
+                    BigInt.Decimal("0.3"),
+                    BigInt.Decimal("0.7")
+                ).toString()
+            ).toBe("1");
+        });
         test("type check enforced", () => {
             expect(() =>
                 BigInt.Decimal.add(42 as any, BigInt.Decimal("1"))
@@ -74,6 +82,14 @@ describe("BigInt.Decimal arithmetic", () => {
                     BigInt.Decimal("5")
                 ).toString()
             ).toBe("-2");
+        });
+        test("1.5 - 0.5 normalizes to 1, not 1.0", () => {
+            expect(
+                BigInt.Decimal.subtract(
+                    BigInt.Decimal("1.5"),
+                    BigInt.Decimal("0.5")
+                ).toString()
+            ).toBe("1");
         });
         test("1.0 - 0.7 = 0.3", () => {
             expect(
@@ -101,6 +117,14 @@ describe("BigInt.Decimal arithmetic", () => {
                     BigInt.Decimal("0.2")
                 ).toString()
             ).toBe("0.02");
+        });
+        test("1.2 * 5 normalizes to 6, not 6.0", () => {
+            expect(
+                BigInt.Decimal.multiply(
+                    BigInt.Decimal("1.2"),
+                    BigInt.Decimal("5")
+                ).toString()
+            ).toBe("6");
         });
         test("negative * positive", () => {
             expect(
@@ -174,6 +198,14 @@ describe("BigInt.Decimal arithmetic", () => {
                     BigInt.Decimal("4")
                 ).toString()
             ).toBe("0.25");
+        });
+        test("3 / 1.5 normalizes to 2, not 2.0", () => {
+            expect(
+                BigInt.Decimal.divide(
+                    BigInt.Decimal("3"),
+                    BigInt.Decimal("1.5")
+                ).toString()
+            ).toBe("2");
         });
         test("invalid maximumFractionDigits throws", () => {
             expect(() =>
