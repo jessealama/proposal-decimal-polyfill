@@ -34,7 +34,7 @@
     },
     "homepage": "https://github.com/jessealama/proposal-decimal-polyfill#readme",
     "devDependencies": {
-        "bignumber.js": "^9.1.2",
+        "bignumber.js": "^10.0.2",
         "c8": "^10.1.2",
         "decimal.js-light": "^2.5.1",
         "esbuild": "^0.27.3",
