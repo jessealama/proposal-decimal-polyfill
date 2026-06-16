@@ -27,11 +27,6 @@ const NAN = "NaN";
 const POSITIVE_INFINITY = "Infinity";
 const NEGATIVE_INFINITY = "-Infinity";
 
-type PrecisionSpecification =
-    | { fractionDigit: number }
-    | { significantDigit: number }
-    | { trailingZero: number };
-
 const ROUNDING_MODE_CEILING = "ceil";
 const ROUNDING_MODE_FLOOR = "floor";
 const ROUNDING_MODE_TRUNCATE = "trunc";
@@ -829,10 +824,6 @@ export class Decimal {
     private readonly _isNaN: boolean = false;
     private readonly _isFinite: boolean = true;
     private readonly _isNegative: boolean = false;
-
-    // methods to be defined later
-    toAmount: any;
-    with: any;
 
     /**
      * Creates a new Decimal128 value.
@@ -2047,176 +2038,6 @@ export class Decimal {
     }
 }
 
-export namespace Decimal {
-    export class Amount {
-        private readonly val: Decimal;
-        public readonly trailingZeroes: number;
-        public readonly significantDigits: number;
-        public readonly fractionalDigits: number;
-        public readonly quantum: Decimal;
-
-        static from(s: string): Amount {
-            // @todo handle exponential notation, too, not just decimal notation
-            let [_, fracPart] = s.split(/[.]/);
-            let numFractionDigits =
-                undefined === fracPart ? 0 : fracPart.length;
-            return new Amount(s, numFractionDigits);
-        }
-
-        private constructor(val: string, fractionalDigits: number) {
-            if ("string" !== typeof val) {
-                throw new TypeError("Digit string argument must be a string");
-            }
-
-            if ("number" !== typeof fractionalDigits) {
-                throw new TypeError("Precision argument must be a number");
-            }
-
-            let d = new Decimal(val); // might throw
-
-            this.val = d;
-
-            // @todo handle exponential notation, too, not just decimal notation
-
-            if (d.isNaN() || !d.isFinite()) {
-                this.fractionalDigits = 0;
-                this.trailingZeroes = 0;
-                this.significantDigits = 0;
-                this.quantum = new Decimal("0");
-            } else {
-                let [intPart, fracPart] = d
-                    .toFixed({ digits: fractionalDigits })
-                    .split(/[.]/);
-
-                this.fractionalDigits =
-                    undefined === fracPart ? 0 : fracPart.length;
-
-                if (undefined === fracPart) {
-                    this.trailingZeroes = 0;
-                } else {
-                    let m = fracPart.match(/0+$/);
-                    if (m) {
-                        this.trailingZeroes = m[0].length;
-                    } else {
-                        this.trailingZeroes = 0;
-                    }
-                }
-
-                this.significantDigits =
-                    intPart.length +
-                    (undefined === fracPart ? 0 : fracPart.length);
-
-                this.quantum = new Decimal(1n).scale10(
-                    0 - this.fractionalDigits
-                );
-            }
-        }
-
-        toDecimal(): Decimal {
-            return this.val;
-        }
-
-        toString(): string {
-            return this.val.toFixed({ digits: this.fractionalDigits });
-        }
-
-        toLocaleString(
-            locale: string,
-            options: Intl.NumberFormatOptions
-        ): string {
-            if (undefined === options) {
-                options = {};
-            }
-
-            options.minimumFractionDigits = this.fractionalDigits;
-
-            let formatter = new Intl.NumberFormat(locale, options);
-            // @ts-ignore
-            return formatter.format(this.toString());
-        }
-
-        with(opts: PrecisionSpecification): Amount {
-            if (opts.hasOwnProperty("fractionDigit")) {
-                // @ts-ignore
-                return this.withFractionalDigits(opts.fractionDigit);
-            } else if (opts.hasOwnProperty("significantDigit")) {
-                // @ts-ignore
-                return this.withSignificantDigits(opts.significantDigit);
-            } else if (opts.hasOwnProperty("trailingZero")) {
-                // @ts-ignore
-                return this.withTrailingZeroes(opts.trailingZero);
-            } else {
-                throw new TypeError(
-                    "Don't know how to handle precision specification"
-                );
-            }
-        }
-
-        private withSignificantDigits(precision: number): Amount {
-            let s = this.val.toPrecision({ digits: precision });
-            let [_, fracPart] = s.split(/[.]/);
-            let numFractionDigits =
-                undefined === fracPart ? 0 : fracPart.length;
-            return new Amount(s, numFractionDigits);
-        }
-
-        private withFractionalDigits(precision: number): Amount {
-            return new Amount(
-                this.val.toFixed({ digits: Infinity }),
-                precision
-            );
-        }
-
-        private withTrailingZeroes(precision: number): Amount {
-            let s = this.val.toFixed({
-                digits: this.fractionalDigits + precision,
-            });
-            let [_, fracPart] = s.split(/[.]/);
-            let numFractionDigits =
-                undefined === fracPart ? 0 : fracPart.length;
-            return new Amount(s, numFractionDigits);
-        }
-
-        /**
-         * Check whether this Amount is equal to another Amount, which means that they
-         * have the same mathematical value as well as the same precision (same number
-         * of trailing zeroes, significant digits, and fractional digits).
-         * @param other
-         */
-        equals(other: Amount): boolean {
-            if (!this.toDecimal().equals(other.toDecimal())) {
-                return false;
-            }
-
-            if (this.trailingZeroes !== other.trailingZeroes) {
-                return false;
-            }
-
-            if (this.significantDigits !== other.significantDigits) {
-                return false;
-            }
-
-            return this.fractionalDigits === other.fractionalDigits;
-        }
-    }
-}
-
-Decimal.prototype.toAmount = function () {
-    return Decimal.Amount.from(this.toFixed({ digits: Infinity }));
-};
-
 Decimal.prototype.valueOf = function () {
     throw TypeError("Decimal.prototype.valueOf throws unconditionally");
-};
-
-/**
- * Convert this Decimal to an Amount, specifying the way in which precision should be understood
- * and the number of digits of precision.
- *
- * @param opts
- */
-Decimal.prototype.with = function (
-    opts: PrecisionSpecification
-): Decimal.Amount {
-    return this.toAmount().with(opts);
 };
