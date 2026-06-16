@@ -10,3 +10,7 @@ src/*.d.mts
 /examples/*.js
 /examples/*.map
 /src/*.mjs.map
+
+# StrykerJS mutation-testing output (spike)
+reports/
+.stryker-tmp/
