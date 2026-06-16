@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses date-based versioning (YYYYMMDD.MAJOR.MINOR).
 
+## [20260616.0.0 ] - 2026-06-16
+
+### Removed
+
+* `Decimal.Amount` (see [Amount](https://github.com/tc39/proposal-amount))
+
 ## [20250613.0.0] - 2025-06-13
 
 ### Changed
