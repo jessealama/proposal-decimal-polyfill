@@ -9,7 +9,7 @@ and this project uses date-based versioning (YYYYMMDD.MAJOR.MINOR).
 
 ### Removed
 
-* `Decimal.Amount` (see [Amount](https://github.com/tc39/proposal-amount))
+- `Decimal.Amount` (see [Amount](https://github.com/tc39/proposal-amount))
 
 ## [20250613.0.0] - 2025-06-13
 
