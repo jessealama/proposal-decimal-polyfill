@@ -132,6 +132,53 @@ describe("constructor", () => {
         });
     });
 
+    describe("Decimal128 domain boundaries", () => {
+        // The largest finite value has adjusted exponent 6144; one step past
+        // it overflows to Infinity.
+        describe("overflow at adjusted exponent 6144", () => {
+            test("adjusted exponent 6144 is finite", () => {
+                expect(new Decimal("1E+6144").toString()).toStrictEqual(
+                    "1e+6144"
+                );
+            });
+            test("adjusted exponent 6145 overflows to Infinity", () => {
+                expect(new Decimal("1E+6145").toString()).toStrictEqual(
+                    "Infinity"
+                );
+            });
+        });
+
+        // Rounding to 34 significant digits can carry, pushing the adjusted
+        // exponent from 6144 up to 6145 and overflowing.
+        describe("overflow when rounding carries past 6144", () => {
+            const thirtyFiveNines = "9".repeat(35);
+            test("carry that stays at 6144 is finite", () => {
+                // 35 nines at adjusted exponent 6143 round up to 1e+6144.
+                expect(
+                    new Decimal(thirtyFiveNines + "E6109").toString()
+                ).toStrictEqual("1e+6144");
+            });
+            test("carry from 6144 to 6145 overflows to Infinity", () => {
+                // 35 nines at adjusted exponent 6144 round up to 1e+6145.
+                expect(
+                    new Decimal(thirtyFiveNines + "E6110").toString()
+                ).toStrictEqual("Infinity");
+            });
+        });
+
+        // Values with adjusted exponent at or below -6177 underflow to zero.
+        describe("underflow to zero at adjusted exponent -6177", () => {
+            test("adjusted exponent -6176 is finite", () => {
+                expect(new Decimal("1E-6176").toString()).toStrictEqual(
+                    "1e-6143"
+                );
+            });
+            test("adjusted exponent -6177 underflows to zero", () => {
+                expect(new Decimal("1E-6177").toString()).toStrictEqual("0");
+            });
+        });
+    });
+
     describe("NaN", () => {
         test("invalid NaN variations throw", () => {
             expect(() => new Decimal("-NaN")).toThrow(SyntaxError);
