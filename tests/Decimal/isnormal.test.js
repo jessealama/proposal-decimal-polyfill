@@ -31,5 +31,8 @@ describe("isNormal", () => {
         test("simple number with exponent beyond limit", () => {
             expect(new Decimal("42E-6145").isNormal()).toStrictEqual(false);
         });
+        test("number with exponent at upper limit is normal", () => {
+            expect(new Decimal("1E+6144").isNormal()).toStrictEqual(true);
+        });
     });
 });
