@@ -119,6 +119,16 @@ describe("addition", () => {
                     .toString()
             ).toStrictEqual("1.234567890123456789012345678901234e+33");
         });
+        test("rounding mode changes the result (ceil vs default)", () => {
+            const a = new Decimal("1.234567890123456789012345678901234");
+            const b = new Decimal("0.0000000000000000000000000000000005");
+            expect(a.add(b, { roundingMode: "ceil" }).toString()).toStrictEqual(
+                "1.234567890123456789012345678901235"
+            );
+            expect(a.add(b).toString()).toStrictEqual(
+                "1.234567890123456789012345678901234"
+            );
+        });
     });
     describe("examples from the General Decimal Arithmetic specification", () => {
         test("example one", () => {
