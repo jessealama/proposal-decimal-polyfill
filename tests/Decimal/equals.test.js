@@ -59,6 +59,16 @@ describe("equals", () => {
             test("NaN equals number is false", () => {
                 expect(nan.equals(one)).toStrictEqual(false);
             });
+            test("NaN equals positive infinity is false", () => {
+                expect(nan.equals(new Decimal("Infinity"))).toStrictEqual(
+                    false
+                );
+            });
+            test("positive infinity equals NaN is false", () => {
+                expect(new Decimal("Infinity").equals(nan)).toStrictEqual(
+                    false
+                );
+            });
         });
         describe("minus zero", () => {
             test("left hand", () => {

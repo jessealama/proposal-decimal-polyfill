@@ -882,6 +882,7 @@ export class Decimal {
 
         if (data === "NaN") {
             this._isNaN = true;
+            this._isFinite = false;
         } else if (data === "Infinity") {
             this._isFinite = false;
         } else if (data === "-Infinity") {
