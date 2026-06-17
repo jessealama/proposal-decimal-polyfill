@@ -394,6 +394,17 @@ describe("division", () => {
                     val1.divide(val2, { roundingMode: "floor" }).toString()
                 ).toStrictEqual("3.333333333333333333333333333333333e+6143");
             });
+
+            test("rounding mode changes the result (ceil vs default)", () => {
+                const a = new Decimal("1");
+                const b = new Decimal("3");
+                expect(
+                    a.divide(b, { roundingMode: "ceil" }).toString()
+                ).toStrictEqual("0.3333333333333333333333333333333334");
+                expect(a.divide(b).toString()).toStrictEqual(
+                    "0.3333333333333333333333333333333333"
+                );
+            });
         });
     });
 });
