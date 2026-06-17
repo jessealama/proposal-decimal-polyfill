@@ -14,7 +14,6 @@
  */
 
 const NORMAL_EXPONENT_MIN = -6143;
-const NORMAL_EXPONENT_MAX = 6144;
 const MAX_SIGNIFICANT_DIGITS = 34;
 
 type NaNValue = "NaN";
@@ -1940,8 +1939,14 @@ export class Decimal {
             );
         }
 
+        // "normal" is defined (IEEE 754 / General Decimal Arithmetic) as a
+        // finite non-zero value whose adjusted exponent is >= Emin. There is no
+        // upper bound to check: any finite value already has an adjusted
+        // exponent <= Emax (anything larger overflows to Infinity on
+        // construction), so a finite non-zero value is normal exactly when it
+        // is not subnormal.
         let exp = this.unrestrictedExponent();
-        return exp >= NORMAL_EXPONENT_MIN && exp <= NORMAL_EXPONENT_MAX;
+        return exp >= NORMAL_EXPONENT_MIN;
     }
 
     /**
