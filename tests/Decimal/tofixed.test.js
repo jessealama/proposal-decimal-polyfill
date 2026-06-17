@@ -75,12 +75,18 @@ describe("toFixed", () => {
         });
         test("negative number of decimal places throws", () => {
             expect(() => decimalD.toFixed({ digits: -1 })).toThrow(RangeError);
+            expect(() => decimalD.toFixed({ digits: -1 })).toThrow(
+                "Argument must be greater than or equal to 0"
+            );
         });
         test("non-integer does not take floor", () => {
             expect(() => decimalD.toFixed({ digits: 1.5 })).toThrow(RangeError);
         });
         test("non-object argument", () => {
             expect(() => decimalD.toFixed("flab")).toThrow(TypeError);
+            expect(() => decimalD.toFixed("flab")).toThrow(
+                "Argument must be an object"
+            );
         });
         test("zeroes get added", () => {
             expect(new Decimal("42").toFixed({ digits: 10 })).toStrictEqual(

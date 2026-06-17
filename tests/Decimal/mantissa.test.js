@@ -3,6 +3,9 @@ import { Decimal } from "../../src/Decimal.mjs";
 describe("mantissa", () => {
     test("0", () => {
         expect(() => new Decimal("0").mantissa()).toThrow(RangeError);
+        expect(() => new Decimal("0").mantissa()).toThrow(
+            "Zero does not have a mantissa"
+        );
     });
     test("0.0", () => {
         expect(() => new Decimal("0.0").mantissa()).toThrow(RangeError);

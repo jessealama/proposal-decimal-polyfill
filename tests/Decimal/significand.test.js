@@ -4,12 +4,18 @@ describe("significand", () => {
     describe("NaN", () => {
         test("throws", () => {
             expect(() => new Decimal("NaN").significand()).toThrow(RangeError);
+            expect(() => new Decimal("NaN").significand()).toThrow(
+                "NaN does not have a scaled significand"
+            );
         });
     });
     describe("infinities", () => {
         test("positive throws", () => {
             expect(() => new Decimal("Infinity").significand()).toThrow(
                 RangeError
+            );
+            expect(() => new Decimal("Infinity").significand()).toThrow(
+                "Infinity does not have a scaled significand"
             );
         });
         test("negative throws", () => {

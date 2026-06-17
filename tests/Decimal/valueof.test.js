@@ -5,5 +5,8 @@ describe("valueOf", () => {
         expect(() => {
             return 42 - new Decimal("42");
         }).toThrow(TypeError);
+        expect(() => {
+            return 42 - new Decimal("42");
+        }).toThrow("Decimal.prototype.valueOf throws unconditionally");
     });
 });

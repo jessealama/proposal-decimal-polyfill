@@ -45,6 +45,7 @@ describe("constructor", () => {
         });
         test("empty string not OK", () => {
             expect(() => new Decimal("")).toThrow(SyntaxError);
+            expect(() => new Decimal("")).toThrow("Empty string not permitted");
         });
         test("whitespace plus number not OK", () => {
             expect(() => new Decimal(" 42")).toThrow(SyntaxError);
@@ -93,6 +94,9 @@ describe("constructor", () => {
     describe("exponential string syntax", () => {
         test("nonsense string input", () => {
             expect(() => new Decimal("howdy")).toThrow(SyntaxError);
+            expect(() => new Decimal("howdy")).toThrow(
+                "Invalid decimal string"
+            );
         });
         test("too many significant digits get rounded", () => {
             expect(
@@ -186,18 +190,27 @@ describe("constructor", () => {
             });
             test("period", () => {
                 expect(() => new Decimal(".")).toThrow(SyntaxError);
+                expect(() => new Decimal(".")).toThrow(
+                    "Lone decimal point not permitted"
+                );
             });
             test("plus period", () => {
                 expect(() => new Decimal("+.")).toThrow(SyntaxError);
             });
             test("minus period", () => {
                 expect(() => new Decimal("-.")).toThrow(SyntaxError);
+                expect(() => new Decimal("-.")).toThrow(
+                    "Lone minus sign and period not permitted"
+                );
             });
             test("plus", () => {
                 expect(() => new Decimal("+")).toThrow(SyntaxError);
             });
             test("minus", () => {
                 expect(() => new Decimal("-")).toThrow(SyntaxError);
+                expect(() => new Decimal("-")).toThrow(
+                    "Lone minus sign not permitted"
+                );
             });
         });
     });

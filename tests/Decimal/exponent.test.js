@@ -4,6 +4,9 @@ describe("exponent", () => {
     describe("NaN", () => {
         test("throws", () => {
             expect(() => new Decimal("NaN").exponent()).toThrow(RangeError);
+            expect(() => new Decimal("NaN").exponent()).toThrow(
+                "Cannot determine exponent for NaN"
+            );
         });
     });
 

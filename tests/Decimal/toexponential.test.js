@@ -34,6 +34,9 @@ describe("toExponential", () => {
     });
     test("wrong argument type", () => {
         expect(() => decimalD.toExponential("foo")).toThrow(TypeError);
+        expect(() => decimalD.toExponential("foo")).toThrow(
+            "Argument must be an object"
+        );
     });
     test("empty options", () => {
         expect(decimalD.toExponential({})).toStrictEqual("1.23456e+2");
@@ -66,6 +69,9 @@ describe("toExponential", () => {
     });
     test("zero decimal places throws", () => {
         expect(() => decimalD.toExponential({ digits: 0 })).toThrow(RangeError);
+        expect(() => decimalD.toExponential({ digits: 0 })).toThrow(
+            "Argument must be positive"
+        );
     });
     test("negative number of decimal places", () => {
         expect(() => decimalD.toExponential({ digits: -1 })).toThrow(
@@ -75,6 +81,9 @@ describe("toExponential", () => {
     test("non-integer number throws", () => {
         expect(() => decimalD.toExponential({ digits: 1.5 })).toThrow(
             RangeError
+        );
+        expect(() => decimalD.toExponential({ digits: 1.5 })).toThrow(
+            "Argument must be an integer"
         );
     });
     describe("negative", () => {
