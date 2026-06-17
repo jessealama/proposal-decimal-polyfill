@@ -4,6 +4,9 @@ describe("toBigInt", () => {
     describe("NaN", () => {
         test("does not work", () => {
             expect(() => new Decimal("NaN").toBigInt()).toThrow(RangeError);
+            expect(() => new Decimal("NaN").toBigInt()).toThrow(
+                "NaN cannot be converted to a BigInt"
+            );
         });
     });
 
@@ -20,6 +23,9 @@ describe("toBigInt", () => {
         test("positive", () => {
             expect(() => new Decimal("Infinity").toBigInt()).toThrow(
                 RangeError
+            );
+            expect(() => new Decimal("Infinity").toBigInt()).toThrow(
+                "Infinity cannot be converted to a BigInt"
             );
         });
         test("negative", () => {

@@ -65,9 +65,15 @@ describe("round", () => {
     });
     test("negative number of digits requested is truncation", () => {
         expect(() => new Decimal("1.5").round(-42)).toThrow(RangeError);
+        expect(() => new Decimal("1.5").round(-42)).toThrow(
+            "Invalid number of decimal digits"
+        );
     });
     test("too many digits requested", () => {
         expect(() => new Decimal("1.5").round(2 ** 53)).toThrow(RangeError);
+        expect(() => new Decimal("1.5").round(2 ** 53)).toThrow(
+            "Too many decimal digits requested"
+        );
     });
     test("round to zero", () => {
         expect(new Decimal("0.5").round(0, "trunc").toString()).toStrictEqual(
@@ -84,6 +90,9 @@ describe("round", () => {
         test("throws", () => {
             expect(() => new Decimal("1.5").round(0, "foobar")).toThrow(
                 RangeError
+            );
+            expect(() => new Decimal("1.5").round(0, "foobar")).toThrow(
+                'Invalid rounding mode "foobar"'
             );
         });
     });

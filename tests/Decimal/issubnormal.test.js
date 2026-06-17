@@ -4,6 +4,9 @@ describe("isSubnormal", () => {
     describe("NaN", () => {
         test("throws", () => {
             expect(() => new Decimal("NaN").isSubnormal()).toThrow(RangeError);
+            expect(() => new Decimal("NaN").isSubnormal()).toThrow(
+                "Cannot determine whether NaN is subnormal"
+            );
         });
     });
 

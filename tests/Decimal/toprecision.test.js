@@ -87,6 +87,9 @@ describe("toPrecision", () => {
         let d = new Decimal("123.456");
         test("non-object argument throws", () => {
             expect(() => d.toPrecision("whatever")).toThrow(TypeError);
+            expect(() => d.toPrecision("whatever")).toThrow(
+                "Argument must be an object"
+            );
         });
         test("object argument given, but has weird property", () => {
             expect(d.toPrecision({ foo: "bar" }).toString()).toStrictEqual(
@@ -97,10 +100,16 @@ describe("toPrecision", () => {
             expect(() => d.toPrecision({ digits: 1.72 }).toString()).toThrow(
                 RangeError
             );
+            expect(() => d.toPrecision({ digits: 1.72 }).toString()).toThrow(
+                "Argument must be an integer"
+            );
         });
         test("negative integer number of digits requested", () => {
             expect(() => d.toPrecision({ digits: -42 }).toString()).toThrow(
                 RangeError
+            );
+            expect(() => d.toPrecision({ digits: -42 }).toString()).toThrow(
+                "Argument must be positive"
             );
         });
     });

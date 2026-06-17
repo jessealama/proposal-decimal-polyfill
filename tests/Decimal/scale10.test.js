@@ -4,6 +4,9 @@ describe("scale10", () => {
     describe("NaN", () => {
         test("throws", () => {
             expect(() => new Decimal("NaN").scale10(5)).toThrow(RangeError);
+            expect(() => new Decimal("NaN").scale10(5)).toThrow(
+                "NaN cannot be scaled"
+            );
         });
     });
     describe("simple examples", () => {
@@ -25,12 +28,18 @@ describe("scale10", () => {
         });
         test("non-integer argument", () => {
             expect(() => new Decimal("42").scale10(1.5)).toThrow(TypeError);
+            expect(() => new Decimal("42").scale10(1.5)).toThrow(
+                "Argument must be an integer"
+            );
         });
     });
     describe("infinty", () => {
         test("positive infinity throws", () => {
             expect(() => new Decimal("Infinity").scale10(5)).toThrow(
                 RangeError
+            );
+            expect(() => new Decimal("Infinity").scale10(5)).toThrow(
+                "Infinity cannot be scaled"
             );
         });
         test("negative infinity throws", () => {
