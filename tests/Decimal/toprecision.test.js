@@ -187,6 +187,26 @@ describe("toPrecision", () => {
                 }
             );
         });
+        describe("integer result padded to the requested precision", () => {
+            test.each`
+                input    | digits | output
+                ${"5"}   | ${3}   | ${"5.00"}
+                ${"16"}  | ${4}   | ${"16.00"}
+                ${"123"} | ${5}   | ${"123.00"}
+                ${"100"} | ${5}   | ${"100.00"}
+                ${"100"} | ${3}   | ${"100"}
+                ${"9"}   | ${2}   | ${"9.0"}
+                ${"9"}   | ${1}   | ${"9"}
+                ${"100"} | ${2}   | ${"1.0e+2"}
+                ${"-5"}  | ${3}   | ${"-5.00"}
+            `(
+                "$input precision($digits) = $output",
+                ({ input, digits, output }) => {
+                    const s = new Decimal(input).toPrecision({ digits });
+                    expect(s).toStrictEqual(output);
+                }
+            );
+        });
         describe("with decimal output", () => {
             test.each`
                 input      | digits | output
