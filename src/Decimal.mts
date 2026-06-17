@@ -620,9 +620,16 @@ class CoefficientExponent {
             const sign = rounded._isNegative ? "-" : "";
 
             if (rounded._exponent >= 0) {
-                // No decimal point needed
+                // Whole number
                 const totalDigits = coeffStr.length + rounded._exponent;
-                return sign + coeffStr + "0".repeat(rounded._exponent);
+                const intStr = coeffStr + "0".repeat(rounded._exponent);
+                if (totalDigits < digits) {
+                    // Pad with trailing zeros to reach the requested precision
+                    return (
+                        sign + intStr + "." + "0".repeat(digits - totalDigits)
+                    );
+                }
+                return sign + intStr;
             } else {
                 // Need decimal point
                 const absExp = -rounded._exponent;
@@ -665,6 +672,12 @@ class CoefficientExponent {
                 // Single digit coefficient
                 const expSign = effectiveExponent >= 0 ? "+" : "";
                 const expStr = "e" + expSign + effectiveExponent;
+                if (digits > 1) {
+                    // Pad with trailing zeros to reach the requested precision
+                    return (
+                        sign + coeffStr + "." + "0".repeat(digits - 1) + expStr
+                    );
+                }
                 return sign + coeffStr + expStr;
             } else {
                 // Multiple digit coefficient
