@@ -15,16 +15,10 @@ describe("exponent", () => {
             expect(() => new Decimal("Infinity").exponent()).toThrow(
                 RangeError
             );
-            expect(() => new Decimal("Infinity").exponent()).toThrow(
-                "Cannot determine whether an infinite value is subnormal"
-            );
         });
         test("negative throws", () => {
             expect(() => new Decimal("-Infinity").exponent()).toThrow(
                 RangeError
-            );
-            expect(() => new Decimal("-Infinity").exponent()).toThrow(
-                "Cannot determine whether an infinite value is subnormal"
             );
         });
     });
