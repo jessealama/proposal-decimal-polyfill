@@ -2017,7 +2017,7 @@ export class Decimal {
 
         if (!this.isFinite()) {
             throw new RangeError(
-                "Cannot determine whether an infinite value is subnormal"
+                "Cannot determine exponent for an infinite value"
             );
         }
 
