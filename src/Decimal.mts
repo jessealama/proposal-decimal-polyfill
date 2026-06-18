@@ -16,6 +16,13 @@
 const NORMAL_EXPONENT_MIN = -6143;
 const MAX_SIGNIFICANT_DIGITS = 34;
 
+// The largest adjusted exponent of a finite Decimal128 value (Emax); above it,
+// values round to infinity.
+const ADJUSTED_EXPONENT_MAX = 6144;
+// The adjusted exponent of the smallest subnormal value (Etiny = Emin -
+// (precision - 1)); below it, values round to zero.
+const TINY_EXPONENT_MIN = NORMAL_EXPONENT_MIN - (MAX_SIGNIFICANT_DIGITS - 1);
+
 type NaNValue = "NaN";
 type InfiniteValue = "Infinity" | "-Infinity";
 type FiniteValue = "0" | "-0" | CoefficientExponent;
@@ -739,44 +746,28 @@ function RoundToDecimal128Domain(
         return (d as CoefficientExponent).negate();
     }
 
-    // Get the number of significant digits
+    // Reduce precision to fit the significand if needed. Rounding can only
+    // carry the adjusted exponent upward (e.g. 999 -> 1000), never lower it, so
+    // the bounds checks below are exact on the rounded result.
     const sigDigits = v.coefficient.toString().length;
-    const currentExponent = v.exponent;
-
-    // Calculate the effective exponent (where the decimal point would be after the first digit)
-    const effectiveExponent = currentExponent + sigDigits - 1;
-
-    // Check if we're above the normal range
-    if (effectiveExponent > 6144) {
-        // Check if we can fit in the extreme range
-        if (effectiveExponent > 6111 + 33) {
-            return "Infinity";
-        }
-    }
-
-    // Check if we need to reduce precision to fit
     let result = v;
     if (sigDigits > MAX_SIGNIFICANT_DIGITS) {
-        // Need to round to 34 significant digits
         result = v.roundToSignificantDigits(MAX_SIGNIFICANT_DIGITS, mode);
     }
 
-    // Check final exponent bounds
-    const finalExp = result.exponent + result.coefficient.toString().length - 1;
-    if (finalExp > 6144) {
-        // We're in the extreme range, check if we exceed it
-        const digitsAvailable = Math.max(1, 34 - (finalExp - 6144));
-        if (digitsAvailable < 1 || finalExp > 6111 + 33) {
-            return "Infinity";
-        }
+    // The adjusted exponent is the power of ten of the leading significant
+    // digit.
+    const adjustedExponent =
+        result.exponent + result.coefficient.toString().length - 1;
+
+    // Above the largest finite value, round to infinity.
+    if (adjustedExponent > ADJUSTED_EXPONENT_MAX) {
+        return "Infinity";
     }
 
-    // Check for subnormal (very small) values
-    if (finalExp < -6143) {
-        const digitsAvailable = Math.max(0, 34 + (finalExp + 6143));
-        if (digitsAvailable <= 0) {
-            return "0";
-        }
+    // Below the smallest subnormal value, round to zero.
+    if (adjustedExponent < TINY_EXPONENT_MIN) {
+        return "0";
     }
 
     if (result.isZero()) {
