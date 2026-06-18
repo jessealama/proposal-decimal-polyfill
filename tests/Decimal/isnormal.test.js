@@ -46,5 +46,13 @@ describe("isNormal", () => {
         test("number with exponent at upper limit is normal", () => {
             expect(new Decimal("1E+6144").isNormal()).toStrictEqual(true);
         });
+        // Classification must not depend on sign: a negative subnormal is not
+        // normal, just like its positive counterpart.
+        test("negative subnormal is not normal", () => {
+            expect(new Decimal("-1E-6144").isNormal()).toStrictEqual(false);
+        });
+        test("negative normal is normal", () => {
+            expect(new Decimal("-42").isNormal()).toStrictEqual(true);
+        });
     });
 });

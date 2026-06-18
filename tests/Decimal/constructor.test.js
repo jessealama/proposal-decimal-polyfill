@@ -119,8 +119,10 @@ describe("constructor", () => {
             );
         });
         test("min exponent", () => {
+            // 123E-6177 = 1.23E-6175, a subnormal whose adjusted exponent
+            // (-6175) is reported truthfully rather than clamped to Emin.
             expect(new Decimal("123E-6177").toString()).toStrictEqual(
-                "1.23e-6143"
+                "1.23e-6175"
             );
         });
         test("integer too big", () => {
@@ -170,7 +172,7 @@ describe("constructor", () => {
         describe("underflow to zero at adjusted exponent -6177", () => {
             test("adjusted exponent -6176 is finite", () => {
                 expect(new Decimal("1E-6176").toString()).toStrictEqual(
-                    "1e-6143"
+                    "1e-6176"
                 );
             });
             test("adjusted exponent -6177 underflows to zero", () => {

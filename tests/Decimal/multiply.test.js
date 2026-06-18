@@ -284,9 +284,9 @@ describe("multiply", () => {
                 // sqrt(min subnormal) ≈ 1E-3088
                 const small1 = new Decimal("1E-3088");
                 const small2 = new Decimal("1E-3088");
-                // Should produce 1E-6176
+                // 1E-3088 * 1E-3088 = 1E-6176, the smallest subnormal
                 expect(small1.multiply(small2).toString()).toStrictEqual(
-                    "1e-6143"
+                    "1e-6176"
                 );
             });
 
@@ -379,8 +379,8 @@ describe("multiply", () => {
                 // This tests the boundary of subnormal arithmetic
                 const val = new Decimal("1E-3088");
                 const squared = val.multiply(val);
-                // Should normalize to E-6143
-                expect(squared.toString()).toStrictEqual("1e-6143");
+                // (1E-3088)^2 = 1E-6176, the smallest subnormal
+                expect(squared.toString()).toStrictEqual("1e-6176");
             });
 
             test("multiplication chain near limits", () => {

@@ -36,5 +36,16 @@ describe("isSubnormal", () => {
         test("simple number with exponent beyond limit", () => {
             expect(new Decimal("42E-6145").isSubnormal()).toStrictEqual(true);
         });
+        // Classification must not depend on sign: a negative value is
+        // subnormal exactly when its magnitude is.
+        test("negative subnormal is subnormal", () => {
+            expect(new Decimal("-1E-6144").isSubnormal()).toStrictEqual(true);
+        });
+        test("negative deep subnormal is subnormal", () => {
+            expect(new Decimal("-1E-6176").isSubnormal()).toStrictEqual(true);
+        });
+        test("negative normal is not subnormal", () => {
+            expect(new Decimal("-42").isSubnormal()).toStrictEqual(false);
+        });
     });
 });

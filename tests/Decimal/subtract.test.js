@@ -234,15 +234,15 @@ describe("subtract", () => {
                     "1.000000000000000000000000000000001E-6143"
                 );
                 const val2 = new Decimal("1E-6143");
-                // Result is 1E-6176, which normalizes to E-6143
-                expect(val1.subtract(val2).toString()).toStrictEqual("1e-6143");
+                // Result is 1E-6176, the smallest subnormal
+                expect(val1.subtract(val2).toString()).toStrictEqual("1e-6176");
             });
 
             test("subtract subnormal values", () => {
                 const sub1 = new Decimal("8E-6150");
                 const sub2 = new Decimal("3E-6150");
-                // Currently normalized to E-6143
-                expect(sub1.subtract(sub2).toString()).toStrictEqual("5e-6143");
+                // 8E-6150 - 3E-6150 = 5E-6150, still subnormal
+                expect(sub1.subtract(sub2).toString()).toStrictEqual("5e-6150");
             });
 
             test("subtraction resulting in underflow", () => {
