@@ -47,7 +47,7 @@ describe("isNormal", () => {
             expect(new Decimal("1E+6144").isNormal()).toStrictEqual(true);
         });
         // Classification must not depend on sign: a negative subnormal is not
-        // normal, just like its positive counterpart. See issue #82.
+        // normal, just like its positive counterpart.
         test("negative subnormal is not normal", () => {
             expect(new Decimal("-1E-6144").isNormal()).toStrictEqual(false);
         });

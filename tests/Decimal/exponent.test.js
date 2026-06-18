@@ -46,8 +46,8 @@ describe("exponent", () => {
 
     // Subnormal values have adjusted exponents below Emin (-6143), down to
     // Etiny = Emin - (precision - 1) = -6176. The exponent must be reported
-    // truthfully rather than clamped up to Emin. See issue #82.
-    describe("subnormal range (issue #82)", () => {
+    // truthfully rather than clamped up to Emin.
+    describe("subnormal range", () => {
         test("just below the normal boundary", () => {
             expect(new Decimal("1E-6144").exponent()).toStrictEqual(-6144);
         });

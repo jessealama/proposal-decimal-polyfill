@@ -37,7 +37,7 @@ describe("isSubnormal", () => {
             expect(new Decimal("42E-6145").isSubnormal()).toStrictEqual(true);
         });
         // Classification must not depend on sign: a negative value is
-        // subnormal exactly when its magnitude is. See issue #82.
+        // subnormal exactly when its magnitude is.
         test("negative subnormal is subnormal", () => {
             expect(new Decimal("-1E-6144").isSubnormal()).toStrictEqual(true);
         });

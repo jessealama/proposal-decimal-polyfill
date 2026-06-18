@@ -143,8 +143,8 @@ describe("toExponential", () => {
     });
 
     // Subnormal values must expose their true exponent down to Etiny
-    // (-6176) rather than being clamped to Emin (-6143). See issue #82.
-    describe("subnormal range (issue #82)", () => {
+    // (-6176) rather than being clamped to Emin (-6143).
+    describe("subnormal range", () => {
         test("just below the normal boundary", () => {
             expect(new Decimal("1E-6144").toExponential()).toStrictEqual(
                 "1e-6144"

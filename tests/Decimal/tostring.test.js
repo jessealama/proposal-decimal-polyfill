@@ -98,8 +98,8 @@ describe("toString", () => {
         });
 
         // Subnormal values (adjusted exponent in [-6176, -6144]) must render
-        // with their true exponent, not clamped up to Emin (-6143). See #82.
-        describe("subnormal range (issue #82)", () => {
+        // with their true exponent, not clamped up to Emin (-6143).
+        describe("subnormal range", () => {
             test("just below the normal boundary", () => {
                 expect(new Decimal("1E-6144").toString()).toStrictEqual(
                     "1e-6144"
