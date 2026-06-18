@@ -112,6 +112,22 @@ describe("toPrecision", () => {
                 "Argument must be positive"
             );
         });
+        test("zero number of digits requested", () => {
+            expect(() => d.toPrecision({ digits: 0 }).toString()).toThrow(
+                RangeError
+            );
+            expect(() => d.toPrecision({ digits: 0 }).toString()).toThrow(
+                "Argument must be positive"
+            );
+        });
+    });
+
+    describe("decimal-versus-exponential boundary", () => {
+        test("adjusted exponent of -6 uses decimal notation", () => {
+            expect(
+                new Decimal("0.0000012345").toPrecision({ digits: 5 })
+            ).toStrictEqual("0.0000012345");
+        });
     });
 
     describe("NaN", () => {

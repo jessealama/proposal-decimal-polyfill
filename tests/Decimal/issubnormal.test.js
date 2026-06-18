@@ -15,10 +15,16 @@ describe("isSubnormal", () => {
             expect(() => new Decimal("Infinity").isSubnormal()).toThrow(
                 RangeError
             );
+            expect(() => new Decimal("Infinity").isSubnormal()).toThrow(
+                "Only finite numbers can be said to be subnormal or not"
+            );
         });
         test("negative throws", () => {
             expect(() => new Decimal("-Infinity").isSubnormal()).toThrow(
                 RangeError
+            );
+            expect(() => new Decimal("-Infinity").isSubnormal()).toThrow(
+                "Only finite numbers can be said to be subnormal or not"
             );
         });
     });
