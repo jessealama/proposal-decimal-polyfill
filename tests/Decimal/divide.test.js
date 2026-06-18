@@ -250,9 +250,9 @@ describe("division", () => {
             test("divide subnormal by normal", () => {
                 const subnormal = new Decimal("1E-6150");
                 const normal = new Decimal("10");
-                // Result normalizes to E-6143
+                // 1E-6150 / 10 = 1E-6151, still in the subnormal range
                 expect(subnormal.divide(normal).toString()).toStrictEqual(
-                    "1e-6143"
+                    "1e-6151"
                 );
             });
 
@@ -346,8 +346,8 @@ describe("division", () => {
                     "9.999999999999999999999999999999999E+6144"
                 );
                 const one = new Decimal("1");
-                // 1 / max normalizes to 1E-6143
-                expect(one.divide(max).toString()).toStrictEqual("1e-6143");
+                // 1 / 9.99...9E+6144 rounds to 1E-6145, a subnormal value
+                expect(one.divide(max).toString()).toStrictEqual("1e-6145");
             });
 
             test("reciprocal of minimum normal", () => {

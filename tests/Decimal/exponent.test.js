@@ -39,8 +39,30 @@ describe("exponent", () => {
         test("simple number between 1 and 10 with exponent apparently at limit", () => {
             expect(new Decimal("4.22E-6143").exponent()).toStrictEqual(-6143);
         });
-        test("simple number with exponent beyond limit", () => {
-            expect(new Decimal("4.22E-6144").exponent()).toStrictEqual(-6143);
+        test("subnormal number reports its true (sub-Emin) exponent", () => {
+            expect(new Decimal("4.22E-6144").exponent()).toStrictEqual(-6144);
+        });
+    });
+
+    // Subnormal values have adjusted exponents below Emin (-6143), down to
+    // Etiny = Emin - (precision - 1) = -6176. The exponent must be reported
+    // truthfully rather than clamped up to Emin. See issue #82.
+    describe("subnormal range (issue #82)", () => {
+        test("just below the normal boundary", () => {
+            expect(new Decimal("1E-6144").exponent()).toStrictEqual(-6144);
+        });
+        test("middle of the subnormal range", () => {
+            expect(new Decimal("1.5E-6160").exponent()).toStrictEqual(-6160);
+        });
+        test("smallest subnormal (Etiny)", () => {
+            expect(new Decimal("1E-6176").exponent()).toStrictEqual(-6176);
+        });
+        test("coefficient with several digits", () => {
+            // 123E-6177 = 1.23E-6175, adjusted exponent -6175
+            expect(new Decimal("123E-6177").exponent()).toStrictEqual(-6175);
+        });
+        test("negative subnormal reports the true exponent", () => {
+            expect(new Decimal("-1E-6144").exponent()).toStrictEqual(-6144);
         });
     });
 });

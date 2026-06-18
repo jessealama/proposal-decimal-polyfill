@@ -96,5 +96,30 @@ describe("toString", () => {
                 );
             });
         });
+
+        // Subnormal values (adjusted exponent in [-6176, -6144]) must render
+        // with their true exponent, not clamped up to Emin (-6143). See #82.
+        describe("subnormal range (issue #82)", () => {
+            test("just below the normal boundary", () => {
+                expect(new Decimal("1E-6144").toString()).toStrictEqual(
+                    "1e-6144"
+                );
+            });
+            test("middle of the subnormal range", () => {
+                expect(new Decimal("1.5E-6160").toString()).toStrictEqual(
+                    "1.5e-6160"
+                );
+            });
+            test("smallest subnormal (Etiny)", () => {
+                expect(new Decimal("1E-6176").toString()).toStrictEqual(
+                    "1e-6176"
+                );
+            });
+            test("negative subnormal keeps its sign and exponent", () => {
+                expect(new Decimal("-1.5E-6160").toString()).toStrictEqual(
+                    "-1.5e-6160"
+                );
+            });
+        });
     });
 });

@@ -205,17 +205,15 @@ describe("addition", () => {
             });
 
             test("add two subnormal values", () => {
-                // Currently, very small values are normalized to E-6143
                 const sub1 = new Decimal("5E-6150");
                 const sub2 = new Decimal("3E-6150");
-                expect(sub1.add(sub2).toString()).toStrictEqual("8e-6143");
+                expect(sub1.add(sub2).toString()).toStrictEqual("8e-6150");
             });
 
             test("add values in deep subnormal range", () => {
-                // Currently, very small values are normalized to E-6143
                 const sub1 = new Decimal("1E-6170");
                 const sub2 = new Decimal("1E-6170");
-                expect(sub1.add(sub2).toString()).toStrictEqual("2e-6143");
+                expect(sub1.add(sub2).toString()).toStrictEqual("2e-6170");
             });
 
             test("add values that are too small (below subnormal)", () => {

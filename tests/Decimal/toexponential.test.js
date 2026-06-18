@@ -141,4 +141,24 @@ describe("toExponential", () => {
             expect(new Decimal("0E+2").toExponential()).toStrictEqual("0e+0");
         });
     });
+
+    // Subnormal values must expose their true exponent down to Etiny
+    // (-6176) rather than being clamped to Emin (-6143). See issue #82.
+    describe("subnormal range (issue #82)", () => {
+        test("just below the normal boundary", () => {
+            expect(new Decimal("1E-6144").toExponential()).toStrictEqual(
+                "1e-6144"
+            );
+        });
+        test("smallest subnormal (Etiny)", () => {
+            expect(new Decimal("1E-6176").toExponential()).toStrictEqual(
+                "1e-6176"
+            );
+        });
+        test("negative subnormal keeps its sign and exponent", () => {
+            expect(new Decimal("-1.5E-6160").toExponential()).toStrictEqual(
+                "-1.5e-6160"
+            );
+        });
+    });
 });

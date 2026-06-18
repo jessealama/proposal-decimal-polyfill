@@ -162,7 +162,7 @@ describe("remainder", () => {
                 const normal = new Decimal("1");
                 // tiny % 1 = tiny (since tiny < 1)
                 expect(tiny.remainder(normal).toString()).toStrictEqual(
-                    "1e-6143"
+                    "1e-6150"
                 );
             });
 
@@ -212,9 +212,9 @@ describe("remainder", () => {
             test("remainder with subnormal values", () => {
                 const sub1 = new Decimal("5E-6150");
                 const sub2 = new Decimal("2E-6150");
-                // Both normalize to E-6143
+                // 5E-6150 % 2E-6150 = 1E-6150, still subnormal
                 const result = sub1.remainder(sub2);
-                expect(result.toString()).toStrictEqual("1e-6143");
+                expect(result.toString()).toStrictEqual("1e-6150");
             });
 
             test("remainder producing zero at extreme", () => {

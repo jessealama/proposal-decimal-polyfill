@@ -1989,7 +1989,7 @@ export class Decimal {
         }
 
         if (this.isNegative()) {
-            return this.negate().exponent();
+            return this.negate().unrestrictedExponent();
         }
 
         let v = this.d as CoefficientExponent;
@@ -2000,9 +2000,10 @@ export class Decimal {
     }
 
     /**
-     * Returns the exponent of this Decimal128 value.
-     * For normal numbers, this is the actual exponent.
-     * For subnormal numbers, this returns the minimum normal exponent.
+     * Returns the adjusted exponent of this Decimal128 value: the exponent
+     * of the most significant digit when written in scientific notation.
+     * For subnormal values this ranges down to Etiny (Emin - (precision - 1)
+     * = -6176); it is reported truthfully rather than clamped to Emin.
      *
      * @returns {number} The exponent value
      * @throws {RangeError} If this value is NaN or infinite
@@ -2018,8 +2019,13 @@ export class Decimal {
             );
         }
 
-        let te = this.unrestrictedExponent();
-        return Math.max(te, NORMAL_EXPONENT_MIN);
+        // Zero has no significant digits and so no meaningful adjusted
+        // exponent; report Emin by convention.
+        if (this.isZero()) {
+            return NORMAL_EXPONENT_MIN;
+        }
+
+        return this.unrestrictedExponent();
     }
 
     /**
