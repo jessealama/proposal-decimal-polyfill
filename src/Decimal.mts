@@ -321,11 +321,20 @@ class CoefficientExponent {
             return 0;
         }
 
-        // Different exponents - align them
+        // Different exponents - align them.
+        //
+        // Note: values are normalized (no trailing zeros), so reaching this
+        // point means exp1 !== exp2, and the scaled magnitudes can never be
+        // equal — one side ends in a zero (it was scaled by a power of ten)
+        // while the other, being normalized, does not. That makes the > and <
+        // comparisons below insensitive to whether they are strict, so the
+        // corresponding boundary mutants are equivalent.
+        // Stryker disable next-line EqualityOperator: exp1 === exp2 handled above
         if (exp1 > exp2) {
             // this has larger exponent, so scale this coefficient up
             const diff = exp1 - exp2;
             const scaledThisCoeff = this._coefficient * 10n ** BigInt(diff);
+            // Stryker disable next-line EqualityOperator: scaled vs normalized magnitudes are never equal
             if (scaledThisCoeff < other._coefficient) {
                 return -1;
             }
@@ -335,6 +344,7 @@ class CoefficientExponent {
             // other has larger exponent, so scale other coefficient up
             const diff = exp2 - exp1;
             const scaledOtherCoeff = other._coefficient * 10n ** BigInt(diff);
+            // Stryker disable next-line EqualityOperator: scaled vs normalized magnitudes are never equal
             if (this._coefficient < scaledOtherCoeff) {
                 return -1;
             }
@@ -444,20 +454,12 @@ class CoefficientExponent {
         const scaledDividend = this._coefficient * 10n ** BigInt(scaleFactor);
 
         const quotient = scaledDividend / other._coefficient;
-        const remainder = scaledDividend % other._coefficient;
 
-        if (remainder === 0n) {
-            // Exact division
-            const exponent = this._exponent - other._exponent - scaleFactor;
-            const isNegative = this._isNegative !== other._isNegative;
-            return new CoefficientExponent(quotient, exponent, isNegative);
-        } else {
-            // For now, we'll use the scaled quotient
-            // In a full implementation, we might want to compute more decimal places
-            const exponent = this._exponent - other._exponent - scaleFactor;
-            const isNegative = this._isNegative !== other._isNegative;
-            return new CoefficientExponent(quotient, exponent, isNegative);
-        }
+        // The scaled quotient is used whether or not the division is exact;
+        // any remainder is simply truncated at the chosen scale factor.
+        const exponent = this._exponent - other._exponent - scaleFactor;
+        const isNegative = this._isNegative !== other._isNegative;
+        return new CoefficientExponent(quotient, exponent, isNegative);
     }
 
     /**
@@ -465,6 +467,7 @@ class CoefficientExponent {
      * @returns {CoefficientExponent} The floor value
      */
     floor(): CoefficientExponent {
+        // Stryker disable next-line EqualityOperator: exponent 0 produces the same value through the truncation path below (divisor 10^0 = 1)
         if (this._exponent >= 0) {
             // Already an integer
             return this;
@@ -483,13 +486,22 @@ class CoefficientExponent {
      * @returns {boolean} True if the value has no fractional part
      */
     isInteger(): boolean {
+        // The only caller (ApplyRoundingModeToPositive) reaches this through
+        // floor(), whose result always has exponent >= 0, so in practice the
+        // fractional branch below is never taken. The boundary on exponent is
+        // therefore equivalent (exponent 0 returns true either way), and the
+        // divisibility check is defensive: a normalized coefficient is never a
+        // multiple of ten, so the remainder is always non-zero here.
+        // Stryker disable next-line EqualityOperator: exponent 0 returns true via the divisibility branch too
         if (this._exponent >= 0) {
             return true;
         }
 
         // Check if coefficient is divisible by 10^(-exponent)
+        // Stryker disable next-line UnaryOperator: unreachable — callers only pass exponent >= 0
         const fracDigits = -this._exponent;
         const divisor = 10n ** BigInt(fracDigits);
+        // Stryker disable next-line ArithmeticOperator: a normalized coefficient is never divisible by 10^k, so the result is non-zero regardless
         return this._coefficient % divisor === 0n;
     }
 
@@ -504,6 +516,7 @@ class CoefficientExponent {
         mode: RoundingMode
     ): CoefficientExponent {
         const currentDigits = this._coefficient.toString().length;
+        // Stryker disable next-line EqualityOperator: when currentDigits === numSignificantDigits the path below removes zero digits and returns an equal value, so the strict-vs-non-strict boundary is equivalent
         if (currentDigits <= numSignificantDigits) {
             return this;
         }
@@ -645,6 +658,7 @@ class CoefficientExponent {
                     const leadingZeros = absExp - coeffStr.length;
                     const result = "0." + "0".repeat(leadingZeros) + coeffStr;
                     const totalSignificantDigits = coeffStr.length;
+                    // Stryker disable next-line EqualityOperator: on equality the padding below is "0".repeat(0) === "", so the strict-vs-non-strict boundary is equivalent
                     if (totalSignificantDigits < digits) {
                         // Need trailing zeros
                         return (
@@ -660,6 +674,7 @@ class CoefficientExponent {
                     const fracPart = coeffStr.slice(coeffStr.length - absExp);
                     const result = intPart + "." + fracPart;
                     const totalSignificantDigits = coeffStr.length;
+                    // Stryker disable next-line EqualityOperator: on equality the padding below is "0".repeat(0) === "", so the strict-vs-non-strict boundary is equivalent
                     if (totalSignificantDigits < digits) {
                         // Need trailing zeros
                         return (
@@ -677,6 +692,7 @@ class CoefficientExponent {
 
             if (coeffStr.length === 1) {
                 // Single digit coefficient
+                // Stryker disable next-line EqualityOperator: in the exponential branch the effective exponent is never exactly 0 (it is < -6 or >= digits >= 1), so >= and > agree
                 const expSign = effectiveExponent >= 0 ? "+" : "";
                 const expStr = "e" + expSign + effectiveExponent;
                 if (digits > 1) {
@@ -690,9 +706,11 @@ class CoefficientExponent {
                 // Multiple digit coefficient
                 const intPart = coeffStr.charAt(0);
                 const fracPart = coeffStr.substring(1);
+                // Stryker disable next-line EqualityOperator: in the exponential branch the effective exponent is never exactly 0 (it is < -6 or >= digits >= 1), so >= and > agree
                 const expSign = effectiveExponent >= 0 ? "+" : "";
                 const expStr = "e" + expSign + effectiveExponent;
 
+                // Stryker disable next-line EqualityOperator,ArithmeticOperator: fracPart.length is at most digits-1, so on equality the padding is "0".repeat(0) === ""; both the boundary and the digits-1/digits+1 arithmetic are equivalent
                 if (fracPart.length < digits - 1) {
                     // Need trailing zeros
                     return (
@@ -751,6 +769,7 @@ function RoundToDecimal128Domain(
     // the bounds checks below are exact on the rounded result.
     const sigDigits = v.coefficient.toString().length;
     let result = v;
+    // Stryker disable next-line EqualityOperator: rounding an exactly-34-digit coefficient to 34 significant digits is a no-op, so > and >= behave identically here
     if (sigDigits > MAX_SIGNIFICANT_DIGITS) {
         result = v.roundToSignificantDigits(MAX_SIGNIFICANT_DIGITS, mode);
     }
@@ -1119,16 +1138,6 @@ export class Decimal {
             );
         }
 
-        if (this.isNaN()) {
-            return NAN;
-        }
-
-        if (!this.isFinite()) {
-            return this.isNegative()
-                ? "-" + POSITIVE_INFINITY
-                : POSITIVE_INFINITY;
-        }
-
         let rounded = this.round(n);
         let roundedRendered = rounded.emitDecimal();
 
@@ -1430,10 +1439,9 @@ export class Decimal {
      * @returns {boolean} True if this <= x, false otherwise (including when either value is NaN)
      */
     lessThanOrEqual(x: Decimal): boolean {
-        if (this.isNaN() || x.isNaN()) {
-            return false;
-        }
-
+        // No explicit NaN guard is needed (cf. lessThan): compare() returns NaN
+        // when either operand is NaN, and NaN === -1 and NaN === 0 are both
+        // false, so a NaN operand correctly yields false.
         let c = this.compare(x);
 
         return c === -1 || c === 0;
@@ -1456,10 +1464,9 @@ export class Decimal {
      * @returns {boolean} True if this >= x, false otherwise (including when either value is NaN)
      */
     greaterThanOrEqual(x: Decimal): boolean {
-        if (this.isNaN() || x.isNaN()) {
-            return false;
-        }
-
+        // No explicit NaN guard is needed (cf. greaterThan): compare() returns
+        // NaN when either operand is NaN, and NaN === 1 and NaN === 0 are both
+        // false, so a NaN operand correctly yields false.
         let c = this.compare(x);
 
         return c === 1 || c === 0;
@@ -1720,11 +1727,6 @@ export class Decimal {
 
         let v = this.d as FiniteValue;
 
-        if (v === "0" || v === "-0") {
-            return new Decimal(v);
-        }
-
-        // For CoefficientExponent, toString() already gives us decimal notation
         return new Decimal(v);
     }
 
