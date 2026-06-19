@@ -486,22 +486,13 @@ class CoefficientExponent {
      * @returns {boolean} True if the value has no fractional part
      */
     isInteger(): boolean {
-        // The only caller (ApplyRoundingModeToPositive) reaches this through
-        // floor(), whose result always has exponent >= 0, so in practice the
-        // fractional branch below is never taken. The boundary on exponent is
-        // therefore equivalent (exponent 0 returns true either way), and the
-        // divisibility check is defensive: a normalized coefficient is never a
-        // multiple of ten, so the remainder is always non-zero here.
-        // Stryker disable next-line EqualityOperator: exponent 0 returns true via the divisibility branch too
         if (this._exponent >= 0) {
             return true;
         }
 
         // Check if coefficient is divisible by 10^(-exponent)
-        // Stryker disable next-line UnaryOperator: unreachable — callers only pass exponent >= 0
         const fracDigits = -this._exponent;
         const divisor = 10n ** BigInt(fracDigits);
-        // Stryker disable next-line ArithmeticOperator: a normalized coefficient is never divisible by 10^k, so the result is non-zero regardless
         return this._coefficient % divisor === 0n;
     }
 

@@ -38,7 +38,13 @@ describe("toBigInt", () => {
     describe("non-integer", () => {
         test("throws", () => {
             expect(() => new Decimal("1.2").toBigInt()).toThrow(RangeError);
-            expect(() => new Decimal("1.2").toBigInt()).toThrow(
+        });
+        test("throws for a value smaller than its own fractional scale", () => {
+            // coefficient (5) is smaller than 10^(-exponent) (1000), so the
+            // divisibility check must use the remainder, not integer division:
+            // 5 / 1000 would floor to 0 and wrongly report an integer.
+            expect(() => new Decimal("0.005").toBigInt()).toThrow(RangeError);
+            expect(() => new Decimal("0.005").toBigInt()).toThrow(
                 "Non-integer decimal cannot be converted to a BigInt"
             );
         });
