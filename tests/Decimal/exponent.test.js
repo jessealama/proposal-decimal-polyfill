@@ -15,10 +15,16 @@ describe("exponent", () => {
             expect(() => new Decimal("Infinity").exponent()).toThrow(
                 RangeError
             );
+            expect(() => new Decimal("Infinity").exponent()).toThrow(
+                "Cannot determine exponent for an infinite value"
+            );
         });
         test("negative throws", () => {
             expect(() => new Decimal("-Infinity").exponent()).toThrow(
                 RangeError
+            );
+            expect(() => new Decimal("-Infinity").exponent()).toThrow(
+                "Cannot determine exponent for an infinite value"
             );
         });
     });
