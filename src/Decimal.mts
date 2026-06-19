@@ -645,32 +645,26 @@ class CoefficientExponent {
                     const leadingZeros = absExp - coeffStr.length;
                     const result = "0." + "0".repeat(leadingZeros) + coeffStr;
                     const totalSignificantDigits = coeffStr.length;
-                    // Stryker disable next-line EqualityOperator: on equality the padding below is "0".repeat(0) === "", so the strict-vs-non-strict boundary is equivalent
-                    if (totalSignificantDigits < digits) {
-                        // Need trailing zeros
-                        return (
-                            sign +
-                            result +
-                            "0".repeat(digits - totalSignificantDigits)
-                        );
-                    }
-                    return sign + result;
+                    // totalSignificantDigits <= digits (we rounded to `digits`
+                    // significant digits), so this pads when short and is a
+                    // no-op ("0".repeat(0)) when exact.
+                    return (
+                        sign +
+                        result +
+                        "0".repeat(digits - totalSignificantDigits)
+                    );
                 } else {
                     // Insert decimal point within coefficient
                     const intPart = coeffStr.slice(0, coeffStr.length - absExp);
                     const fracPart = coeffStr.slice(coeffStr.length - absExp);
                     const result = intPart + "." + fracPart;
                     const totalSignificantDigits = coeffStr.length;
-                    // Stryker disable next-line EqualityOperator: on equality the padding below is "0".repeat(0) === "", so the strict-vs-non-strict boundary is equivalent
-                    if (totalSignificantDigits < digits) {
-                        // Need trailing zeros
-                        return (
-                            sign +
-                            result +
-                            "0".repeat(digits - totalSignificantDigits)
-                        );
-                    }
-                    return sign + result;
+                    // Pads when short, no-op ("0".repeat(0)) when exact.
+                    return (
+                        sign +
+                        result +
+                        "0".repeat(digits - totalSignificantDigits)
+                    );
                 }
             }
         } else {
@@ -679,9 +673,7 @@ class CoefficientExponent {
 
             if (coeffStr.length === 1) {
                 // Single digit coefficient
-                // Stryker disable next-line EqualityOperator: in the exponential branch the effective exponent is never exactly 0 (it is < -6 or >= digits >= 1), so >= and > agree
-                const expSign = effectiveExponent >= 0 ? "+" : "";
-                const expStr = "e" + expSign + effectiveExponent;
+                const expStr = formatExponent(effectiveExponent);
                 if (digits > 1) {
                     // Pad with trailing zeros to reach the requested precision
                     return (
@@ -693,27 +685,27 @@ class CoefficientExponent {
                 // Multiple digit coefficient
                 const intPart = coeffStr.charAt(0);
                 const fracPart = coeffStr.substring(1);
-                // Stryker disable next-line EqualityOperator: in the exponential branch the effective exponent is never exactly 0 (it is < -6 or >= digits >= 1), so >= and > agree
-                const expSign = effectiveExponent >= 0 ? "+" : "";
-                const expStr = "e" + expSign + effectiveExponent;
+                const expStr = formatExponent(effectiveExponent);
 
-                // Stryker disable next-line EqualityOperator,ArithmeticOperator: fracPart.length is at most digits-1, so on equality the padding is "0".repeat(0) === ""; both the boundary and the digits-1/digits+1 arithmetic are equivalent
-                if (fracPart.length < digits - 1) {
-                    // Need trailing zeros
-                    return (
-                        sign +
-                        intPart +
-                        "." +
-                        fracPart +
-                        "0".repeat(digits - 1 - fracPart.length) +
-                        expStr
-                    );
-                } else {
-                    return sign + intPart + "." + fracPart + expStr;
-                }
+                // fracPart.length <= digits - 1, so this pads when short and is
+                // a no-op ("0".repeat(0)) when exact.
+                return (
+                    sign +
+                    intPart +
+                    "." +
+                    fracPart +
+                    "0".repeat(digits - 1 - fracPart.length) +
+                    expStr
+                );
             }
         }
     }
+}
+
+// Formats an exponent as the suffix used in exponential notation, always
+// with an explicit sign (e.g. 5 -> "e+5", -3 -> "e-3", 0 -> "e+0").
+function formatExponent(e: number): string {
+    return "e" + (e < 0 ? "-" : "+") + Math.abs(e);
 }
 
 function RoundToDecimal128Domain(
@@ -1031,8 +1023,7 @@ export class Decimal {
         let m = this.mantissa();
 
         let mAsString = m.toFixed({ digits: Infinity });
-        let expPart = (e < 0 ? "-" : "+") + Math.abs(e);
-        return mAsString + "e" + expPart;
+        return mAsString + formatExponent(e);
     }
 
     private emitDecimal(): string {
