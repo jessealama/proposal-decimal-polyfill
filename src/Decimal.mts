@@ -321,14 +321,10 @@ class CoefficientExponent {
             return 0;
         }
 
-        // Different exponents - align them.
-        //
-        // Note: values are normalized (no trailing zeros), so reaching this
-        // point means exp1 !== exp2, and the scaled magnitudes can never be
-        // equal — one side ends in a zero (it was scaled by a power of ten)
-        // while the other, being normalized, does not. That makes the > and <
-        // comparisons below insensitive to whether they are strict, so the
-        // corresponding boundary mutants are equivalent.
+        // Different exponents - align them. Normalized values with unequal
+        // exponents can never compare equal here (the scaled magnitude ends in
+        // a zero, the normalized one does not), so the boundary mutants below
+        // are equivalent.
         // Stryker disable next-line EqualityOperator: exp1 === exp2 handled above
         if (exp1 > exp2) {
             // this has larger exponent, so scale this coefficient up
