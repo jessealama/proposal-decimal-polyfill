@@ -38,6 +38,9 @@ describe("toBigInt", () => {
     describe("non-integer", () => {
         test("throws", () => {
             expect(() => new Decimal("1.2").toBigInt()).toThrow(RangeError);
+            expect(() => new Decimal("1.2").toBigInt()).toThrow(
+                "Non-integer decimal cannot be converted to a BigInt"
+            );
         });
         test("work with mathematical value (ignore trailing zeroes)", () => {
             expect(new Decimal("1.00").toBigInt()).toStrictEqual(1n);

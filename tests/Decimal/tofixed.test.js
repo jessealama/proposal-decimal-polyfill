@@ -81,6 +81,9 @@ describe("toFixed", () => {
         });
         test("non-integer does not take floor", () => {
             expect(() => decimalD.toFixed({ digits: 1.5 })).toThrow(RangeError);
+            expect(() => decimalD.toFixed({ digits: 1.5 })).toThrow(
+                "Argument must be an integer or positive infinity"
+            );
         });
         test("non-object argument", () => {
             expect(() => decimalD.toFixed("flab")).toThrow(TypeError);
