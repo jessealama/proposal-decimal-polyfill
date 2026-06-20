@@ -133,12 +133,10 @@ class CoefficientExponent {
             this._coefficient = 0n;
             this._exponent = 0;
         } else {
-            while (c % 10n === 0n) {
-                c = c / 10n;
-                e = e + 1;
-            }
-            this._coefficient = c;
-            this._exponent = e;
+            const s = c.toString();
+            const trimmed = s.replace(/0+$/, "");
+            this._coefficient = BigInt(trimmed);
+            this._exponent = e + (s.length - trimmed.length);
         }
     }
 
