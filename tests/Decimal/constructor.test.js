@@ -252,6 +252,11 @@ describe("constructor", () => {
                     "Lone minus sign and period not permitted"
                 );
             });
+            test("fractional with no integer part", () => {
+                expect(new Decimal(".5").toString()).toStrictEqual("0.5");
+                expect(new Decimal("-.5").toString()).toStrictEqual("-0.5");
+                expect(new Decimal(".25e2").toString()).toStrictEqual("25");
+            });
             test("plus", () => {
                 expect(() => new Decimal("+")).toThrow(SyntaxError);
             });
