@@ -1626,24 +1626,18 @@ export class Decimal {
             return new Decimal(NEGATIVE_INFINITY);
         }
 
-        if (this.isNegative()) {
-            return this.negate().multiply(x, opts).negate();
-        }
-
-        if (x.isNegative()) {
-            return this.multiply(x.negate(), opts).negate();
+        // The product's sign is the exclusive-or of the operand signs, which
+        // CoefficientExponent.multiply already applies to non-zero results. A
+        // zero operand still carries that sign, so compute it here directly
+        // rather than deferring to a sign-negating recursive call.
+        if (this.isZero() || x.isZero()) {
+            return new Decimal(
+                this.isNegative() !== x.isNegative() ? "-0" : "0"
+            );
         }
 
         let ourCohort = this.d as CoefficientExponent;
         let theirCohort = x.d as CoefficientExponent;
-
-        if (this.isZero()) {
-            return this.clone();
-        }
-
-        if (x.isZero()) {
-            return x.clone();
-        }
 
         let product = ourCohort.multiply(theirCohort);
         let rounded = RoundToDecimal128Domain(
@@ -1699,8 +1693,13 @@ export class Decimal {
             return new Decimal(NAN);
         }
 
+        // The quotient's sign is the exclusive-or of the operand signs, even
+        // when the dividend is zero (e.g. 0 / -1 is -0, -0 / -1 is +0). This
+        // also covers a zero dividend with an infinite divisor below.
         if (this.isZero()) {
-            return this.clone();
+            return new Decimal(
+                this.isNegative() !== x.isNegative() ? "-0" : "0"
+            );
         }
 
         if (!this.isFinite()) {
@@ -1727,14 +1726,8 @@ export class Decimal {
             return new Decimal("-0");
         }
 
-        if (this.isNegative()) {
-            return this.negate().divide(x, opts).negate();
-        }
-
-        if (x.isNegative()) {
-            return this.divide(x.negate(), opts).negate();
-        }
-
+        // CoefficientExponent.divide applies the exclusive-or of the operand
+        // signs to its result, so no sign-based recursion is needed here.
         let ourV = this.d as CoefficientExponent;
         let theirV = x.d as CoefficientExponent;
         let quotient = ourV.divide(theirV);
@@ -1833,14 +1826,6 @@ export class Decimal {
             return new Decimal(NAN);
         }
 
-        if (this.isNegative()) {
-            return this.negate().remainder(d).negate();
-        }
-
-        if (d.isNegative()) {
-            return this.remainder(d.negate());
-        }
-
         if (!this.isFinite()) {
             return new Decimal(NAN);
         }
@@ -1853,12 +1838,28 @@ export class Decimal {
             return new Decimal(NAN);
         }
 
-        if (this.compare(d) === -1) {
+        // When |this| < |d| the truncated quotient is zero, so the remainder is
+        // the dividend itself (keeping its sign). Comparing magnitudes lets this
+        // shortcut work for every sign combination without recursing through
+        // negate(). Otherwise, this - d * trunc(this / d) is sign-correct on its
+        // own: signed division, multiplication, and subtraction give the
+        // remainder the dividend's sign for all sign combinations.
+        if (this.abs().compare(d.abs()) === -1) {
             return this.clone();
         }
 
         let q = this.divide(d).round(0, ROUNDING_MODE_TRUNCATE);
-        return this.subtract(d.multiply(q));
+        let r = this.subtract(d.multiply(q));
+
+        // A non-zero remainder already carries the dividend's sign (an identity
+        // of truncated division), but an exact-zero remainder comes back as +0
+        // from subtract(). The remainder keeps the dividend's sign even then
+        // (e.g. -1 % 1 is -0), so restore it explicitly.
+        if (r.isZero()) {
+            return new Decimal(this.isNegative() ? "-0" : "0");
+        }
+
+        return r;
     }
 
     /**

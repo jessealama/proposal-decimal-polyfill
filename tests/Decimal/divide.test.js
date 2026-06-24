@@ -120,10 +120,37 @@ describe("division", () => {
             );
         });
     });
-    test("negative zero", () => {
-        expect(
-            new Decimal("-0").divide(new Decimal("1")).toString()
-        ).toStrictEqual("-0");
+    describe("zero dividend takes the sign of the quotient", () => {
+        test("positive zero by negative is negative zero", () => {
+            expect(
+                new Decimal("0").divide(new Decimal("-1")).toString()
+            ).toStrictEqual("-0");
+        });
+        test("negative zero by negative is positive zero", () => {
+            expect(
+                new Decimal("-0").divide(new Decimal("-1")).toString()
+            ).toStrictEqual("0");
+        });
+        test("negative zero by positive is negative zero", () => {
+            expect(
+                new Decimal("-0").divide(new Decimal("1")).toString()
+            ).toStrictEqual("-0");
+        });
+        test("positive zero by positive is positive zero", () => {
+            expect(
+                new Decimal("0").divide(new Decimal("1")).toString()
+            ).toStrictEqual("0");
+        });
+        test("positive zero by negative infinity is negative zero", () => {
+            expect(
+                new Decimal("0").divide(new Decimal("-Infinity")).toString()
+            ).toStrictEqual("-0");
+        });
+        test("negative zero by negative infinity is positive zero", () => {
+            expect(
+                new Decimal("-0").divide(new Decimal("-Infinity")).toString()
+            ).toStrictEqual("0");
+        });
     });
     test("negative argument", () => {
         expect(

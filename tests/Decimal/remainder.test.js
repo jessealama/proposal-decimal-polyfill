@@ -39,6 +39,23 @@ describe("remainder", () => {
             new Decimal("10").remainder(new Decimal("5")).toString()
         ).toStrictEqual("0");
     });
+    test("negative zero dividend keeps its sign", () => {
+        expect(
+            new Decimal("-0").remainder(new Decimal("1")).toString()
+        ).toStrictEqual("-0");
+    });
+    describe("an exact-zero remainder keeps the dividend's sign", () => {
+        test("negative dividend cleanly divided is negative zero", () => {
+            expect(
+                new Decimal("-1").remainder(new Decimal("1")).toString()
+            ).toStrictEqual("-0");
+        });
+        test("negative dividend, negative divisor, clean is negative zero", () => {
+            expect(
+                new Decimal("-1").remainder(new Decimal("-1")).toString()
+            ).toStrictEqual("-0");
+        });
+    });
     describe("NaN", () => {
         test("NaN remainder NaN is NaN", () => {
             expect(

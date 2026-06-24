@@ -90,6 +90,17 @@ describe("multiply", () => {
                 new Decimal("-0.0").multiply(posZero).toString()
             ).toStrictEqual("-0");
         });
+        test("negative zero times negative zero is positive zero", () => {
+            expect(negZero.multiply(negZero).toString()).toStrictEqual("0");
+        });
+        test("positive zero times negative zero is negative zero", () => {
+            expect(posZero.multiply(negZero).toString()).toStrictEqual("-0");
+        });
+        test("negative number times positive zero is negative zero", () => {
+            expect(
+                new Decimal("-3").multiply(posZero).toString()
+            ).toStrictEqual("-0");
+        });
     });
     describe("NaN", () => {
         test("NaN times NaN is NaN", () => {
