@@ -1927,17 +1927,8 @@ export class Decimal {
      * @private
      */
     private unrestrictedExponent(): number {
-        if (this.isZero()) {
-            return -Infinity;
-        }
-
-        if (this.isNegative()) {
-            return this.negate().unrestrictedExponent();
-        }
-
-        let v = this.d as CoefficientExponent;
-        // For CoefficientExponent, the mathematical exponent is
-        // the stored exponent plus the number of digits in coefficient minus 1
+        const v = this.d as CoefficientExponent;
+        // Callers exclude zero, and the coefficient is a sign-independent magnitude.
         const numDigits = v.coefficient.toString().length;
         return v.exponent + numDigits - 1;
     }
