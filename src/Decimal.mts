@@ -348,37 +348,39 @@ class CoefficientExponent {
     }
 
     /**
+     * Returns this value's coefficient scaled down to the given exponent, with
+     * its sign applied. The target exponent must be less than or equal to this
+     * value's own exponent, so the scaling factor is a non-negative power of 10.
+     * @param {number} exponent - The exponent to align to (<= this._exponent)
+     * @returns {bigint} The signed coefficient expressed at the target exponent
+     * @private
+     */
+    private signedCoefficientAt(exponent: number): bigint {
+        const scaled =
+            this._coefficient * 10n ** BigInt(this._exponent - exponent);
+        return this._isNegative ? -scaled : scaled;
+    }
+
+    /**
      * Adds two CoefficientExponent values.
      * @param {CoefficientExponent} other - The value to add
      * @returns {CoefficientExponent} The sum of the two values
      */
     add(other: CoefficientExponent): CoefficientExponent {
-        // Handle zeros
-        if (this.isZero()) {
-            return other;
-        }
-
-        // Handle different signs
-        if (this._isNegative && !other._isNegative) {
-            return other.subtract(this.negate());
-        }
-        if (!this._isNegative && other._isNegative) {
-            return this.subtract(other.negate());
-        }
-
-        // Same sign addition
-        const exp1 = this._exponent;
-        const exp2 = other._exponent;
-
-        // Align to the smaller exponent
-        const minExp = Math.min(exp1, exp2);
-        const coeff1 = this._coefficient * 10n ** BigInt(exp1 - minExp);
-        const coeff2 = other._coefficient * 10n ** BigInt(exp2 - minExp);
+        // Align both operands to the smaller exponent and add their signed
+        // coefficients directly. Signed BigInt arithmetic handles every sign
+        // combination -- including exact cancellation to +0 -- without
+        // branching on sign or deferring to subtract().
+        const minExp = Math.min(this._exponent, other._exponent);
+        const sum =
+            this.signedCoefficientAt(minExp) +
+            other.signedCoefficientAt(minExp);
+        const isNegative = sum < 0n;
 
         return new CoefficientExponent(
-            coeff1 + coeff2,
+            isNegative ? -sum : sum,
             minExp,
-            this._isNegative
+            isNegative
         );
     }
 
@@ -388,38 +390,8 @@ class CoefficientExponent {
      * @returns {CoefficientExponent} The difference of the two values
      */
     subtract(other: CoefficientExponent): CoefficientExponent {
-        // Handle zeros
-        if (other.isZero()) {
-            return this;
-        }
-
-        // Convert to addition if signs differ
-        if (this._isNegative && !other._isNegative) {
-            return this.negate().add(other).negate();
-        }
-
-        // Same sign subtraction
-        const exp1 = this._exponent;
-        const exp2 = other._exponent;
-
-        // Align to the smaller exponent
-        const minExp = Math.min(exp1, exp2);
-        const coeff1 = this._coefficient * 10n ** BigInt(exp1 - minExp);
-        const coeff2 = other._coefficient * 10n ** BigInt(exp2 - minExp);
-
-        if (coeff1 >= coeff2) {
-            return new CoefficientExponent(
-                coeff1 - coeff2,
-                minExp,
-                this._isNegative
-            );
-        } else {
-            return new CoefficientExponent(
-                coeff2 - coeff1,
-                minExp,
-                !this._isNegative
-            );
-        }
+        // a - b is a + (-b); negate() is sign-only, so this is not recursive.
+        return this.add(other.negate());
     }
 
     /**
@@ -1515,10 +1487,6 @@ export class Decimal {
             return x.clone();
         }
 
-        if (this.isNegative() && x.isNegative()) {
-            return this.negate().add(x.negate()).negate();
-        }
-
         if (this.isZero()) {
             return x.clone();
         }
@@ -1583,10 +1551,6 @@ export class Decimal {
 
         if (!x.isFinite()) {
             return x.negate();
-        }
-
-        if (x.isNegative()) {
-            return this.add(x.negate());
         }
 
         if (this.isZero()) {
