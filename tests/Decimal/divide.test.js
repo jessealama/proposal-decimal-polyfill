@@ -120,12 +120,7 @@ describe("division", () => {
             );
         });
     });
-    test("negative zero", () => {
-        expect(
-            new Decimal("-0").divide(new Decimal("1")).toString()
-        ).toStrictEqual("-0");
-    });
-    describe("zero dividend takes the sign of the quotient (dqdiv741-744)", () => {
+    describe("zero dividend takes the sign of the quotient", () => {
         test("positive zero by negative is negative zero", () => {
             expect(
                 new Decimal("0").divide(new Decimal("-1")).toString()
