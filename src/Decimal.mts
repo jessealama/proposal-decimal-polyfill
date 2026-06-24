@@ -86,14 +86,12 @@ function ApplyRoundingModeToPositive(
         return mHigh;
     }
 
-    // Exactly 0.5
     if (mode === ROUNDING_MODE_HALF_EXPAND) {
         return mHigh;
     }
 
     // ROUNDING_MODE_HALF_EVEN: round to even
     if (mLow.isInteger()) {
-        // Check if mLow is even (divisible by 2)
         if (mLow.coefficient % 2n === 0n) {
             return mLow;
         }
@@ -204,17 +202,14 @@ class CoefficientExponent {
      * Handles decimal notation including scientific notation
      */
     static from(s: string): CoefficientExponent {
-        // Remove underscores and leading plus
         s = s.replace(/_/g, "").replace(/^\+/, "");
 
-        // Handle sign
         let isNegative = false;
         if (s.startsWith("-")) {
             isNegative = true;
             s = s.substring(1);
         }
 
-        // Match decimal number pattern
         // Handle cases like ".5" (no integer part) and "17." (trailing decimal)
         const match = s.match(/^(\d*)(?:\.(\d*))?(?:[eE]([-+]?\d+))?$/);
         if (!match || (match[1] === "" && (!match[2] || match[2] === ""))) {
@@ -223,7 +218,6 @@ class CoefficientExponent {
 
         const [, intPart = "0", fracPart = "", expPart = "0"] = match;
 
-        // Combine integer and fractional parts
         const digits = intPart + fracPart;
 
         // Remove leading zeros but keep at least one digit
@@ -266,17 +260,14 @@ class CoefficientExponent {
         const exp = this._exponent;
 
         if (exp >= 0) {
-            // Integer or number with trailing zeros
             return sign + coeffStr + "0".repeat(exp);
         } else {
-            // Fractional number
             const absExp = -exp;
             if (absExp >= coeffStr.length) {
                 // Need leading zeros after decimal point
                 const leadingZeros = absExp - coeffStr.length;
                 return sign + "0." + "0".repeat(leadingZeros) + coeffStr;
             } else {
-                // Insert decimal point within coefficient
                 const intPart = coeffStr.slice(0, coeffStr.length - absExp);
                 const fracPart = coeffStr.slice(coeffStr.length - absExp);
                 return sign + intPart + "." + fracPart;
@@ -313,7 +304,6 @@ class CoefficientExponent {
         const exp2 = other._exponent;
 
         if (exp1 === exp2) {
-            // Same exponent, compare coefficients
             if (this._coefficient < other._coefficient) return -1;
             if (this._coefficient > other._coefficient) return 1;
             return 0;
@@ -435,11 +425,9 @@ class CoefficientExponent {
     floor(): CoefficientExponent {
         // Stryker disable next-line EqualityOperator: exponent 0 produces the same value through the truncation path below (divisor 10^0 = 1)
         if (this._exponent >= 0) {
-            // Already an integer
             return this;
         }
 
-        // Need to truncate fractional digits
         const fracDigits = -this._exponent;
         const divisor = 10n ** BigInt(fracDigits);
         const truncatedCoeff = this._coefficient / divisor;
@@ -456,7 +444,6 @@ class CoefficientExponent {
             return true;
         }
 
-        // Check if coefficient is divisible by 10^(-exponent)
         const fracDigits = -this._exponent;
         const divisor = 10n ** BigInt(fracDigits);
         return this._coefficient % divisor === 0n;
@@ -484,7 +471,6 @@ class CoefficientExponent {
         const quotient = this._coefficient / divisor;
         const remainder = this._coefficient % divisor;
 
-        // Apply rounding based on the remainder
         let newCoefficient = quotient;
         if (remainder !== 0n) {
             // Create a fractional value to determine rounding
@@ -518,11 +504,9 @@ class CoefficientExponent {
                     return true;
                 }
 
-                // Exactly half
                 if (mode === ROUNDING_MODE_HALF_EXPAND) {
                     return true;
                 }
-                // HALF_EVEN - round to even
                 return quotient % 2n === 1n;
             })();
 
@@ -568,7 +552,6 @@ class CoefficientExponent {
             const result = rounded.scale10(-BigInt(numFractionalDigits));
             return result.negate();
         } else {
-            // For positive numbers, apply rounding directly
             const rounded = ApplyRoundingModeToPositive(scaled, mode);
             return rounded.scale10(-BigInt(numFractionalDigits));
         }
@@ -593,11 +576,9 @@ class CoefficientExponent {
         // Decide whether to use decimal or exponential notation
         // JavaScript uses decimal notation when exponent is between -6 and (digits - 1)
         if (effectiveExponent >= -6 && effectiveExponent < digits) {
-            // Use decimal notation
             const sign = rounded._isNegative ? "-" : "";
 
             if (rounded._exponent >= 0) {
-                // Whole number
                 const totalDigits = coeffStr.length + rounded._exponent;
                 const intStr = coeffStr + "0".repeat(rounded._exponent);
                 if (totalDigits < digits) {
@@ -608,7 +589,6 @@ class CoefficientExponent {
                 }
                 return sign + intStr;
             } else {
-                // Need decimal point
                 const absExp = -rounded._exponent;
                 if (absExp >= coeffStr.length) {
                     // Number starts with 0.000...
@@ -624,7 +604,6 @@ class CoefficientExponent {
                         "0".repeat(digits - totalSignificantDigits)
                     );
                 } else {
-                    // Insert decimal point within coefficient
                     const intPart = coeffStr.slice(0, coeffStr.length - absExp);
                     const fracPart = coeffStr.slice(coeffStr.length - absExp);
                     const result = intPart + "." + fracPart;
@@ -638,11 +617,9 @@ class CoefficientExponent {
                 }
             }
         } else {
-            // Use exponential notation
             const sign = rounded._isNegative ? "-" : "";
 
             if (coeffStr.length === 1) {
-                // Single digit coefficient
                 const expStr = formatExponent(effectiveExponent);
                 if (digits > 1) {
                     // Pad with trailing zeros to reach the requested precision
@@ -652,7 +629,6 @@ class CoefficientExponent {
                 }
                 return sign + coeffStr + expStr;
             } else {
-                // Multiple digit coefficient
                 const intPart = coeffStr.charAt(0);
                 const fracPart = coeffStr.substring(1);
                 const expStr = formatExponent(effectiveExponent);
@@ -928,7 +904,6 @@ export class Decimal {
             return this.negate().mantissa().negate();
         }
 
-        // Direct calculation using coefficient-exponent representation
         const ce = this.d as CoefficientExponent;
         const coefficientStr = ce.coefficient.toString();
         const numDigits = coefficientStr.length;
@@ -939,7 +914,6 @@ export class Decimal {
         if (numDigits === 1) {
             mantissaStr = coefficientStr; // Single digit, already in [1, 9]
         } else {
-            // Insert decimal point after the first digit
             mantissaStr = coefficientStr[0] + "." + coefficientStr.slice(1);
         }
 
@@ -1762,7 +1736,6 @@ export class Decimal {
             throw new RangeError("Invalid number of decimal digits");
         }
 
-        // Check for excessively large values
         if (numDecimalDigits > 1e9) {
             throw new RangeError("Too many decimal digits requested");
         }
@@ -1927,17 +1900,8 @@ export class Decimal {
      * @private
      */
     private unrestrictedExponent(): number {
-        if (this.isZero()) {
-            return -Infinity;
-        }
-
-        if (this.isNegative()) {
-            return this.negate().unrestrictedExponent();
-        }
-
-        let v = this.d as CoefficientExponent;
-        // For CoefficientExponent, the mathematical exponent is
-        // the stored exponent plus the number of digits in coefficient minus 1
+        const v = this.d as CoefficientExponent;
+        // Callers exclude zero, and the coefficient is a sign-independent magnitude.
         const numDigits = v.coefficient.toString().length;
         return v.exponent + numDigits - 1;
     }
@@ -1992,7 +1956,6 @@ export class Decimal {
         }
 
         let v = this.d as CoefficientExponent;
-        // Return the coefficient directly - the minimal integer representation
         return v.coefficient;
     }
 }
