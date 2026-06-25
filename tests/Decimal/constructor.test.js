@@ -257,6 +257,10 @@ describe("constructor", () => {
                 expect(new Decimal("-.5").toString()).toStrictEqual("-0.5");
                 expect(new Decimal(".25e2").toString()).toStrictEqual("25");
             });
+            test("leading plus sign accepted", () => {
+                expect(new Decimal("+5").toString()).toStrictEqual("5");
+                expect(new Decimal("+1.25").toString()).toStrictEqual("1.25");
+            });
             test("plus", () => {
                 expect(() => new Decimal("+")).toThrow(SyntaxError);
             });
@@ -265,6 +269,15 @@ describe("constructor", () => {
                 expect(() => new Decimal("-")).toThrow(
                     "Lone minus sign not permitted"
                 );
+            });
+            test("trailing garbage after a valid prefix", () => {
+                expect(() => new Decimal("5x")).toThrow(SyntaxError);
+                expect(() => new Decimal("5x")).toThrow(
+                    "Invalid decimal string"
+                );
+            });
+            test("exponent with no mantissa", () => {
+                expect(() => new Decimal("e5")).toThrow(SyntaxError);
             });
         });
     });
