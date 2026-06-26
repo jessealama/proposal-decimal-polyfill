@@ -1,9 +1,10 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import { POSITIVE_ZERO, NEGATIVE_ZERO } from "./special-values.js";
 
 describe("mantissa", () => {
     test("0", () => {
-        expect(() => new Decimal("0").mantissa()).toThrow(RangeError);
-        expect(() => new Decimal("0").mantissa()).toThrow(
+        expect(() => POSITIVE_ZERO.mantissa()).toThrow(RangeError);
+        expect(() => POSITIVE_ZERO.mantissa()).toThrow(
             "Zero does not have a mantissa"
         );
     });
@@ -11,7 +12,7 @@ describe("mantissa", () => {
         expect(() => new Decimal("0.0").mantissa()).toThrow(RangeError);
     });
     test("-0", () => {
-        expect(() => new Decimal("-0").mantissa()).toThrow(RangeError);
+        expect(() => NEGATIVE_ZERO.mantissa()).toThrow(RangeError);
     });
     let data = [
         ["123.456", "1.23456", 2],

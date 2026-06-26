@@ -1,17 +1,21 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+} from "./special-values.js";
 
 describe("scale10", () => {
     describe("NaN", () => {
         test("throws", () => {
-            expect(() => new Decimal("NaN").scale10(5)).toThrow(RangeError);
-            expect(() => new Decimal("NaN").scale10(5)).toThrow(
-                "NaN cannot be scaled"
-            );
+            expect(() => NAN.scale10(5)).toThrow(RangeError);
+            expect(() => NAN.scale10(5)).toThrow("NaN cannot be scaled");
         });
     });
     describe("simple examples", () => {
         test("0", () => {
-            expect(new Decimal("0").scale10(4).toString()).toStrictEqual("0");
+            expect(POSITIVE_ZERO.scale10(4).toString()).toStrictEqual("0");
         });
         test("42, 4", () => {
             expect(new Decimal("42").scale10(4).toString()).toStrictEqual(
@@ -35,17 +39,13 @@ describe("scale10", () => {
     });
     describe("infinty", () => {
         test("positive infinity throws", () => {
-            expect(() => new Decimal("Infinity").scale10(5)).toThrow(
-                RangeError
-            );
-            expect(() => new Decimal("Infinity").scale10(5)).toThrow(
+            expect(() => POSITIVE_INFINITY.scale10(5)).toThrow(RangeError);
+            expect(() => POSITIVE_INFINITY.scale10(5)).toThrow(
                 "Infinity cannot be scaled"
             );
         });
         test("negative infinity throws", () => {
-            expect(() => new Decimal("-Infinity").scale10(5)).toThrow(
-                RangeError
-            );
+            expect(() => NEGATIVE_INFINITY.scale10(5)).toThrow(RangeError);
         });
     });
 });

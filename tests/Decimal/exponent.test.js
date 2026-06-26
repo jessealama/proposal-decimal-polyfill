@@ -1,10 +1,16 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+} from "./special-values.js";
 
 describe("exponent", () => {
     describe("NaN", () => {
         test("throws", () => {
-            expect(() => new Decimal("NaN").exponent()).toThrow(RangeError);
-            expect(() => new Decimal("NaN").exponent()).toThrow(
+            expect(() => NAN.exponent()).toThrow(RangeError);
+            expect(() => NAN.exponent()).toThrow(
                 "Cannot determine exponent for NaN"
             );
         });
@@ -12,18 +18,14 @@ describe("exponent", () => {
 
     describe("infinity", () => {
         test("positive throws", () => {
-            expect(() => new Decimal("Infinity").exponent()).toThrow(
-                RangeError
-            );
-            expect(() => new Decimal("Infinity").exponent()).toThrow(
+            expect(() => POSITIVE_INFINITY.exponent()).toThrow(RangeError);
+            expect(() => POSITIVE_INFINITY.exponent()).toThrow(
                 "Cannot determine exponent for an infinite value"
             );
         });
         test("negative throws", () => {
-            expect(() => new Decimal("-Infinity").exponent()).toThrow(
-                RangeError
-            );
-            expect(() => new Decimal("-Infinity").exponent()).toThrow(
+            expect(() => NEGATIVE_INFINITY.exponent()).toThrow(RangeError);
+            expect(() => NEGATIVE_INFINITY.exponent()).toThrow(
                 "Cannot determine exponent for an infinite value"
             );
         });
@@ -37,7 +39,7 @@ describe("exponent", () => {
             expect(new Decimal("4.2").exponent()).toStrictEqual(0);
         });
         test("zero", () => {
-            expect(new Decimal("0").exponent()).toStrictEqual(-6143);
+            expect(POSITIVE_ZERO.exponent()).toStrictEqual(-6143);
         });
         test("simple number, greater than 10, with exponent apparently at limit", () => {
             expect(new Decimal("42E-6143").exponent()).toStrictEqual(-6142);

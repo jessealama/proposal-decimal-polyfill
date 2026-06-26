@@ -1,35 +1,38 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 
 describe("significand", () => {
     describe("NaN", () => {
         test("throws", () => {
-            expect(() => new Decimal("NaN").significand()).toThrow(RangeError);
-            expect(() => new Decimal("NaN").significand()).toThrow(
+            expect(() => NAN.significand()).toThrow(RangeError);
+            expect(() => NAN.significand()).toThrow(
                 "NaN does not have a scaled significand"
             );
         });
     });
     describe("infinities", () => {
         test("positive throws", () => {
-            expect(() => new Decimal("Infinity").significand()).toThrow(
-                RangeError
-            );
-            expect(() => new Decimal("Infinity").significand()).toThrow(
+            expect(() => POSITIVE_INFINITY.significand()).toThrow(RangeError);
+            expect(() => POSITIVE_INFINITY.significand()).toThrow(
                 "Infinity does not have a scaled significand"
             );
         });
         test("negative throws", () => {
-            expect(() => new Decimal("-Infinity").significand()).toThrow(
-                RangeError
-            );
+            expect(() => NEGATIVE_INFINITY.significand()).toThrow(RangeError);
         });
     });
     describe("finite values", () => {
         test("0", () => {
-            expect(new Decimal("0").significand()).toStrictEqual(0n);
+            expect(POSITIVE_ZERO.significand()).toStrictEqual(0n);
         });
         test("-0", () => {
-            expect(new Decimal("-0").significand()).toStrictEqual(0n);
+            expect(NEGATIVE_ZERO.significand()).toStrictEqual(0n);
         });
         test("123.456", () => {
             expect(new Decimal("123.456").significand()).toStrictEqual(123456n);
