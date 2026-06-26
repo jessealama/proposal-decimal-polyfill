@@ -1,9 +1,16 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
-const nan = new Decimal("NaN");
-const zero = new Decimal("0");
-const negZero = new Decimal("-0");
+const nan = NAN;
+const zero = POSITIVE_ZERO;
+const negZero = NEGATIVE_ZERO;
 const one = new Decimal("1");
 
 describe("equals", () => {
@@ -60,14 +67,10 @@ describe("equals", () => {
                 expect(nan.equals(one)).toStrictEqual(false);
             });
             test("NaN equals positive infinity is false", () => {
-                expect(nan.equals(new Decimal("Infinity"))).toStrictEqual(
-                    false
-                );
+                expect(nan.equals(POSITIVE_INFINITY)).toStrictEqual(false);
             });
             test("positive infinity equals NaN is false", () => {
-                expect(new Decimal("Infinity").equals(nan)).toStrictEqual(
-                    false
-                );
+                expect(POSITIVE_INFINITY.equals(nan)).toStrictEqual(false);
             });
         });
         describe("minus zero", () => {
@@ -82,8 +85,8 @@ describe("equals", () => {
             });
         });
         describe("infinity", () => {
-            let posInf = new Decimal("Infinity");
-            let negInf = new Decimal("-Infinity");
+            let posInf = POSITIVE_INFINITY;
+            let negInf = NEGATIVE_INFINITY;
             test("positive infinity vs number", () => {
                 expect(posInf.equals(one)).toStrictEqual(false);
             });
