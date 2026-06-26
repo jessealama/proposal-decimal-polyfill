@@ -1,10 +1,16 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+} from "./special-values.js";
 
 describe("isSubnormal", () => {
     describe("NaN", () => {
         test("throws", () => {
-            expect(() => new Decimal("NaN").isSubnormal()).toThrow(RangeError);
-            expect(() => new Decimal("NaN").isSubnormal()).toThrow(
+            expect(() => NAN.isSubnormal()).toThrow(RangeError);
+            expect(() => NAN.isSubnormal()).toThrow(
                 "Cannot determine whether NaN is subnormal"
             );
         });
@@ -12,18 +18,14 @@ describe("isSubnormal", () => {
 
     describe("infinity", () => {
         test("positive throws", () => {
-            expect(() => new Decimal("Infinity").isSubnormal()).toThrow(
-                RangeError
-            );
-            expect(() => new Decimal("Infinity").isSubnormal()).toThrow(
+            expect(() => POSITIVE_INFINITY.isSubnormal()).toThrow(RangeError);
+            expect(() => POSITIVE_INFINITY.isSubnormal()).toThrow(
                 "Only finite numbers can be said to be subnormal or not"
             );
         });
         test("negative throws", () => {
-            expect(() => new Decimal("-Infinity").isSubnormal()).toThrow(
-                RangeError
-            );
-            expect(() => new Decimal("-Infinity").isSubnormal()).toThrow(
+            expect(() => NEGATIVE_INFINITY.isSubnormal()).toThrow(RangeError);
+            expect(() => NEGATIVE_INFINITY.isSubnormal()).toThrow(
                 "Only finite numbers can be said to be subnormal or not"
             );
         });
@@ -34,7 +36,7 @@ describe("isSubnormal", () => {
             expect(new Decimal("42").isSubnormal()).toStrictEqual(false);
         });
         test("zero is not subnormal", () => {
-            expect(new Decimal("0").isSubnormal()).toStrictEqual(false);
+            expect(POSITIVE_ZERO.isSubnormal()).toStrictEqual(false);
         });
         test("simple number with exponent at limit", () => {
             expect(new Decimal("42E-6144").isSubnormal()).toStrictEqual(false);
