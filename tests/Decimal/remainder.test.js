@@ -1,4 +1,11 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 
 const a = "4.1";
 const b = "1.25";
@@ -26,12 +33,12 @@ describe("remainder", () => {
     });
     test("divide by zero", () => {
         expect(
-            new Decimal("42").remainder(new Decimal("0")).toString()
+            new Decimal("42").remainder(POSITIVE_ZERO).toString()
         ).toStrictEqual("NaN");
     });
     test("divide by minus zero", () => {
         expect(
-            new Decimal("42").remainder(new Decimal("-0")).toString()
+            new Decimal("42").remainder(NEGATIVE_ZERO).toString()
         ).toStrictEqual("NaN");
     });
     test("cleanly divides", () => {
@@ -41,7 +48,7 @@ describe("remainder", () => {
     });
     test("negative zero dividend keeps its sign", () => {
         expect(
-            new Decimal("-0").remainder(new Decimal("1")).toString()
+            NEGATIVE_ZERO.remainder(new Decimal("1")).toString()
         ).toStrictEqual("-0");
     });
     describe("an exact-zero remainder keeps the dividend's sign", () => {
@@ -58,24 +65,22 @@ describe("remainder", () => {
     });
     describe("NaN", () => {
         test("NaN remainder NaN is NaN", () => {
-            expect(
-                new Decimal("NaN").remainder(new Decimal("NaN")).toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.remainder(NAN).toString()).toStrictEqual("NaN");
         });
         test("number remainder NaN is NaN", () => {
-            expect(
-                new Decimal("1").remainder(new Decimal("NaN")).toString()
-            ).toStrictEqual("NaN");
+            expect(new Decimal("1").remainder(NAN).toString()).toStrictEqual(
+                "NaN"
+            );
         });
         test("NaN remainder number is NaN", () => {
-            expect(
-                new Decimal("NaN").remainder(new Decimal("1")).toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.remainder(new Decimal("1")).toString()).toStrictEqual(
+                "NaN"
+            );
         });
     });
     describe("infinity", () => {
-        let posInf = new Decimal("Infinity");
-        let negInf = new Decimal("-Infinity");
+        let posInf = POSITIVE_INFINITY;
+        let negInf = NEGATIVE_INFINITY;
         test("positive infinity remainder positive infinity is NaN", () => {
             expect(posInf.remainder(posInf).toString()).toStrictEqual("NaN");
         });

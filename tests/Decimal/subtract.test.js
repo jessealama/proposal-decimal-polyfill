@@ -1,4 +1,11 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 import { expectDecimal128 } from "./util.js";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
@@ -39,24 +46,22 @@ describe("subtract", () => {
     });
     describe("NaN", () => {
         test("NaN minus NaN is NaN", () => {
-            expect(
-                new Decimal("NaN").subtract(new Decimal("NaN")).toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.subtract(NAN).toString()).toStrictEqual("NaN");
         });
         test("NaN minus number", () => {
-            expect(
-                new Decimal("NaN").subtract(new Decimal("1")).toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.subtract(new Decimal("1")).toString()).toStrictEqual(
+                "NaN"
+            );
         });
         test("number minus NaN", () => {
-            expect(
-                new Decimal("1").subtract(new Decimal("NaN")).toString()
-            ).toStrictEqual("NaN");
+            expect(new Decimal("1").subtract(NAN).toString()).toStrictEqual(
+                "NaN"
+            );
         });
     });
     describe("zero", () => {
         let d = new Decimal("42.65");
-        let zero = new Decimal("0");
+        let zero = POSITIVE_ZERO;
         test("difference is zero", () => {
             expect(d.subtract(d).toString()).toStrictEqual("0");
         });
@@ -69,15 +74,15 @@ describe("subtract", () => {
     });
     describe("minus zero", () => {
         let x = new Decimal("42.54");
-        let minusZero = new Decimal("-0");
+        let minusZero = NEGATIVE_ZERO;
         test("subtracting minus zero", () => {
             expect(x.subtract(minusZero).toString()).toStrictEqual("42.54");
         });
     });
 
     describe("infinity", () => {
-        let posInf = new Decimal("Infinity");
-        let negInf = new Decimal("-Infinity");
+        let posInf = POSITIVE_INFINITY;
+        let negInf = NEGATIVE_INFINITY;
         describe("first argument", () => {
             describe("positive infinity", () => {
                 test("positive number", () => {

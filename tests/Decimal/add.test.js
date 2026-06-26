@@ -1,10 +1,17 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const bigDigits = "9".repeat(MAX_SIGNIFICANT_DIGITS);
 
-const zero = new Decimal("0");
-const minusZero = new Decimal("-0");
+const zero = POSITIVE_ZERO;
+const minusZero = NEGATIVE_ZERO;
 const one = new Decimal("1");
 const minusOne = new Decimal("-1");
 const two = new Decimal("2");
@@ -64,24 +71,18 @@ describe("addition", () => {
     });
     describe("NaN", () => {
         test("NaN plus NaN is NaN", () => {
-            expect(
-                new Decimal("NaN").add(new Decimal("NaN")).toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.add(NAN).toString()).toStrictEqual("NaN");
         });
         test("NaN plus number", () => {
-            expect(
-                new Decimal("NaN").add(new Decimal("1")).toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.add(new Decimal("1")).toString()).toStrictEqual("NaN");
         });
         test("number plus NaN", () => {
-            expect(
-                new Decimal("1").add(new Decimal("NaN")).toString()
-            ).toStrictEqual("NaN");
+            expect(new Decimal("1").add(NAN).toString()).toStrictEqual("NaN");
         });
     });
     describe("infinity", () => {
-        let posInf = new Decimal("Infinity");
-        let negInf = new Decimal("-Infinity");
+        let posInf = POSITIVE_INFINITY;
+        let negInf = NEGATIVE_INFINITY;
         test("positive infinity plus number", () => {
             expect(posInf.add(one).toString()).toStrictEqual("Infinity");
         });

@@ -1,4 +1,11 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 
 describe("division", () => {
     test("simple example", () => {
@@ -38,35 +45,33 @@ describe("division", () => {
         ).toStrictEqual("0.1");
     });
     test("zero divided by zero", () => {
-        expect(
-            new Decimal("0").divide(new Decimal("0")).toString()
-        ).toStrictEqual("NaN");
+        expect(POSITIVE_ZERO.divide(POSITIVE_ZERO).toString()).toStrictEqual(
+            "NaN"
+        );
     });
     describe("NaN", () => {
         test("NaN divided by NaN is NaN", () => {
-            expect(
-                new Decimal("NaN").divide(new Decimal("NaN")).toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.divide(NAN).toString()).toStrictEqual("NaN");
         });
         test("NaN divided by number is NaN", () => {
-            expect(
-                new Decimal("NaN").divide(new Decimal("1")).toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.divide(new Decimal("1")).toString()).toStrictEqual(
+                "NaN"
+            );
         });
         test("number divided by NaN is NaN", () => {
-            expect(
-                new Decimal("1").divide(new Decimal("NaN")).toString()
-            ).toStrictEqual("NaN");
+            expect(new Decimal("1").divide(NAN).toString()).toStrictEqual(
+                "NaN"
+            );
         });
         test("divide by zero is NaN", () => {
             expect(
-                new Decimal("42").divide(new Decimal("0")).toString()
+                new Decimal("42").divide(POSITIVE_ZERO).toString()
             ).toStrictEqual("NaN");
         });
     });
     describe("infinity", () => {
-        let posInf = new Decimal("Infinity");
-        let negInf = new Decimal("-Infinity");
+        let posInf = POSITIVE_INFINITY;
+        let negInf = NEGATIVE_INFINITY;
         test("infinity divided by infinity is NaN", () => {
             expect(posInf.divide(posInf).toString()).toStrictEqual("NaN");
         });
@@ -123,32 +128,32 @@ describe("division", () => {
     describe("zero dividend takes the sign of the quotient", () => {
         test("positive zero by negative is negative zero", () => {
             expect(
-                new Decimal("0").divide(new Decimal("-1")).toString()
+                POSITIVE_ZERO.divide(new Decimal("-1")).toString()
             ).toStrictEqual("-0");
         });
         test("negative zero by negative is positive zero", () => {
             expect(
-                new Decimal("-0").divide(new Decimal("-1")).toString()
+                NEGATIVE_ZERO.divide(new Decimal("-1")).toString()
             ).toStrictEqual("0");
         });
         test("negative zero by positive is negative zero", () => {
             expect(
-                new Decimal("-0").divide(new Decimal("1")).toString()
+                NEGATIVE_ZERO.divide(new Decimal("1")).toString()
             ).toStrictEqual("-0");
         });
         test("positive zero by positive is positive zero", () => {
             expect(
-                new Decimal("0").divide(new Decimal("1")).toString()
+                POSITIVE_ZERO.divide(new Decimal("1")).toString()
             ).toStrictEqual("0");
         });
         test("positive zero by negative infinity is negative zero", () => {
             expect(
-                new Decimal("0").divide(new Decimal("-Infinity")).toString()
+                POSITIVE_ZERO.divide(NEGATIVE_INFINITY).toString()
             ).toStrictEqual("-0");
         });
         test("negative zero by negative infinity is positive zero", () => {
             expect(
-                new Decimal("-0").divide(new Decimal("-Infinity")).toString()
+                NEGATIVE_ZERO.divide(NEGATIVE_INFINITY).toString()
             ).toStrictEqual("0");
         });
     });
