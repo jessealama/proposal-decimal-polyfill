@@ -202,8 +202,6 @@ class CoefficientExponent {
      * Handles decimal notation including scientific notation
      */
     static from(s: string): CoefficientExponent {
-        s = s.replace(/_/g, "").replace(/^\+/, "");
-
         let isNegative = false;
         if (s.startsWith("-")) {
             isNegative = true;
