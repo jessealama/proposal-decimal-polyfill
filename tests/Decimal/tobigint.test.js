@@ -1,10 +1,17 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 
 describe("toBigInt", () => {
     describe("NaN", () => {
         test("does not work", () => {
-            expect(() => new Decimal("NaN").toBigInt()).toThrow(RangeError);
-            expect(() => new Decimal("NaN").toBigInt()).toThrow(
+            expect(() => NAN.toBigInt()).toThrow(RangeError);
+            expect(() => NAN.toBigInt()).toThrow(
                 "NaN cannot be converted to a BigInt"
             );
         });
@@ -12,26 +19,22 @@ describe("toBigInt", () => {
 
     describe("zero", () => {
         test("positive zero", () => {
-            expect(new Decimal("0").toBigInt()).toStrictEqual(0n);
+            expect(POSITIVE_ZERO.toBigInt()).toStrictEqual(0n);
         });
         test("negative zero", () => {
-            expect(new Decimal("-0").toBigInt()).toStrictEqual(0n);
+            expect(NEGATIVE_ZERO.toBigInt()).toStrictEqual(0n);
         });
     });
 
     describe("infinity", () => {
         test("positive", () => {
-            expect(() => new Decimal("Infinity").toBigInt()).toThrow(
-                RangeError
-            );
-            expect(() => new Decimal("Infinity").toBigInt()).toThrow(
+            expect(() => POSITIVE_INFINITY.toBigInt()).toThrow(RangeError);
+            expect(() => POSITIVE_INFINITY.toBigInt()).toThrow(
                 "Infinity cannot be converted to a BigInt"
             );
         });
         test("negative", () => {
-            expect(() => new Decimal("-Infinity").toBigInt()).toThrow(
-                RangeError
-            );
+            expect(() => NEGATIVE_INFINITY.toBigInt()).toThrow(RangeError);
         });
     });
 
