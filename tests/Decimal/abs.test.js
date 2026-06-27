@@ -1,24 +1,26 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const bigDigits = "9".repeat(MAX_SIGNIFICANT_DIGITS);
 
 describe("abs", () => {
     test("minus zero", () => {
-        expect(new Decimal("-0").abs().toString()).toStrictEqual("0");
+        expect(NEGATIVE_ZERO.abs().toString()).toStrictEqual("0");
     });
     test("NaN", () => {
-        expect(new Decimal("NaN").abs().toString()).toStrictEqual("NaN");
+        expect(NAN.abs().toString()).toStrictEqual("NaN");
     });
     test("-Infinity", () => {
-        expect(new Decimal("-Infinity").abs().toString()).toStrictEqual(
-            "Infinity"
-        );
+        expect(NEGATIVE_INFINITY.abs().toString()).toStrictEqual("Infinity");
     });
     test("Infinity", () => {
-        expect(new Decimal("Infinity").abs().toString()).toStrictEqual(
-            "Infinity"
-        );
+        expect(POSITIVE_INFINITY.abs().toString()).toStrictEqual("Infinity");
     });
     test("limit of digits", () => {
         expect(new Decimal("-" + bigDigits).abs().toString()).toStrictEqual(

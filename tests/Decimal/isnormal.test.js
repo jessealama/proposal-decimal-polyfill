@@ -1,28 +1,30 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+} from "./special-values.js";
 
 describe("isNormal", () => {
     describe("NaN", () => {
         test("throws", () => {
-            expect(() => new Decimal("NaN").isNormal()).toThrow(RangeError);
-            expect(() => new Decimal("NaN").isNormal()).toThrow(
+            expect(() => NAN.isNormal()).toThrow(RangeError);
+            expect(() => NAN.isNormal()).toThrow(
                 "Cannot determine whether NaN is normal"
             );
         });
     });
     describe("infinity", () => {
         test("positive throws", () => {
-            expect(() => new Decimal("Infinity").isNormal()).toThrow(
-                RangeError
-            );
-            expect(() => new Decimal("Infinity").isNormal()).toThrow(
+            expect(() => POSITIVE_INFINITY.isNormal()).toThrow(RangeError);
+            expect(() => POSITIVE_INFINITY.isNormal()).toThrow(
                 "Only finite numbers can be said to be normal or not"
             );
         });
         test("negative throws", () => {
-            expect(() => new Decimal("-Infinity").isNormal()).toThrow(
-                RangeError
-            );
-            expect(() => new Decimal("-Infinity").isNormal()).toThrow(
+            expect(() => NEGATIVE_INFINITY.isNormal()).toThrow(RangeError);
+            expect(() => NEGATIVE_INFINITY.isNormal()).toThrow(
                 "Only finite numbers can be said to be normal or not"
             );
         });
@@ -32,8 +34,8 @@ describe("isNormal", () => {
             expect(new Decimal("42").isNormal()).toStrictEqual(true);
         });
         test("zero is not normal", () => {
-            expect(() => new Decimal("0").isNormal()).toThrow(RangeError);
-            expect(() => new Decimal("0").isNormal()).toThrow(
+            expect(() => POSITIVE_ZERO.isNormal()).toThrow(RangeError);
+            expect(() => POSITIVE_ZERO.isNormal()).toThrow(
                 "Only non-zero numbers can be said to be normal or not"
             );
         });

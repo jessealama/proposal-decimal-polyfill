@@ -1,28 +1,33 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 import { expectDecimal128 } from "./util.js";
 
 describe("toNumber", () => {
     describe("NaN", () => {
         test("works", () => {
-            expect(new Decimal("NaN").toNumber()).toStrictEqual(NaN);
+            expect(NAN.toNumber()).toStrictEqual(NaN);
         });
     });
     describe("zero", () => {
         test("positive zero", () => {
-            expect(new Decimal("0").toNumber()).toStrictEqual(0);
+            expect(POSITIVE_ZERO.toNumber()).toStrictEqual(0);
         });
         test("negative zero", () => {
-            expect(new Decimal("-0").toNumber()).toStrictEqual(-0);
+            expect(NEGATIVE_ZERO.toNumber()).toStrictEqual(-0);
         });
     });
     describe("infinity", () => {
         test("positive infinity", () => {
-            expect(new Decimal("Infinity").toNumber()).toStrictEqual(Infinity);
+            expect(POSITIVE_INFINITY.toNumber()).toStrictEqual(Infinity);
         });
         test("negative infinity", () => {
-            expect(new Decimal("-Infinity").toNumber()).toStrictEqual(
-                -Infinity
-            );
+            expect(NEGATIVE_INFINITY.toNumber()).toStrictEqual(-Infinity);
         });
     });
     describe("simple examples", () => {

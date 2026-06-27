@@ -1,17 +1,24 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const bigDigits = "9".repeat(MAX_SIGNIFICANT_DIGITS);
 
 describe("negate", () => {
     test("minus zero", () => {
-        expect(new Decimal("-0").negate().toString()).toStrictEqual("0");
+        expect(NEGATIVE_ZERO.negate().toString()).toStrictEqual("0");
     });
     test("zero", () => {
-        expect(new Decimal("0").negate().toString()).toStrictEqual("-0");
+        expect(POSITIVE_ZERO.negate().toString()).toStrictEqual("-0");
     });
     test("NaN", () => {
-        expect(new Decimal("NaN").negate().toString()).toStrictEqual("NaN");
+        expect(NAN.negate().toString()).toStrictEqual("NaN");
     });
     test("negative number", () => {
         expect(new Decimal("-42.51").negate().toString()).toStrictEqual(
@@ -29,12 +36,10 @@ describe("negate", () => {
         );
     });
     test("-Infinity", () => {
-        expect(new Decimal("-Infinity").negate().toString()).toStrictEqual(
-            "Infinity"
-        );
+        expect(NEGATIVE_INFINITY.negate().toString()).toStrictEqual("Infinity");
     });
     test("Infinity", () => {
-        expect(new Decimal("Infinity").negate().toString()).toStrictEqual(
+        expect(POSITIVE_INFINITY.negate().toString()).toStrictEqual(
             "-Infinity"
         );
     });

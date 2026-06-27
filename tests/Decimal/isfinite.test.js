@@ -1,22 +1,29 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 
 describe("isFinite", () => {
     test("42", () => {
         expect(new Decimal("42").isFinite()).toStrictEqual(true);
     });
     test("0", () => {
-        expect(new Decimal("0").isFinite()).toStrictEqual(true);
+        expect(POSITIVE_ZERO.isFinite()).toStrictEqual(true);
     });
     test("-0", () => {
-        expect(new Decimal("-0").isFinite()).toStrictEqual(true);
+        expect(NEGATIVE_ZERO.isFinite()).toStrictEqual(true);
     });
     test("Infinity", () => {
-        expect(new Decimal("Infinity").isFinite()).toStrictEqual(false);
+        expect(POSITIVE_INFINITY.isFinite()).toStrictEqual(false);
     });
     test("-Infinity", () => {
-        expect(new Decimal("-Infinity").isFinite()).toStrictEqual(false);
+        expect(NEGATIVE_INFINITY.isFinite()).toStrictEqual(false);
     });
     test("NaN", () => {
-        expect(new Decimal("NaN").isFinite()).toStrictEqual(false);
+        expect(NAN.isFinite()).toStrictEqual(false);
     });
 });

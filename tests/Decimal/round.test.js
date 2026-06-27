@@ -1,4 +1,11 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 import { expectDecimal128 } from "./util.js";
 
 const ROUNDING_MODE_CEILING = "ceil";
@@ -239,11 +246,11 @@ describe("round", () => {
             });
         });
         test("NaN", () => {
-            expect(new Decimal("NaN").round().toString()).toStrictEqual("NaN");
+            expect(NAN.round().toString()).toStrictEqual("NaN");
         });
         describe("infinity", () => {
-            let posInf = new Decimal("Infinity");
-            let negInf = new Decimal("-Infinity");
+            let posInf = POSITIVE_INFINITY;
+            let negInf = NEGATIVE_INFINITY;
             test(`positive infinity (no argument)`, () => {
                 expect(posInf.round().toString()).toStrictEqual("Infinity");
             });
@@ -290,19 +297,17 @@ describe("round", () => {
             ).toStrictEqual("123");
         });
         test("NaN", () => {
-            expect(
-                new Decimal("NaN").round(0, "ceil").toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.round(0, "ceil").toString()).toStrictEqual("NaN");
         });
         test("positive infinity", () => {
-            expect(
-                new Decimal("Infinity").round(0, "ceil").toString()
-            ).toStrictEqual("Infinity");
+            expect(POSITIVE_INFINITY.round(0, "ceil").toString()).toStrictEqual(
+                "Infinity"
+            );
         });
         test("minus infinity", () => {
-            expect(
-                new Decimal("-Infinity").round(0, "ceil").toString()
-            ).toStrictEqual("-Infinity");
+            expect(NEGATIVE_INFINITY.round(0, "ceil").toString()).toStrictEqual(
+                "-Infinity"
+            );
         });
     });
 
@@ -324,21 +329,19 @@ describe("round", () => {
                 expectDecimal128(new Decimal("0.00765").round(0, "trunc"), "0");
             });
             test("NaN", () => {
-                expect(
-                    new Decimal("NaN").round(0, "trunc").toString()
-                ).toStrictEqual("NaN");
+                expect(NAN.round(0, "trunc").toString()).toStrictEqual("NaN");
             });
         });
 
         describe("infinity", () => {
             test("positive infinity", () => {
                 expect(
-                    new Decimal("Infinity").round(0, "trunc").toString()
+                    POSITIVE_INFINITY.round(0, "trunc").toString()
                 ).toStrictEqual("Infinity");
             });
             test("negative infinity", () => {
                 expect(
-                    new Decimal("-Infinity").round(0, "trunc").toString()
+                    NEGATIVE_INFINITY.round(0, "trunc").toString()
                 ).toStrictEqual("-Infinity");
             });
         });
@@ -361,23 +364,21 @@ describe("round", () => {
             ).toStrictEqual("123");
         });
         test("floor of zero is unchanged", () => {
-            expect(new Decimal("0").round(0, "floor").toString()).toStrictEqual(
+            expect(POSITIVE_ZERO.round(0, "floor").toString()).toStrictEqual(
                 "0"
             );
         });
         test("NaN", () => {
-            expect(
-                new Decimal("NaN").round(0, "floor").toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.round(0, "floor").toString()).toStrictEqual("NaN");
         });
         test("positive infinity", () => {
             expect(
-                new Decimal("Infinity").round(0, "floor").toString()
+                POSITIVE_INFINITY.round(0, "floor").toString()
             ).toStrictEqual("Infinity");
         });
         test("minus infinity", () => {
             expect(
-                new Decimal("-Infinity").round(0, "floor").toString()
+                NEGATIVE_INFINITY.round(0, "floor").toString()
             ).toStrictEqual("-Infinity");
         });
     });
@@ -519,7 +520,7 @@ describe("round", () => {
 
         describe("special rounding cases", () => {
             test("round negative zero", () => {
-                const negZero = new Decimal("-0");
+                const negZero = NEGATIVE_ZERO;
                 expect(negZero.round().toString()).toStrictEqual("-0");
                 expect(negZero.round(5).toString()).toStrictEqual("-0");
             });

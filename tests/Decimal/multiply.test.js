@@ -1,7 +1,14 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import {
+    NAN,
+    POSITIVE_INFINITY,
+    NEGATIVE_INFINITY,
+    POSITIVE_ZERO,
+    NEGATIVE_ZERO,
+} from "./special-values.js";
 
-let posZero = new Decimal("0");
-let negZero = new Decimal("-0");
+let posZero = POSITIVE_ZERO;
+let negZero = NEGATIVE_ZERO;
 
 const examples = [
     ["123.456", "789.789", "97504.190784"],
@@ -104,98 +111,80 @@ describe("multiply", () => {
     });
     describe("NaN", () => {
         test("NaN times NaN is NaN", () => {
-            expect(
-                new Decimal("NaN").multiply(new Decimal("NaN")).toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.multiply(NAN).toString()).toStrictEqual("NaN");
         });
         test("number times NaN is NaN", () => {
-            expect(
-                new Decimal("1").multiply(new Decimal("NaN")).toString()
-            ).toStrictEqual("NaN");
+            expect(new Decimal("1").multiply(NAN).toString()).toStrictEqual(
+                "NaN"
+            );
         });
         test("NaN times number is NaN", () => {
-            expect(
-                new Decimal("NaN").multiply(new Decimal("1")).toString()
-            ).toStrictEqual("NaN");
+            expect(NAN.multiply(new Decimal("1")).toString()).toStrictEqual(
+                "NaN"
+            );
         });
     });
     describe("infinity", () => {
         describe("invalid operation", () => {
             test("zero times positive infinity is NaN", () => {
                 expect(
-                    new Decimal("0")
-                        .multiply(new Decimal("Infinity"))
-                        .toString()
+                    POSITIVE_ZERO.multiply(POSITIVE_INFINITY).toString()
                 ).toStrictEqual("NaN");
                 expect(
-                    new Decimal("Infinity")
-                        .multiply(new Decimal("0"))
-                        .toString()
+                    POSITIVE_INFINITY.multiply(POSITIVE_ZERO).toString()
                 ).toStrictEqual("NaN");
             });
             test("zero times negative infinity is NaN", () => {
                 expect(
-                    new Decimal("0")
-                        .multiply(new Decimal("-Infinity"))
-                        .toString()
+                    POSITIVE_ZERO.multiply(NEGATIVE_INFINITY).toString()
                 ).toStrictEqual("NaN");
                 expect(
-                    new Decimal("-Infinity")
-                        .multiply(new Decimal("0"))
-                        .toString()
+                    NEGATIVE_INFINITY.multiply(POSITIVE_ZERO).toString()
                 ).toStrictEqual("NaN");
             });
         });
         test("positive infinity times positive number is positive infinity", () => {
             expect(
-                new Decimal("Infinity").multiply(new Decimal("42")).toString()
+                POSITIVE_INFINITY.multiply(new Decimal("42")).toString()
             ).toStrictEqual("Infinity");
         });
         test("positive number times positive infinity is positive infinity", () => {
             expect(
-                new Decimal("42").multiply(new Decimal("Infinity")).toString()
+                new Decimal("42").multiply(POSITIVE_INFINITY).toString()
             ).toStrictEqual("Infinity");
         });
         test("positive infinity times negative number is negative infinity", () => {
             expect(
-                new Decimal("Infinity").multiply(new Decimal("-42")).toString()
+                POSITIVE_INFINITY.multiply(new Decimal("-42")).toString()
             ).toStrictEqual("-Infinity");
         });
         test("negative number times positive infinity is negative infinity", () => {
             expect(
-                new Decimal("-42").multiply(new Decimal("Infinity")).toString()
+                new Decimal("-42").multiply(POSITIVE_INFINITY).toString()
             ).toStrictEqual("-Infinity");
         });
         test("positive infinity times negative infinity is negative infinity", () => {
             expect(
-                new Decimal("Infinity")
-                    .multiply(new Decimal("-Infinity"))
-                    .toString()
+                POSITIVE_INFINITY.multiply(NEGATIVE_INFINITY).toString()
             ).toStrictEqual("-Infinity");
         });
         test("positive infinity times positive infinity is positive infinity", () => {
             expect(
-                new Decimal("Infinity")
-                    .multiply(new Decimal("Infinity"))
-                    .toString()
+                POSITIVE_INFINITY.multiply(POSITIVE_INFINITY).toString()
             ).toStrictEqual("Infinity");
         });
         test("negative infinity times negative infinity is positive infinity", () => {
             expect(
-                new Decimal("-Infinity")
-                    .multiply(new Decimal("-Infinity"))
-                    .toString()
+                NEGATIVE_INFINITY.multiply(NEGATIVE_INFINITY).toString()
             ).toStrictEqual("Infinity");
         });
         test("negative infinity times positive infinity is negative infinity", () => {
             expect(
-                new Decimal("-Infinity")
-                    .multiply(new Decimal("Infinity"))
-                    .toString()
+                NEGATIVE_INFINITY.multiply(POSITIVE_INFINITY).toString()
             ).toStrictEqual("-Infinity");
         });
-        let negInf = new Decimal("-Infinity");
-        let posInf = new Decimal("Infinity");
+        let negInf = NEGATIVE_INFINITY;
+        let posInf = POSITIVE_INFINITY;
         test("negative infinity times itself", () => {
             expect(negInf.multiply(negInf).toString()).toStrictEqual(
                 "Infinity"
@@ -226,7 +215,7 @@ describe("multiply", () => {
         });
         test("example four", () => {
             expect(
-                new Decimal("0.9").multiply(new Decimal("-0")).toString()
+                new Decimal("0.9").multiply(NEGATIVE_ZERO).toString()
             ).toStrictEqual("-0"); // would be -0.0 in official IEEE 754
         });
         test("example five", () => {
