@@ -13,16 +13,15 @@
  * @author Jesse Alama <jesse@igalia.com>
  */
 
+import { CoefficientExponent, formatExponent } from "./CoefficientExponent.mjs";
 import {
-    CoefficientExponent,
-    formatExponent,
     ROUNDING_MODE_CEILING,
     ROUNDING_MODE_FLOOR,
     ROUNDING_MODE_HALF_EVEN,
-    ROUNDING_MODE_HALF_EXPAND,
     ROUNDING_MODE_TRUNCATE,
+    ROUNDING_MODES,
     type RoundingMode,
-} from "./CoefficientExponent.mjs";
+} from "./Rounding.mjs";
 
 const NORMAL_EXPONENT_MIN = -6143;
 const MAX_SIGNIFICANT_DIGITS = 34;
@@ -43,14 +42,6 @@ type Decimal128Value = NaNValue | InfiniteValue | FiniteValue;
 const NAN = "NaN";
 const POSITIVE_INFINITY = "Infinity";
 const NEGATIVE_INFINITY = "-Infinity";
-
-const ROUNDING_MODES: RoundingMode[] = [
-    ROUNDING_MODE_CEILING,
-    ROUNDING_MODE_FLOOR,
-    ROUNDING_MODE_TRUNCATE,
-    ROUNDING_MODE_HALF_EVEN,
-    ROUNDING_MODE_HALF_EXPAND,
-];
 
 function RoundToDecimal128Domain(
     v: CoefficientExponent,
