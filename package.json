@@ -3,6 +3,10 @@
     "version": "20250613.0.0",
     "description": "Champion-maintained polyfill for the TC39 decimal proposal",
     "main": "src/Decimal.mjs",
+    "exports": {
+        ".": "./src/Decimal.mjs",
+        "./package.json": "./package.json"
+    },
     "scripts": {
         "test": "jest",
         "format": "prettier . --write",

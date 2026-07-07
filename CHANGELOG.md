@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses date-based versioning (YYYYMMDD.MAJOR.MINOR).
 
+## [Unreleased]
+
+### Changed
+
+- Restrict imports to the package's main entry point via the `exports`
+  field in package.json. Deep imports of package internals (e.g.
+  `proposal-decimal/src/...`) now fail with
+  `ERR_PACKAGE_PATH_NOT_EXPORTED`.
+
 ## [20260616.0.0 ] - 2026-06-16
 
 ### Removed
