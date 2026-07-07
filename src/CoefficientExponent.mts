@@ -9,6 +9,7 @@
  */
 
 import {
+    flipModeForNegative,
     ROUNDING_MODE_CEILING,
     ROUNDING_MODE_FLOOR,
     ROUNDING_MODE_HALF_EVEN,
@@ -503,12 +504,7 @@ export class CoefficientExponent {
 
         // For negative numbers, we work with absolute value and adjust rounding mode
         if (this._isNegative) {
-            let adjustedMode = mode;
-            if (mode === ROUNDING_MODE_FLOOR) {
-                adjustedMode = ROUNDING_MODE_CEILING;
-            } else if (mode === ROUNDING_MODE_CEILING) {
-                adjustedMode = ROUNDING_MODE_FLOOR;
-            }
+            const adjustedMode = flipModeForNegative(mode);
 
             const absScaled = scaled.abs();
             const rounded = ApplyRoundingModeToPositive(

@@ -15,8 +15,7 @@
 
 import { CoefficientExponent, formatExponent } from "./CoefficientExponent.mjs";
 import {
-    ROUNDING_MODE_CEILING,
-    ROUNDING_MODE_FLOOR,
+    flipModeForNegative,
     ROUNDING_MODE_HALF_EVEN,
     ROUNDING_MODE_TRUNCATE,
     ROUNDING_MODES,
@@ -54,12 +53,7 @@ function RoundToDecimal128Domain(
     /* c8 ignore end */
 
     if (v.isNegative) {
-        let reverseRoundingMode = mode;
-        if (mode === ROUNDING_MODE_FLOOR) {
-            reverseRoundingMode = ROUNDING_MODE_CEILING;
-        } else if (mode === ROUNDING_MODE_CEILING) {
-            reverseRoundingMode = ROUNDING_MODE_FLOOR;
-        }
+        const reverseRoundingMode = flipModeForNegative(mode);
 
         let d = RoundToDecimal128Domain(v.negate(), reverseRoundingMode);
 

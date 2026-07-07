@@ -29,3 +29,18 @@ export const ROUNDING_MODES: RoundingMode[] = [
     ROUNDING_MODE_HALF_EVEN,
     ROUNDING_MODE_HALF_EXPAND,
 ];
+
+/**
+ * Flip a rounding mode for application to a negated value: rounding a
+ * negative number is done by rounding its absolute value, which turns
+ * floor into ceil and vice versa. The other modes are sign-symmetric.
+ */
+export function flipModeForNegative(mode: RoundingMode): RoundingMode {
+    if (mode === ROUNDING_MODE_FLOOR) {
+        return ROUNDING_MODE_CEILING;
+    }
+    if (mode === ROUNDING_MODE_CEILING) {
+        return ROUNDING_MODE_FLOOR;
+    }
+    return mode;
+}
