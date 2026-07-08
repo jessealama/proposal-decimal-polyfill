@@ -1,7 +1,8 @@
 describe("package encapsulation", () => {
-    test("the main entry point exposes Decimal", async () => {
+    test("the entry point exports exactly the Decimal class", async () => {
         const mod = await import("proposal-decimal");
-        expect(mod.Decimal).toBeDefined();
+        expect(Object.keys(mod)).toEqual(["Decimal"]);
+        expect(mod.CoefficientExponent).toBeUndefined();
     });
     test.each(["CoefficientExponent", "Rounding"])(
         "internal module %s cannot be imported from the package",
