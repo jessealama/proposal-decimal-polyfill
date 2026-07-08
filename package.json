@@ -23,7 +23,8 @@
         "lint": "prettier . --check",
         "coverage": "npx c8 npx jest",
         "build": "mkdir -p dist && esbuild src/Decimal.mjs --bundle --format=esm --outfile=dist/Decimal.mjs",
-        "mutation": "stryker run"
+        "mutation": "stryker run",
+        "pabst": "pabst test src/Decimal.mts"
     },
     "prettier": {
         "trailingComma": "es5",
