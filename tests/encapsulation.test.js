@@ -13,4 +13,10 @@ describe("package encapsulation", () => {
             });
         }
     );
+    test("Decimal instances expose no own properties (internals are #private)", async () => {
+        const { Decimal } = await import("proposal-decimal");
+        const d = new Decimal("1.5");
+        expect(Object.getOwnPropertyNames(d)).toEqual([]);
+        expect(Object.getOwnPropertySymbols(d)).toEqual([]);
+    });
 });

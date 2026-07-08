@@ -150,10 +150,10 @@ function handleDecimalNotation(s: string, mode: RoundingMode): Decimal128Value {
 }
 
 export class Decimal {
-    private readonly d: FiniteValue | undefined = undefined;
-    private readonly _isNaN: boolean = false;
-    private readonly _isFinite: boolean = true;
-    private readonly _isNegative: boolean = false;
+    readonly #d: FiniteValue | undefined = undefined;
+    readonly #isNaN: boolean = false;
+    readonly #isFinite: boolean = true;
+    readonly #isNegative: boolean = false;
 
     /**
      * Creates a new Decimal128 value.
@@ -211,23 +211,23 @@ export class Decimal {
         }
 
         if (data === "NaN") {
-            this._isNaN = true;
-            this._isFinite = false;
+            this.#isNaN = true;
+            this.#isFinite = false;
         } else if (data === "Infinity") {
-            this._isFinite = false;
+            this.#isFinite = false;
         } else if (data === "-Infinity") {
-            this._isFinite = false;
-            this._isNegative = true;
+            this.#isFinite = false;
+            this.#isNegative = true;
         } else {
             let v = data;
             if (v === "-0") {
-                this._isNegative = true;
+                this.#isNegative = true;
             } else if (v === "0") {
-                this._isNegative = false;
+                this.#isNegative = false;
             } else {
-                this._isNegative = v.isNegative;
+                this.#isNegative = v.isNegative;
             }
-            this.d = data;
+            this.#d = data;
         }
     }
 
@@ -237,7 +237,7 @@ export class Decimal {
      * @returns {boolean} True if this value is NaN, false otherwise
      */
     public isNaN(): boolean {
-        return this._isNaN;
+        return this.#isNaN;
     }
 
     /**
@@ -246,7 +246,7 @@ export class Decimal {
      * @returns {boolean} True if this value is finite, false otherwise
      */
     public isFinite(): boolean {
-        return this._isFinite;
+        return this.#isFinite;
     }
 
     /**
@@ -256,10 +256,15 @@ export class Decimal {
      * @returns {boolean} True if this value is negative (including -0 and -Infinity), false otherwise
      */
     public isNegative(): boolean {
-        return this._isNegative;
+        return this.#isNegative;
     }
 
-    private isZero(): boolean {
+    /**
+     * Checks if this Decimal128 value is zero (either +0 or -0).
+     *
+     * @returns {boolean} True if this value is zero, false otherwise (including NaN and infinities)
+     */
+    public isZero(): boolean {
         if (this.isNaN()) {
             return false;
         }
@@ -268,7 +273,7 @@ export class Decimal {
             return false;
         }
 
-        return this.d === "0" || this.d === "-0";
+        return this.#d === "0" || this.#d === "-0";
     }
 
     /**
@@ -287,7 +292,7 @@ export class Decimal {
             return this.negate().mantissa().negate();
         }
 
-        const ce = this.d as CoefficientExponent;
+        const ce = this.#d as CoefficientExponent;
         const coefficientStr = ce.coefficient.toString();
         const numDigits = coefficientStr.length;
 
@@ -327,20 +332,20 @@ export class Decimal {
         }
 
         if (n === 0) {
-            return this.clone();
+            return this.#clone();
         }
 
-        let v = this.d as FiniteValue;
+        let v = this.#d as FiniteValue;
 
         if (v === "0" || v === "-0") {
-            return this.clone();
+            return this.#clone();
         }
 
         return new Decimal(v.scale10(BigInt(n)));
     }
 
-    private emitExponential(): string {
-        let v = this.d;
+    #emitExponential(): string {
+        let v = this.#d;
         let e = this.exponent();
 
         if (v === "0" || v === "-0") {
@@ -353,12 +358,12 @@ export class Decimal {
         return mAsString + formatExponent(e);
     }
 
-    private emitDecimal(): string {
+    #emitDecimal(): string {
         if (this.isZero()) {
-            return this._isNegative ? "-0" : "0";
+            return this.#isNegative ? "-0" : "0";
         }
 
-        let v = this.d as CoefficientExponent;
+        let v = this.#d as CoefficientExponent;
         return v.toString();
     }
 
@@ -379,7 +384,7 @@ export class Decimal {
         }
 
         if (this.isZero()) {
-            return this._isNegative ? "-0" : "0";
+            return this.#isNegative ? "-0" : "0";
         }
 
         let e = this.exponent();
@@ -387,10 +392,10 @@ export class Decimal {
         // Follow JavaScript Number.toString() behavior:
         // Use exponential notation if the exponent is >= 21 or <= -7
         if (e >= 21 || e <= -7) {
-            return this.emitExponential();
+            return this.#emitExponential();
         }
 
-        return this.emitDecimal();
+        return this.#emitDecimal();
     }
 
     /**
@@ -434,7 +439,7 @@ export class Decimal {
         }
 
         if (n === Infinity) {
-            return this.emitDecimal();
+            return this.#emitDecimal();
         }
 
         if (!Number.isInteger(n)) {
@@ -444,7 +449,7 @@ export class Decimal {
         }
 
         let rounded = this.round(n);
-        let roundedRendered = rounded.emitDecimal();
+        let roundedRendered = rounded.#emitDecimal();
 
         if (roundedRendered.match(/[.]/)) {
             let [lhs, rhs] = roundedRendered.split(/[.]/);
@@ -513,7 +518,7 @@ export class Decimal {
             return p + "0." + additionalZeroes;
         }
 
-        let d = this.d as CoefficientExponent;
+        let d = this.#d as CoefficientExponent;
         return d.toPrecision(precision);
     }
 
@@ -537,7 +542,7 @@ export class Decimal {
         }
 
         if (undefined === opts) {
-            return this.emitExponential();
+            return this.#emitExponential();
         }
 
         if ("object" !== typeof opts) {
@@ -545,7 +550,7 @@ export class Decimal {
         }
 
         if (undefined === opts.digits) {
-            return this.emitExponential();
+            return this.#emitExponential();
         }
 
         let n = opts.digits;
@@ -558,7 +563,7 @@ export class Decimal {
             throw new RangeError("Argument must be an integer");
         }
 
-        let s = this.abs().emitExponential();
+        let s = this.abs().#emitExponential();
 
         let [lhs, rhsWithEsign] = s.split(/[.]/);
 
@@ -573,8 +578,8 @@ export class Decimal {
         return p + lhs + "." + rhs.substring(0, n) + "e" + exp;
     }
 
-    private isInteger(): boolean {
-        let d = this.d as FiniteValue;
+    #isInteger(): boolean {
+        let d = this.#d as FiniteValue;
 
         if (d === "0" || d === "-0") {
             return true;
@@ -601,7 +606,7 @@ export class Decimal {
             throw new RangeError("Infinity cannot be converted to a BigInt");
         }
 
-        if (!this.isInteger()) {
+        if (!this.#isInteger()) {
             throw new RangeError(
                 "Non-integer decimal cannot be converted to a BigInt"
             );
@@ -679,8 +684,8 @@ export class Decimal {
             return this.isNegative() ? -1 : 1;
         }
 
-        let ourCohort = this.d as CoefficientExponent;
-        let theirCohort = x.d as CoefficientExponent;
+        let ourCohort = this.#d as CoefficientExponent;
+        let theirCohort = x.#d as CoefficientExponent;
 
         return ourCohort.cmp(theirCohort);
     }
@@ -792,14 +797,14 @@ export class Decimal {
                 return this.negate();
             }
 
-            return this.clone();
+            return this.#clone();
         }
 
         if (this.isNegative()) {
             return this.negate();
         }
 
-        return this.clone();
+        return this.#clone();
     }
 
     /**
@@ -831,33 +836,33 @@ export class Decimal {
         if (!this.isFinite()) {
             if (!x.isFinite()) {
                 if (this.isNegative() === x.isNegative()) {
-                    return x.clone();
+                    return x.#clone();
                 }
 
                 return new Decimal(NAN);
             }
 
-            return this.clone();
+            return this.#clone();
         }
 
         if (!x.isFinite()) {
-            return x.clone();
+            return x.#clone();
         }
 
         if (this.isZero()) {
-            return x.clone();
+            return x.#clone();
         }
 
         if (x.isZero()) {
-            return this.clone();
+            return this.#clone();
         }
 
-        let ourCohort = this.d as CoefficientExponent;
-        let theirCohort = x.d as CoefficientExponent;
+        let ourCohort = this.#d as CoefficientExponent;
+        let theirCohort = x.#d as CoefficientExponent;
         let sum = ourCohort.add(theirCohort);
 
         if (sum.isZero()) {
-            if (this._isNegative) {
+            if (this.#isNegative) {
                 return new Decimal("-0");
             }
 
@@ -900,10 +905,10 @@ export class Decimal {
                     return new Decimal(NAN);
                 }
 
-                return this.clone();
+                return this.#clone();
             }
 
-            return this.clone();
+            return this.#clone();
         }
 
         if (!x.isFinite()) {
@@ -915,11 +920,11 @@ export class Decimal {
         }
 
         if (x.isZero()) {
-            return this.clone();
+            return this.#clone();
         }
 
-        let ourCohort = this.d as CoefficientExponent;
-        let theirCohort = x.d as CoefficientExponent;
+        let ourCohort = this.#d as CoefficientExponent;
+        let theirCohort = x.#d as CoefficientExponent;
         let difference = ourCohort.subtract(theirCohort);
 
         if (difference.isZero()) {
@@ -993,8 +998,8 @@ export class Decimal {
             );
         }
 
-        let ourCohort = this.d as CoefficientExponent;
-        let theirCohort = x.d as CoefficientExponent;
+        let ourCohort = this.#d as CoefficientExponent;
+        let theirCohort = x.#d as CoefficientExponent;
 
         let product = ourCohort.multiply(theirCohort);
         let rounded = RoundToDecimal128Domain(
@@ -1005,7 +1010,7 @@ export class Decimal {
         return new Decimal(rounded);
     }
 
-    private clone(): Decimal {
+    #clone(): Decimal {
         if (this.isNaN()) {
             return new Decimal(NAN);
         }
@@ -1016,7 +1021,7 @@ export class Decimal {
             );
         }
 
-        let v = this.d as FiniteValue;
+        let v = this.#d as FiniteValue;
 
         return new Decimal(v);
     }
@@ -1069,7 +1074,7 @@ export class Decimal {
             }
 
             if (this.isNegative()) {
-                return this.clone();
+                return this.#clone();
             }
 
             return new Decimal(NEGATIVE_INFINITY);
@@ -1085,8 +1090,8 @@ export class Decimal {
 
         // CoefficientExponent.divide applies the exclusive-or of the operand
         // signs to its result, so no sign-based recursion is needed here.
-        let ourV = this.d as CoefficientExponent;
-        let theirV = x.d as CoefficientExponent;
+        let ourV = this.#d as CoefficientExponent;
+        let theirV = x.#d as CoefficientExponent;
         let quotient = ourV.divide(theirV);
         let rounded = RoundToDecimal128Domain(
             quotient,
@@ -1124,14 +1129,14 @@ export class Decimal {
         }
 
         if (this.isNaN() || !this.isFinite()) {
-            return this.clone();
+            return this.#clone();
         }
 
         if (this.isZero()) {
-            return this.clone();
+            return this.#clone();
         }
 
-        let v = this.d as CoefficientExponent;
+        let v = this.#d as CoefficientExponent;
         let roundedV = v.round(numDecimalDigits, mode);
 
         if (roundedV.isZero()) {
@@ -1148,7 +1153,7 @@ export class Decimal {
      */
     negate(): Decimal {
         if (this.isNaN()) {
-            return this.clone();
+            return this.#clone();
         }
 
         if (!this.isFinite()) {
@@ -1157,7 +1162,7 @@ export class Decimal {
             );
         }
 
-        let v = this.d as FiniteValue;
+        let v = this.#d as FiniteValue;
 
         if (v === "0") {
             return new Decimal("-0");
@@ -1187,7 +1192,7 @@ export class Decimal {
         }
 
         if (!d.isFinite()) {
-            return this.clone();
+            return this.#clone();
         }
 
         if (d.isZero()) {
@@ -1201,7 +1206,7 @@ export class Decimal {
         // own: signed division, multiplication, and subtraction give the
         // remainder the dividend's sign for all sign combinations.
         if (this.abs().compare(d.abs()) === -1) {
-            return this.clone();
+            return this.#clone();
         }
 
         let q = this.divide(d).round(0, ROUNDING_MODE_TRUNCATE);
@@ -1248,7 +1253,7 @@ export class Decimal {
         // exponent <= Emax (anything larger overflows to Infinity on
         // construction), so a finite non-zero value is normal exactly when it
         // is not subnormal.
-        let exp = this.unrestrictedExponent();
+        let exp = this.#unrestrictedExponent();
         return exp >= NORMAL_EXPONENT_MIN;
     }
 
@@ -1274,7 +1279,7 @@ export class Decimal {
             return false;
         }
 
-        let exp = this.unrestrictedExponent();
+        let exp = this.#unrestrictedExponent();
         return exp < NORMAL_EXPONENT_MIN;
     }
 
@@ -1282,8 +1287,8 @@ export class Decimal {
      * Returns the exponent of this Decimal128 value, regardless of whether it is normal or subnormal.
      * @private
      */
-    private unrestrictedExponent(): number {
-        const v = this.d as CoefficientExponent;
+    #unrestrictedExponent(): number {
+        const v = this.#d as CoefficientExponent;
         // Callers exclude zero, and the coefficient is a sign-independent magnitude.
         const numDigits = v.coefficient.toString().length;
         return v.exponent + numDigits - 1;
@@ -1315,7 +1320,7 @@ export class Decimal {
             return NORMAL_EXPONENT_MIN;
         }
 
-        return this.unrestrictedExponent();
+        return this.#unrestrictedExponent();
     }
 
     /**
@@ -1338,7 +1343,7 @@ export class Decimal {
             return 0n;
         }
 
-        let v = this.d as CoefficientExponent;
+        let v = this.#d as CoefficientExponent;
         return v.coefficient;
     }
 }
