@@ -226,9 +226,10 @@ describe("remainder", () => {
             test("remainder where quotient would overflow", () => {
                 const dividend = new Decimal("1E+6144");
                 const divisor = new Decimal("1E-100");
-                // Even though dividend/divisor would overflow, remainder computation fails
+                // The quotient (1E+6244) is not representable, but the
+                // remainder is exact: 1E+6144 is an integer multiple of 1E-100
                 const result = dividend.remainder(divisor);
-                expect(result.toString()).toStrictEqual("-Infinity");
+                expect(result.toString()).toStrictEqual("0");
             });
 
             test("remainder with subnormal values", () => {
@@ -264,9 +265,9 @@ describe("remainder", () => {
             test("cyclic remainder pattern at extreme", () => {
                 const base = new Decimal("1E+6143");
                 const mod3 = new Decimal("3");
-                // 1E+6143 % 3 - the result is very large due to the extreme exponent
+                // 10 ≡ 1 (mod 3), so 1E+6143 ≡ 1 (mod 3)
                 const result = base.remainder(mod3);
-                expect(result.toString()).toStrictEqual("1e+6109");
+                expect(result.toString()).toStrictEqual("1");
             });
 
             test("remainder chain with large values", () => {
@@ -282,6 +283,38 @@ describe("remainder", () => {
                 const mod2 = new Decimal("1E+6143");
                 const remainder2 = remainder1.remainder(mod2);
                 expect(remainder2.lessThan(mod2)).toBe(true);
+            });
+        });
+
+        describe("quotient exceeds 34 significant digits", () => {
+            // The remainder must be exact even when the truncated quotient
+            // is not representable in 34 digits (x - y * trunc(x / y)
+            // computed with a rounded quotient gives garbage).
+            test("1e40 % 7", () => {
+                // 10^40 mod 7 = 3^40 mod 7 = 4
+                expect(
+                    new Decimal("1e40").remainder(new Decimal("7")).toString()
+                ).toStrictEqual("4");
+            });
+
+            test("exact remainder below the minimum quantum rounds to zero", () => {
+                // The exact remainder is 2.3e-6177, below Decimal128's
+                // smallest positive value; it rounds to zero like any other
+                // operation's result would.
+                const x = new Decimal("1.23e-6176");
+                const y = new Decimal("1e-6176");
+                expect(x.remainder(y).toString()).toStrictEqual("0");
+            });
+
+            test("tiny operands with a quotient near 2e100", () => {
+                // Found by pabst (seed 2296663786): the remainder came out
+                // ~10^67 times larger than the divisor, with flipped sign.
+                const x = new Decimal("-5.00158408674736e-50");
+                const y = new Decimal("-2.3030815829730813e-150");
+                const r = x.remainder(y);
+                expect(r.toString()).toStrictEqual("-8.064634468813786e-151");
+                expect(r.abs().lessThan(y.abs())).toBe(true);
+                expect(r.isNegative()).toBe(true);
             });
         });
 

@@ -17,7 +17,6 @@ import { CoefficientExponent, formatExponent } from "./CoefficientExponent.mjs";
 import {
     flipModeForNegative,
     ROUNDING_MODE_HALF_EVEN,
-    ROUNDING_MODE_TRUNCATE,
     ROUNDING_MODES,
     type RoundingMode,
 } from "./Rounding.mjs";
@@ -1199,28 +1198,47 @@ export class Decimal {
             return new Decimal(NAN);
         }
 
-        // When |this| < |d| the truncated quotient is zero, so the remainder is
-        // the dividend itself (keeping its sign). Comparing magnitudes lets this
-        // shortcut work for every sign combination without recursing through
-        // negate(). Otherwise, this - d * trunc(this / d) is sign-correct on its
-        // own: signed division, multiplication, and subtraction give the
-        // remainder the dividend's sign for all sign combinations.
-        if (this.abs().compare(d.abs()) === -1) {
+        // A zero dividend is its own remainder, keeping its sign.
+        if (this.isZero()) {
             return this.#clone();
         }
 
-        let q = this.divide(d).round(0, ROUNDING_MODE_TRUNCATE);
-        let r = this.subtract(d.multiply(q));
+        // The remainder is computed exactly: align both operands to a common
+        // quantum and take the bigint remainder of their coefficients. The
+        // identity this - d * trunc(this / d) is not usable here because
+        // divide() rounds the quotient to 34 significant digits: once the
+        // quotient reaches 10^34, the rounding error in its truncated value
+        // makes the "remainder" arbitrarily larger than the divisor.
+        let ourV = this.#d as CoefficientExponent;
+        let theirV = d.#d as CoefficientExponent;
+        let minExp = Math.min(ourV.exponent, theirV.exponent);
+        let ourCoefficient =
+            ourV.coefficient * 10n ** BigInt(ourV.exponent - minExp);
+        let theirCoefficient =
+            theirV.coefficient * 10n ** BigInt(theirV.exponent - minExp);
+        let remainderCoefficient = ourCoefficient % theirCoefficient;
 
-        // A non-zero remainder already carries the dividend's sign (an identity
-        // of truncated division), but an exact-zero remainder comes back as +0
-        // from subtract(). The remainder keeps the dividend's sign even then
-        // (e.g. -1 % 1 is -0), so restore it explicitly.
-        if (r.isZero()) {
+        // The remainder keeps the dividend's sign (an identity of truncated
+        // division) even when it is exactly zero (e.g. -1 % 1 is -0).
+        if (remainderCoefficient === 0n) {
             return new Decimal(this.isNegative() ? "-0" : "0");
         }
 
-        return r;
+        // The exact remainder of two in-range values is itself in range
+        // (writing |this| = X * 10^a and |d| = D * 10^b, either the quotient
+        // is zero and the remainder is |this|, or |this| >= |d| forces
+        // digits(D) + b - min(a, b) <= digits(X) <= 34), so rounding is a
+        // no-op except for operands that already sit below Decimal128's
+        // minimum quantum of 10^-6176.
+        return new Decimal(
+            RoundToDecimal128Domain(
+                new CoefficientExponent(
+                    remainderCoefficient,
+                    minExp,
+                    this.isNegative()
+                )
+            )
+        );
     }
 
     /**
