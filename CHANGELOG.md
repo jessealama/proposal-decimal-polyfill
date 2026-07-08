@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses date-based versioning (YYYYMMDD.MAJOR.MINOR).
 
-## [Unreleased]
+## [20260708.0.0] - 2026-07-08
 
 ### Changed
 
@@ -23,7 +23,7 @@ and this project uses date-based versioning (YYYYMMDD.MAJOR.MINOR).
 - `npm pack`/`npm publish` build the bundle and declarations automatically
   via a `prepack` script.
 
-## [20260616.0.0 ] - 2026-06-16
+## [20260616.0.0] - 2026-06-16
 
 ### Removed
 
