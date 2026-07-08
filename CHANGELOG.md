@@ -9,10 +9,19 @@ and this project uses date-based versioning (YYYYMMDD.MAJOR.MINOR).
 
 ### Changed
 
-- Restrict imports to the package's main entry point via the `exports`
-  field in package.json. Deep imports of package internals (e.g.
-  `proposal-decimal/src/...`) now fail with
+- The package's entry point is now the bundled `dist/Decimal.mjs`. The
+  `exports` field in package.json restricts imports to the bare specifier
+  (`import { Decimal } from "proposal-decimal"`); deep imports of package
+  internals (e.g. `proposal-decimal/src/...`) and of the bundle path
+  (`proposal-decimal/dist/Decimal.mjs`) fail with
   `ERR_PACKAGE_PATH_NOT_EXPORTED`.
+- Compiled internal modules (`src/*.mjs`) no longer ship in the published
+  package; the TypeScript sources and declaration files still do.
+- `Decimal` holds its internal state in ES `#private` fields, so package
+  internals (notably the `CoefficientExponent` class) cannot be reached at
+  runtime through property access.
+- `npm pack`/`npm publish` build the bundle and declarations automatically
+  via a `prepack` script.
 
 ## [20260616.0.0 ] - 2026-06-16
 

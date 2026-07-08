@@ -27,9 +27,9 @@ values.
 ## Quick start
 
 ```javascript
-import { Decimal128 } from "proposal-decimal";
-let a = new Decimal128("0.1");
-let b = new Decimal128("0.2");
+import { Decimal } from "proposal-decimal";
+let a = new Decimal("0.1");
+let b = new Decimal("0.2");
 let c = a.add(b);
 console.log(c.toString() === "0.3"); // true
 ```
@@ -102,32 +102,32 @@ dealing with non-`NaN` values, you need to watch out for `-0`.
 
 ## Installation
 
-After installing this NPM package (`npm install proposal-decimal`), the `dist` subdirectory contains a single ESM
-module, `Decimal128.mjs`. It exports a single class, `Decimal128`.
-
-To use this package in Node.js, you can import the module as follows:
+Install from npm: `npm install proposal-decimal`. The package has a single
+entry point, an ESM module exporting the `Decimal` class:
 
 ```javascript
-import { Decimal128 } from "proposal-decimal";
-// your code goes here
-// for example:
-const x = new Decimal128("0.1");
-const y = new Decimal128("0.2");
+import { Decimal } from "proposal-decimal";
+const x = new Decimal("0.1");
+const y = new Decimal("0.2");
 console.log(x.add(y).toString());
 ```
 
-To use this package in a browser, try something like this:
+This works in Node.js and with any bundler. To use the package in a browser
+without a bundler, copy `dist/Decimal.mjs` — a single, self-contained ESM
+file — out of the installed package and serve it yourself:
 
 ```html
 <script type="module">
-    import { Decimal128 } from "/path/to/dist/Decimal128.mjs";
-    // your code goes here
-    // for example:
-    const x = new Decimal128("0.1");
-    const y = new Decimal128("0.2");
+    import { Decimal } from "/path/to/Decimal.mjs";
+    const x = new Decimal("0.1");
+    const y = new Decimal("0.2");
     console.log(x.add(y).toString());
 </script>
 ```
+
+Only the entry point is importable; deep imports of files inside the package
+(e.g. `proposal-decimal/src/...` or `proposal-decimal/dist/Decimal.mjs`)
+fail with `ERR_PACKAGE_PATH_NOT_EXPORTED`.
 
 ## Implementation
 
