@@ -1042,6 +1042,11 @@ export class Decimal {
      * @ensures{commutes} forall (x y: number),
      *   new Decimal(x).multiply(new Decimal(y)).toString() ===
      *     new Decimal(y).multiply(new Decimal(x)).toString()
+     *
+     * @ensures{keepsQuantumAboveEtiny} forall (j k: int),
+     *   j !== 0 ∧ k !== 0 →
+     *     new Decimal(j + "e-3090").multiply(new Decimal(k + "e-3090")).exponent() -
+     *       (new Decimal(j + "e-3090").multiply(new Decimal(k + "e-3090")).significand().toString().length - 1) >= -6176
      */
     multiply(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
         let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
@@ -1133,6 +1138,11 @@ export class Decimal {
      * @ensures{selfDivisionIsUnity} forall (x: number),
      *   Number.isFinite(x) ∧ x !== 0 →
      *     new Decimal(x).divide(new Decimal(x)).equals(new Decimal("1"))
+     *
+     * @ensures{keepsQuantumAboveEtiny} forall (k: int) (n: nat),
+     *   k !== 0 →
+     *     new Decimal(k + "e-6170").divide(new Decimal("1e" + (n % 10))).exponent() -
+     *       (new Decimal(k + "e-6170").divide(new Decimal("1e" + (n % 10))).significand().toString().length - 1) >= -6176
      */
     divide(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
         let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
@@ -1459,6 +1469,11 @@ export class Decimal {
      *
      * @returns {bigint} The significand as a BigInt
      * @throws {RangeError} If this value is NaN or infinite
+     *
+     * @ensures{quantumNeverBelowEtiny} forall (k: int) (n: nat),
+     *   k !== 0 →
+     *     new Decimal(k + "e-" + (6150 + (n % 30))).exponent() -
+     *       (new Decimal(k + "e-" + (6150 + (n % 30))).significand().toString().length - 1) >= -6176
      */
     significand(): bigint {
         if (this.isNaN()) {
