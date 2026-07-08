@@ -1,10 +1,24 @@
 {
     "name": "proposal-decimal",
-    "version": "20250613.0.0",
+    "version": "20260708.0.0",
     "description": "Champion-maintained polyfill for the TC39 decimal proposal",
-    "main": "src/Decimal.mjs",
+    "main": "dist/Decimal.mjs",
+    "types": "./src/Decimal.d.mts",
+    "exports": {
+        ".": {
+            "types": "./src/Decimal.d.mts",
+            "default": "./dist/Decimal.mjs"
+        },
+        "./package.json": "./package.json"
+    },
+    "c8": {
+        "include": [
+            "src/**"
+        ]
+    },
     "scripts": {
         "test": "jest",
+        "prepack": "npx tsc && npm run build",
         "format": "prettier . --write",
         "lint": "prettier . --check",
         "coverage": "npx c8 npx jest",

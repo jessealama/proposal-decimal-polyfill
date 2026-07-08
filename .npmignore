@@ -1,5 +1,7 @@
+.claude/
 .idea/
 coverage/
+reports/
 node_modules/
 tests/
 examples/*.map
@@ -11,3 +13,5 @@ examples/*.d.mts
 .prettierignore
 jest.config.cjs
 tsconfig.json
+src/*.mjs
+src/*.mjs.map
