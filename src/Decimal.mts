@@ -289,6 +289,11 @@ export class Decimal {
      *
      * @returns {Decimal} The mantissa as a Decimal value in the range [1, 10)
      * @throws {RangeError} If this value is zero (zero has no mantissa)
+     *
+     * @ensures{liesInUnitDecade} forall (x: number),
+     *   Number.isFinite(x) ∧ x !== 0 →
+     *     new Decimal(x).mantissa().abs().greaterThanOrEqual(new Decimal("1")) ∧
+     *       new Decimal(x).mantissa().abs().lessThan(new Decimal("10"))
      */
     public mantissa(): Decimal {
         if (this.isZero()) {
@@ -330,6 +335,12 @@ export class Decimal {
      * @throws {RangeError} If this value is NaN
      * @throws {RangeError} If this value is infinite
      * @throws {TypeError} If n is not an integer
+     *
+     * @ensures{staysInDecimal128Domain} forall (x: number) (n: int),
+     *   Number.isFinite(x) ∧ x !== 0 →
+     *     (new Decimal(x).scale10(n).isFinite() →
+     *       new Decimal(x).scale10(n).exponent() <= 6144 ∧
+     *         new Decimal(x).scale10(n).exponent() >= -6176)
      */
     public scale10(n: number): Decimal {
         if (this.isNaN()) {
@@ -425,6 +436,10 @@ export class Decimal {
      * @returns {string} The string representation in fixed-point notation
      * @throws {TypeError} If opts is not an object
      * @throws {RangeError} If digits is negative, NaN, or not an integer (except Infinity)
+     *
+     * @ensures{padsToRequestedDigits} forall (x: number) (n: nat),
+     *   Number.isFinite(x) →
+     *     (new Decimal(x).toFixed({ digits: 1 + (n % 80) }).split(".")[1] ?? "").length === 1 + (n % 80)
      */
     toFixed(opts?: { digits?: number }): string {
         if (undefined === opts) {
@@ -548,6 +563,10 @@ export class Decimal {
      * @returns {string} The string representation in exponential notation
      * @throws {TypeError} If opts is not an object
      * @throws {RangeError} If digits is not a positive integer
+     *
+     * @ensures{honorsRequestedDigits} forall (x: number) (n: nat),
+     *   Number.isFinite(x) →
+     *     new Decimal(x).toExponential({ digits: 1 + (n % 30) }).split("e")[0].split(".")[1].length === 1 + (n % 30)
      */
     toExponential(opts?: { digits?: number }): string {
         if (this.isNaN()) {
@@ -618,6 +637,10 @@ export class Decimal {
      * @throws {RangeError} If this value is NaN
      * @throws {RangeError} If this value is infinite
      * @throws {RangeError} If this value has a fractional part
+     *
+     * @ensures{roundTripsSmallBigInts} forall (x: bigint),
+     *   new Decimal(x % 10000000000000000000000000000000000n).toBigInt() ===
+     *     x % 10000000000000000000000000000000000n
      */
     toBigInt(): bigint {
         if (this.isNaN()) {
@@ -648,6 +671,9 @@ export class Decimal {
      * Note that this may lose precision as JavaScript numbers are 64-bit floats.
      *
      * @returns {number} The JavaScript number representation of this value
+     *
+     * @ensures{roundTripsDoubles} forall (x: number),
+     *   Object.is(new Decimal(x).toNumber(), x)
      */
     toNumber(): number {
         if (this.isNaN()) {
@@ -674,6 +700,10 @@ export class Decimal {
      *   - -1 if this < x
      *   - 0 if this equals x
      *   - 1 if this > x
+     *
+     * @ensures{antisymmetric} forall (x y: number),
+     *   ¬Number.isNaN(x) ∧ ¬Number.isNaN(y) →
+     *     new Decimal(x).compare(new Decimal(y)) === -new Decimal(y).compare(new Decimal(x))
      */
     compare(x: Decimal): number {
         if (this.isNaN() || x.isNaN()) {
@@ -724,6 +754,10 @@ export class Decimal {
      *
      * @param {Decimal} other The value to compare with
      * @returns {boolean} True if the values are mathematically equal, false otherwise
+     *
+     * @ensures{agreesWithCompare} forall (x y: number),
+     *   ¬Number.isNaN(x) ∧ ¬Number.isNaN(y) →
+     *     (new Decimal(x).equals(new Decimal(y)) ↔ 0 === new Decimal(x).compare(new Decimal(y)))
      */
     equals(other: Decimal): boolean {
         if (this.isNaN() || other.isNaN()) {
@@ -845,6 +879,14 @@ export class Decimal {
      *   enumeration, such as `ROUNDING_MODE_HALF_EVEN`, `ROUNDING_MODE_TRUNCATE`,
      *   `ROUNDING_MODE_CEILING`, and `ROUNDING_MODE_FLOOR`. Defaults to
      *   `ROUNDING_MODE_HALF_EVEN`.
+     *
+     * @ensures{commutes} forall (x y: number),
+     *   new Decimal(x).add(new Decimal(y)).toString() ===
+     *     new Decimal(y).add(new Decimal(x)).toString()
+     *
+     * @ensures{exactCancellationIsPositiveZero} forall (x: number),
+     *   Number.isFinite(x) →
+     *     new Decimal(x).add(new Decimal(x).negate()).toString() === "0"
      */
     add(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
         let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
@@ -917,6 +959,10 @@ export class Decimal {
      *   when performing the subtraction. Valid values are: "ceil", "floor", "trunc",
      *   "halfEven", "halfExpand". Defaults to "halfEven".
      * @returns {Decimal} A new Decimal value representing the difference
+     *
+     * @ensures{antiCommutes} forall (x y: number),
+     *   Number.isFinite(x) ∧ Number.isFinite(y) →
+     *     new Decimal(x).subtract(new Decimal(y)).equals(new Decimal(y).subtract(new Decimal(x)).negate())
      */
     subtract(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
         let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
@@ -992,6 +1038,10 @@ export class Decimal {
      *   when performing the multiplication. Valid values are: "ceil", "floor", "trunc",
      *   "halfEven", "halfExpand". Defaults to "halfEven".
      * @returns {Decimal} A new Decimal value representing the product
+     *
+     * @ensures{commutes} forall (x y: number),
+     *   new Decimal(x).multiply(new Decimal(y)).toString() ===
+     *     new Decimal(y).multiply(new Decimal(x)).toString()
      */
     multiply(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
         let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
@@ -1079,6 +1129,10 @@ export class Decimal {
      *   when performing the division. Valid values are: "ceil", "floor", "trunc",
      *   "halfEven", "halfExpand". Defaults to "halfEven".
      * @returns {Decimal} A new Decimal value representing the quotient
+     *
+     * @ensures{selfDivisionIsUnity} forall (x: number),
+     *   Number.isFinite(x) ∧ x !== 0 →
+     *     new Decimal(x).divide(new Decimal(x)).equals(new Decimal("1"))
      */
     divide(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
         let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
@@ -1155,6 +1209,11 @@ export class Decimal {
      * @returns {Decimal} A new Decimal value rounded to the specified number of decimal places
      * @throws {RangeError} If the rounding mode is invalid
      * @throws {RangeError} If numDecimalDigits is negative or not an integer
+     *
+     * @ensures{idempotent} forall (x: number) (n: nat),
+     *   Number.isFinite(x) →
+     *     new Decimal(x).round(n % 50).round(n % 50).toString() ===
+     *       new Decimal(x).round(n % 50).toString()
      */
     round(
         numDecimalDigits: number = 0,
@@ -1225,6 +1284,14 @@ export class Decimal {
      *
      * @param {Decimal} d The divisor
      * @returns {Decimal} The remainder after division
+     *
+     * @ensures{keepsDividendSign} forall (x y: number),
+     *   Number.isFinite(x) ∧ Number.isFinite(y) ∧ y !== 0 →
+     *     new Decimal(x).remainder(new Decimal(y)).isNegative() === new Decimal(x).isNegative()
+     *
+     * @ensures{staysBelowDivisorMagnitude} forall (x y: number),
+     *   Number.isFinite(x) ∧ Number.isFinite(y) ∧ y !== 0 →
+     *     new Decimal(x).remainder(new Decimal(y)).abs().lessThan(new Decimal(y).abs())
      */
     remainder(d: Decimal): Decimal {
         if (this.isNaN() || d.isNaN()) {

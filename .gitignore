@@ -14,3 +14,4 @@ src/*.d.mts
 # StrykerJS mutation-testing output (spike)
 reports/
 .stryker-tmp/
+.pabst/
