@@ -19,6 +19,46 @@ import {
 } from "./Rounding.mjs";
 
 /**
+ * Decide whether a non-zero fractional part rounds away from zero.
+ * @param {RoundingMode} mode - The rounding mode to apply
+ * @param {() => -1|0|1} compareToHalf - Compares the fractional part to 0.5
+ * @param {() => boolean} lowIsEven - Whether the rounded-down value is even
+ * @returns {boolean} True if the value should round away from zero
+ */
+function shouldRoundAwayFromZero(
+    mode: RoundingMode,
+    compareToHalf: () => -1 | 0 | 1,
+    lowIsEven: () => boolean
+): boolean {
+    if (mode === ROUNDING_MODE_FLOOR || mode === ROUNDING_MODE_TRUNCATE) {
+        return false;
+    }
+
+    if (mode === ROUNDING_MODE_CEILING) {
+        return true;
+    }
+
+    // For half-even and half-expand, we need to check if the fractional
+    // part is exactly 0.5
+    const cmp = compareToHalf();
+
+    if (cmp === -1) {
+        return false;
+    }
+
+    if (cmp === 1) {
+        return true;
+    }
+
+    if (mode === ROUNDING_MODE_HALF_EXPAND) {
+        return true;
+    }
+
+    // ROUNDING_MODE_HALF_EVEN: round to even
+    return !lowIsEven();
+}
+
+/**
  * Apply a rounding mode to a positive CoefficientExponent value
  * This is an internal helper function corresponding to the spec's abstract operation
  */
@@ -33,40 +73,17 @@ function ApplyRoundingModeToPositive(
         return mLow;
     }
 
-    const mHigh = mLow.add(new CoefficientExponent(1n, 0, false));
+    const roundUp = shouldRoundAwayFromZero(
+        mode,
+        () => fraction.cmp(new CoefficientExponent(5n, -1, false)),
+        () => mLow.coefficient % 2n === 0n
+    );
 
-    if (mode === ROUNDING_MODE_FLOOR || mode === ROUNDING_MODE_TRUNCATE) {
-        return mLow;
+    if (roundUp) {
+        return mLow.add(new CoefficientExponent(1n, 0, false));
     }
 
-    if (mode === ROUNDING_MODE_CEILING) {
-        return mHigh;
-    }
-
-    // For half-even and half-expand, we need to check if fraction is exactly 0.5
-    const oneHalf = new CoefficientExponent(5n, -1, false);
-    const cmp = fraction.cmp(oneHalf);
-
-    if (cmp === -1) {
-        return mLow;
-    }
-
-    if (cmp === 1) {
-        return mHigh;
-    }
-
-    if (mode === ROUNDING_MODE_HALF_EXPAND) {
-        return mHigh;
-    }
-
-    // ROUNDING_MODE_HALF_EVEN: round to even
-    if (mLow.isInteger()) {
-        if (mLow.coefficient % 2n === 0n) {
-            return mLow;
-        }
-    }
-
-    return mHigh;
+    return mLow;
 }
 
 /**
@@ -90,20 +107,17 @@ export class CoefficientExponent {
         exponent: number,
         isNegative: boolean = false
     ) {
-        // Normalize: remove trailing zeros
-        let c = coefficient;
-        let e = exponent;
-
         this._isNegative = isNegative;
 
-        if (c === 0n) {
+        // Normalize: remove trailing zeros
+        if (coefficient === 0n) {
             this._coefficient = 0n;
             this._exponent = 0;
         } else {
-            const s = c.toString();
+            const s = coefficient.toString();
             const trimmed = s.replace(/0+$/, "");
             this._coefficient = BigInt(trimmed);
-            this._exponent = e + (s.length - trimmed.length);
+            this._exponent = exponent + (s.length - trimmed.length);
         }
     }
 
@@ -440,7 +454,8 @@ export class CoefficientExponent {
 
         let newCoefficient = quotient;
         if (remainder !== 0n) {
-            // Create a fractional value to determine rounding
+            // Compare the removed digits against half a unit in the last
+            // kept place to determine rounding
             const fraction = new CoefficientExponent(
                 remainder,
                 -digitsToRemove,
@@ -452,32 +467,13 @@ export class CoefficientExponent {
                 false
             );
 
-            const shouldRoundUp = (() => {
-                if (
-                    mode === ROUNDING_MODE_FLOOR ||
-                    mode === ROUNDING_MODE_TRUNCATE
-                ) {
-                    return false;
-                }
-                if (mode === ROUNDING_MODE_CEILING) {
-                    return true;
-                }
+            const roundUp = shouldRoundAwayFromZero(
+                mode,
+                () => fraction.cmp(halfUnit),
+                () => quotient % 2n === 0n
+            );
 
-                const cmp = fraction.cmp(halfUnit);
-                if (cmp === -1) {
-                    return false;
-                }
-                if (cmp === 1) {
-                    return true;
-                }
-
-                if (mode === ROUNDING_MODE_HALF_EXPAND) {
-                    return true;
-                }
-                return quotient % 2n === 1n;
-            })();
-
-            if (shouldRoundUp) {
+            if (roundUp) {
                 newCoefficient = quotient + 1n;
             }
         }

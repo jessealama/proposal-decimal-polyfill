@@ -8,7 +8,9 @@ describe("package encapsulation", () => {
         async (mod) => {
             await expect(
                 import(`proposal-decimal/src/${mod}.mjs`)
-            ).rejects.toThrow(/not defined by "exports"/);
+            ).rejects.toMatchObject({
+                code: "ERR_PACKAGE_PATH_NOT_EXPORTED",
+            });
         }
     );
 });
