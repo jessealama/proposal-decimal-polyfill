@@ -22,13 +22,43 @@ describe("addition", () => {
     });
     test("one plus minus one equals zero", () => {
         expect(one.add(minusOne).toString()).toStrictEqual("0");
-        expect(minusOne.add(one).toString()).toStrictEqual("-0");
+        expect(minusOne.add(one).toString()).toStrictEqual("0");
+    });
+    test("exact cancellation is minus zero when rounding toward negative", () => {
+        expect(
+            one.add(minusOne, { roundingMode: "floor" }).toString()
+        ).toStrictEqual("-0");
+        expect(
+            minusOne.add(one, { roundingMode: "floor" }).toString()
+        ).toStrictEqual("-0");
+    });
+    test("zero plus minus zero", () => {
+        expect(zero.add(minusZero).toString()).toStrictEqual("0");
     });
     test("minus zero plus zero", () => {
         expect(minusZero.add(zero).toString()).toStrictEqual("0");
     });
+    test("oppositely signed zeros are minus zero when rounding toward negative", () => {
+        expect(
+            zero.add(minusZero, { roundingMode: "floor" }).toString()
+        ).toStrictEqual("-0");
+        expect(
+            minusZero.add(zero, { roundingMode: "floor" }).toString()
+        ).toStrictEqual("-0");
+    });
+    test("zero plus zero", () => {
+        expect(zero.add(zero).toString()).toStrictEqual("0");
+    });
     test("minus zero plus minus zero", () => {
         expect(minusZero.add(minusZero).toString()).toStrictEqual("-0");
+    });
+    test("like-signed zeros keep their sign even when rounding toward negative", () => {
+        expect(
+            zero.add(zero, { roundingMode: "floor" }).toString()
+        ).toStrictEqual("0");
+        expect(
+            minusZero.add(minusZero, { roundingMode: "floor" }).toString()
+        ).toStrictEqual("-0");
     });
     test("two negatives", () => {
         expect(minusOne.add(new Decimal("-99")).toString()).toStrictEqual(

@@ -16,6 +16,7 @@
 import { CoefficientExponent, formatExponent } from "./CoefficientExponent.mjs";
 import {
     flipModeForNegative,
+    ROUNDING_MODE_FLOOR,
     ROUNDING_MODE_HALF_EVEN,
     ROUNDING_MODES,
     type RoundingMode,
@@ -146,6 +147,13 @@ function handleDecimalNotation(s: string, mode: RoundingMode): Decimal128Value {
     }
 
     return RoundToDecimal128Domain(v, mode);
+}
+
+// IEEE 754-2019, section 6.3: when a sum (or difference) of operands with
+// opposite (or like) signs is exactly zero, the result is +0 in every
+// rounding-direction attribute except roundTowardNegative, where it is -0.
+function exactlyCancelledZero(mode: RoundingMode): Decimal {
+    return new Decimal(mode === ROUNDING_MODE_FLOOR ? "-0" : "0");
 }
 
 export class Decimal {
@@ -869,6 +877,16 @@ export class Decimal {
             return x.#clone();
         }
 
+        if (this.isZero() && x.isZero()) {
+            // IEEE 754-2019, section 6.3: like-signed zeros sum to a zero
+            // of that same sign; oppositely-signed zeros cancel exactly.
+            if (this.#isNegative === x.#isNegative) {
+                return this.#clone();
+            }
+
+            return exactlyCancelledZero(mode);
+        }
+
         if (this.isZero()) {
             return x.#clone();
         }
@@ -882,11 +900,7 @@ export class Decimal {
         let sum = ourCohort.add(theirCohort);
 
         if (sum.isZero()) {
-            if (this.#isNegative) {
-                return new Decimal("-0");
-            }
-
-            return new Decimal("0");
+            return exactlyCancelledZero(mode);
         }
 
         let rounded = RoundToDecimal128Domain(sum, mode) as CoefficientExponent;
@@ -935,6 +949,16 @@ export class Decimal {
             return x.negate();
         }
 
+        if (this.isZero() && x.isZero()) {
+            // IEEE 754-2019, section 6.3: x - (-x) keeps the sign of x, even
+            // for zeros; like-signed zeros cancel exactly.
+            if (this.#isNegative !== x.#isNegative) {
+                return this.#clone();
+            }
+
+            return exactlyCancelledZero(mode);
+        }
+
         if (this.isZero()) {
             return x.negate();
         }
@@ -948,7 +972,7 @@ export class Decimal {
         let difference = ourCohort.subtract(theirCohort);
 
         if (difference.isZero()) {
-            return new Decimal("0");
+            return exactlyCancelledZero(mode);
         }
 
         let rounded = RoundToDecimal128Domain(
