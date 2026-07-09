@@ -119,10 +119,12 @@ describe("constructor", () => {
             );
         });
         test("min exponent", () => {
-            // 123E-6177 = 1.23E-6175, a subnormal whose adjusted exponent
-            // (-6175) is reported truthfully rather than clamped to Emin.
+            // 123E-6177 = 1.23E-6175, a subnormal whose trailing digit sits
+            // below the Etiny quantum (10^-6176) and so gets rounded away;
+            // the adjusted exponent (-6175) is reported truthfully rather
+            // than clamped to Emin.
             expect(new Decimal("123E-6177").toString()).toStrictEqual(
-                "1.23e-6175"
+                "1.2e-6175"
             );
         });
         test("integer too big", () => {
@@ -168,15 +170,101 @@ describe("constructor", () => {
             });
         });
 
-        // Values with adjusted exponent at or below -6177 underflow to zero.
-        describe("underflow to zero at adjusted exponent -6177", () => {
+        // Every finite Decimal128 value is an integer multiple of 10^-6176
+        // (Etiny). A value with digits below that quantum is rounded at
+        // Etiny, keeping fewer significant digits (gradual underflow).
+        describe("rounding at the Etiny quantum", () => {
+            test("digits below Etiny are rounded away", () => {
+                expect(new Decimal("1.23E-6176").toString()).toStrictEqual(
+                    "1e-6176"
+                );
+            });
+            test("rounding at Etiny respects the rounding mode", () => {
+                expect(
+                    new Decimal("1.23E-6176", {
+                        roundingMode: "ceil",
+                    }).toString()
+                ).toStrictEqual("2e-6176");
+            });
+            test("ties at Etiny round to even", () => {
+                expect(new Decimal("1.5E-6176").toString()).toStrictEqual(
+                    "2e-6176"
+                );
+                expect(new Decimal("2.5E-6176").toString()).toStrictEqual(
+                    "2e-6176"
+                );
+            });
+            test("rounding at Etiny can carry into a higher quantum", () => {
+                expect(new Decimal("9.9E-6176").toString()).toStrictEqual(
+                    "1e-6175"
+                );
+            });
+            test("subnormal precision shrinks below 34 digits", () => {
+                // At adjusted exponent -6144, one below Emin, only 33
+                // significant digits fit above Etiny.
+                expect(
+                    new Decimal(
+                        "1.1111111111111111111111111111152444E-6144"
+                    ).toString()
+                ).toStrictEqual("1.11111111111111111111111111111524e-6144");
+            });
+            test("no double rounding through 34 significant digits", () => {
+                // The value is just over half of the smallest subnormal, so
+                // rounding at Etiny gives 1e-6176. Rounding to 34 significant
+                // digits first would give exactly half, which ties to zero.
+                expect(
+                    new Decimal(
+                        "5.00000000000000000000000000000000001E-6177"
+                    ).toString()
+                ).toStrictEqual("1e-6176");
+            });
+        });
+
+        // Values smaller than the smallest subnormal (1E-6176) also round at
+        // Etiny: to zero or to 1E-6176, per the rounding mode.
+        describe("underflow below the smallest subnormal", () => {
             test("adjusted exponent -6176 is finite", () => {
                 expect(new Decimal("1E-6176").toString()).toStrictEqual(
                     "1e-6176"
                 );
             });
-            test("adjusted exponent -6177 underflows to zero", () => {
+            test("a tenth of the smallest subnormal underflows to zero", () => {
                 expect(new Decimal("1E-6177").toString()).toStrictEqual("0");
+            });
+            test("more than half of the smallest subnormal rounds up to it", () => {
+                expect(new Decimal("6E-6177").toString()).toStrictEqual(
+                    "1e-6176"
+                );
+            });
+            test("just under half of the smallest subnormal rounds to zero", () => {
+                expect(new Decimal("4.9E-6177").toString()).toStrictEqual("0");
+            });
+            test("exactly half of the smallest subnormal ties to zero", () => {
+                expect(new Decimal("5E-6177").toString()).toStrictEqual("0");
+            });
+            test("exactly half of the smallest subnormal rounds up under halfExpand", () => {
+                expect(
+                    new Decimal("5E-6177", {
+                        roundingMode: "halfExpand",
+                    }).toString()
+                ).toStrictEqual("1e-6176");
+            });
+            test("ceil rounds any tiny positive value up to the smallest subnormal", () => {
+                expect(
+                    new Decimal("1E-7000", {
+                        roundingMode: "ceil",
+                    }).toString()
+                ).toStrictEqual("1e-6176");
+            });
+            test("floor rounds any tiny negative value to minus the smallest subnormal", () => {
+                expect(
+                    new Decimal("-1E-7000", {
+                        roundingMode: "floor",
+                    }).toString()
+                ).toStrictEqual("-1e-6176");
+            });
+            test("negative underflow gives negative zero", () => {
+                expect(new Decimal("-1E-7000").toString()).toStrictEqual("-0");
             });
         });
     });

@@ -28,8 +28,13 @@ const MAX_SIGNIFICANT_DIGITS = 34;
 // The largest adjusted exponent of a finite Decimal128 value (Emax); above it,
 // values round to infinity.
 const ADJUSTED_EXPONENT_MAX = 6144;
-// The adjusted exponent of the smallest subnormal value (Etiny = Emin -
-// (precision - 1)); below it, values round to zero.
+// The smallest quantum exponent of a finite Decimal128 value (Etiny = Emin -
+// (precision - 1)). Unlike Emax, which bounds the position of the *leading*
+// significant digit, Etiny bounds the position of the *trailing* one: every
+// finite Decimal128 value is an integer multiple of 10^Etiny. Results with
+// digits below this quantum are rounded at it, so precision shrinks as the
+// leading digit approaches Etiny (gradual underflow), and values too small to
+// round to a nonzero multiple of 10^Etiny become zero.
 const TINY_EXPONENT_MIN = NORMAL_EXPONENT_MIN - (MAX_SIGNIFICANT_DIGITS - 1);
 
 type NaNValue = "NaN";
@@ -63,42 +68,42 @@ function RoundToDecimal128Domain(
         }
         /* c8 ignore end */
 
-        /* c8 ignore start */
         if (d === "0") {
             return "-0";
         }
-        /* c8 ignore end */
 
         return (d as CoefficientExponent).negate();
     }
 
-    // Reduce precision to fit the significand if needed. Rounding can only
-    // carry the adjusted exponent upward (e.g. 999 -> 1000), never lower it, so
-    // the bounds checks below are exact on the rounded result.
-    const sigDigits = v.coefficient.toString().length;
-    let result = v;
-    // Stryker disable next-line EqualityOperator: rounding an exactly-34-digit coefficient to 34 significant digits is a no-op, so > and >= behave identically here
-    if (sigDigits > MAX_SIGNIFICANT_DIGITS) {
-        result = v.roundToSignificantDigits(MAX_SIGNIFICANT_DIGITS, mode);
-    }
-
     // The adjusted exponent is the power of ten of the leading significant
     // digit.
-    const adjustedExponent =
-        result.exponent + result.coefficient.toString().length - 1;
+    const adjustedExponent = v.exponent + v.coefficient.toString().length - 1;
 
-    // Above the largest finite value, round to infinity.
-    if (adjustedExponent > ADJUSTED_EXPONENT_MAX) {
-        return "Infinity";
-    }
+    // The quantum -- the power of ten of the trailing significant digit -- can
+    // sit no more than 33 places below the leading digit (the 34-digit
+    // precision limit) and never below Etiny. In the subnormal range the
+    // second bound binds, so fewer than 34 digits survive (gradual underflow).
+    const targetQuantum = Math.max(
+        adjustedExponent - (MAX_SIGNIFICANT_DIGITS - 1),
+        TINY_EXPONENT_MIN
+    );
 
-    // Below the smallest subnormal value, round to zero.
-    if (adjustedExponent < TINY_EXPONENT_MIN) {
-        return "0";
-    }
+    // Round once, directly at the target quantum; rounding to 34 significant
+    // digits first and then again at Etiny would double-round. Rounding can
+    // only carry the adjusted exponent upward (e.g. 999 -> 1000), never lower
+    // it, so the overflow check below is exact on the rounded result.
+    const result = v.roundToExponent(targetQuantum, mode);
 
+    // Too small to round to a nonzero multiple of 10^Etiny.
     if (result.isZero()) {
         return "0";
+    }
+
+    // Above the largest finite value, round to infinity.
+    const roundedAdjustedExponent =
+        result.exponent + result.coefficient.toString().length - 1;
+    if (roundedAdjustedExponent > ADJUSTED_EXPONENT_MAX) {
+        return "Infinity";
     }
 
     return result;

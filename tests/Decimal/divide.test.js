@@ -279,6 +279,16 @@ describe("division", () => {
                 expect(small.divide(large).toString()).toStrictEqual("0");
             });
 
+            test("quotient with digits below Etiny is rounded at Etiny", () => {
+                // The exact quotient is -1.90503701E-6169, whose last digit
+                // sits one place below the Etiny quantum; rounding there
+                // gives -1.905037E-6169.
+                const quotient = new Decimal("-190503701e-6170").divide(
+                    new Decimal("1e7")
+                );
+                expect(quotient.toString()).toStrictEqual("-1.905037e-6169");
+            });
+
             test("divide subnormal by normal", () => {
                 const subnormal = new Decimal("1E-6150");
                 const normal = new Decimal("10");

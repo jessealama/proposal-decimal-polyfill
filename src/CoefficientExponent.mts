@@ -486,6 +486,62 @@ export class CoefficientExponent {
     }
 
     /**
+     * Rounds to the given exponent (quantum): the result is an integer
+     * multiple of 10^targetExponent. Like roundToSignificantDigits, the
+     * rounding mode is applied to the magnitude; callers handle sign by
+     * flipping the mode for negative values.
+     * @param {number} targetExponent - The exponent to round at
+     * @param {RoundingMode} mode - The rounding mode to use
+     * @returns {CoefficientExponent} The rounded value
+     */
+    roundToExponent(
+        targetExponent: number,
+        mode: RoundingMode
+    ): CoefficientExponent {
+        if (this._exponent >= targetExponent) {
+            return this;
+        }
+
+        const digitsToRemove = targetExponent - this._exponent;
+        const currentDigits = this._coefficient.toString().length;
+
+        if (digitsToRemove < currentDigits) {
+            return this.roundToSignificantDigits(
+                currentDigits - digitsToRemove,
+                mode
+            );
+        }
+
+        // Every significant digit sits below the target exponent, so the
+        // result is either zero or a single unit at the target exponent.
+        // Decide without constructing 10^digitsToRemove, which can be
+        // enormous: with more digits to remove than there are digits, the
+        // magnitude is under a tenth of a unit; with exactly as many,
+        // comparing against half a unit compares two coefficients of the
+        // same length.
+        const roundUp = shouldRoundAwayFromZero(
+            mode,
+            () => {
+                if (digitsToRemove > currentDigits) {
+                    return -1;
+                }
+                const half = 5n * 10n ** BigInt(currentDigits - 1);
+                if (this._coefficient < half) {
+                    return -1;
+                }
+                return this._coefficient === half ? 0 : 1;
+            },
+            () => true // rounding down yields zero, which is even
+        );
+
+        return new CoefficientExponent(
+            roundUp ? 1n : 0n,
+            targetExponent,
+            this._isNegative
+        );
+    }
+
+    /**
      * Rounds to a specified number of fractional digits.
      * @param {number} numFractionalDigits - The number of decimal places to keep
      * @param {RoundingMode} mode - The rounding mode to use
