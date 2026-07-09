@@ -59,34 +59,6 @@ function shouldRoundAwayFromZero(
 }
 
 /**
- * Apply a rounding mode to a positive CoefficientExponent value
- * This is an internal helper function corresponding to the spec's abstract operation
- */
-function ApplyRoundingModeToPositive(
-    value: CoefficientExponent,
-    mode: RoundingMode
-): CoefficientExponent {
-    const mLow = value.floor();
-    const fraction = value.subtract(mLow);
-
-    if (fraction.isZero()) {
-        return mLow;
-    }
-
-    const roundUp = shouldRoundAwayFromZero(
-        mode,
-        () => fraction.cmp(new CoefficientExponent(5n, -1, false)),
-        () => mLow.coefficient % 2n === 0n
-    );
-
-    if (roundUp) {
-        return mLow.add(new CoefficientExponent(1n, 0, false));
-    }
-
-    return mLow;
-}
-
-/**
  * Represents a decimal number as coefficient * 10^exponent
  * The coefficient is always non-negative; the sign is stored separately
  */
@@ -158,25 +130,10 @@ export class CoefficientExponent {
      * @returns {CoefficientExponent} A new instance with negated sign
      */
     negate(): CoefficientExponent {
-        if (this.isZero()) {
-            return this;
-        }
         return new CoefficientExponent(
             this._coefficient,
             this._exponent,
             !this._isNegative
-        );
-    }
-
-    /**
-     * Returns the absolute value of this CoefficientExponent.
-     * @returns {CoefficientExponent} A new instance with positive sign
-     */
-    abs(): CoefficientExponent {
-        return new CoefficientExponent(
-            this._coefficient,
-            this._exponent,
-            false
         );
     }
 
@@ -217,9 +174,6 @@ export class CoefficientExponent {
      * @throws {RangeError} If the resulting exponent overflows
      */
     scale10(n: bigint): CoefficientExponent {
-        if (this.isZero()) {
-            return this;
-        }
         const newExponent = this._exponent + Number(n);
         return new CoefficientExponent(
             this._coefficient,
@@ -400,23 +354,6 @@ export class CoefficientExponent {
     }
 
     /**
-     * Gets the floor (largest integer less than or equal to this value).
-     * @returns {CoefficientExponent} The floor value
-     */
-    floor(): CoefficientExponent {
-        // Stryker disable next-line EqualityOperator: exponent 0 produces the same value through the truncation path below (divisor 10^0 = 1)
-        if (this._exponent >= 0) {
-            return this;
-        }
-
-        const fracDigits = -this._exponent;
-        const divisor = 10n ** BigInt(fracDigits);
-        const truncatedCoeff = this._coefficient / divisor;
-
-        return new CoefficientExponent(truncatedCoeff, 0, this._isNegative);
-    }
-
-    /**
      * Checks if this value is an integer.
      * @returns {boolean} True if the value has no fractional part
      */
@@ -551,24 +488,13 @@ export class CoefficientExponent {
         numFractionalDigits: number,
         mode: RoundingMode
     ): CoefficientExponent {
-        // Scale up to have numFractionalDigits after the decimal point
-        const scaled = this.scale10(BigInt(numFractionalDigits));
-
-        // For negative numbers, we work with absolute value and adjust rounding mode
-        if (this._isNegative) {
-            const adjustedMode = flipModeForNegative(mode);
-
-            const absScaled = scaled.abs();
-            const rounded = ApplyRoundingModeToPositive(
-                absScaled,
-                adjustedMode
-            );
-            const result = rounded.scale10(-BigInt(numFractionalDigits));
-            return result.negate();
-        } else {
-            const rounded = ApplyRoundingModeToPositive(scaled, mode);
-            return rounded.scale10(-BigInt(numFractionalDigits));
-        }
+        // Keeping numFractionalDigits fractional digits is rounding at
+        // exponent -numFractionalDigits; roundToExponent applies the mode
+        // to the magnitude, so flip it here for negative values.
+        const adjustedMode = this._isNegative
+            ? flipModeForNegative(mode)
+            : mode;
+        return this.roundToExponent(-numFractionalDigits, adjustedMode);
     }
 
     /**

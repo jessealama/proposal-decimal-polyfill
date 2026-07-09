@@ -73,6 +73,9 @@ describe("toFixed", () => {
         test("impute precision to an integer", () => {
             expectDecimal128(new Decimal("42").toFixed({ digits: 1 }), "42.0");
         });
+        test("halfEven tie whose even neighbor ends in a trailing zero", () => {
+            expectDecimal128(new Decimal("10.5").toFixed({ digits: 0 }), "10");
+        });
         test("negative number of decimal places throws", () => {
             expect(() => decimalD.toFixed({ digits: -1 })).toThrow(RangeError);
             expect(() => decimalD.toFixed({ digits: -1 })).toThrow(
