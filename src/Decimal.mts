@@ -574,9 +574,10 @@ export class Decimal {
 
         let s = this.abs().#emitExponential();
 
-        let [lhs, rhsWithEsign] = s.split(/[.]/);
+        let [mantissa, exp] = s.split(/[eE]/);
 
-        let [rhs, exp] = rhsWithEsign.split(/[eE]/);
+        // A single-digit mantissa has no fraction part (e.g. "7e+0").
+        let [lhs, rhs = ""] = mantissa.split(/[.]/);
 
         let p = this.isNegative() ? "-" : "";
 

@@ -142,6 +142,41 @@ describe("toExponential", () => {
         });
     });
 
+    // A single-digit mantissa renders without a fraction part ("7e+0"),
+    // which the digits code path must handle (issue #99).
+    describe("single-digit mantissa with digits requested", () => {
+        test("single digit", () => {
+            expect(new Decimal("7").toExponential({ digits: 2 })).toStrictEqual(
+                "7.00e+0"
+            );
+        });
+        test("zero", () => {
+            expect(new Decimal("0").toExponential({ digits: 3 })).toStrictEqual(
+                "0.000e+0"
+            );
+        });
+        test("negative zero", () => {
+            expect(
+                new Decimal("-0").toExponential({ digits: 3 })
+            ).toStrictEqual("-0.000e+0");
+        });
+        test("negative single digit", () => {
+            expect(
+                new Decimal("-7").toExponential({ digits: 2 })
+            ).toStrictEqual("-7.00e+0");
+        });
+        test("power of ten", () => {
+            expect(
+                new Decimal("100").toExponential({ digits: 2 })
+            ).toStrictEqual("1.00e+2");
+        });
+        test("negative power of ten exponent", () => {
+            expect(
+                new Decimal("0.001").toExponential({ digits: 2 })
+            ).toStrictEqual("1.00e-3");
+        });
+    });
+
     // Subnormal values must expose their true exponent down to Etiny
     // (-6176) rather than being clamped to Emin (-6143).
     describe("subnormal range", () => {
