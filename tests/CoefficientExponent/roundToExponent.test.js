@@ -1,6 +1,5 @@
 import { CoefficientExponent } from "../../src/CoefficientExponent.mjs";
-
-const ROUNDING_MODES = ["ceil", "floor", "trunc", "halfEven", "halfExpand"];
+import { ROUNDING_MODE_CEILING, ROUNDING_MODES } from "../../src/Rounding.mjs";
 
 describe("roundToExponent", () => {
     describe("zero at a positive target exponent", () => {
@@ -16,7 +15,7 @@ describe("roundToExponent", () => {
         test("negative zero stays zero under ceil", () => {
             expect(
                 CoefficientExponent.from("-0")
-                    .roundToExponent(2, "ceil")
+                    .roundToExponent(2, ROUNDING_MODE_CEILING)
                     .toString()
             ).toStrictEqual("-0");
         });
