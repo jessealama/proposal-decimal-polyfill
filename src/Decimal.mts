@@ -311,8 +311,14 @@ export class Decimal {
      * Scales this Decimal128 value by 10^n.
      * This operation multiplies the value by 10 raised to the power of n.
      *
+     * The mathematical result is rounded to the Decimal128 domain: results
+     * above the largest finite value overflow to Infinity, results too small
+     * to represent underflow to zero, and subnormal results are quantized
+     * at 10^-6176.
+     *
      * @param {number} n The power of 10 to scale by (must be an integer)
-     * @returns {Decimal} A new Decimal value equal to this * 10^n
+     * @returns {Decimal} A new Decimal value equal to this * 10^n, rounded
+     *   to the Decimal128 domain
      * @throws {RangeError} If this value is NaN
      * @throws {RangeError} If this value is infinite
      * @throws {TypeError} If n is not an integer
@@ -340,7 +346,11 @@ export class Decimal {
             return this.#clone();
         }
 
-        return new Decimal(v.scale10(BigInt(n)));
+        let rounded = RoundToDecimal128Domain(
+            v.scale10(BigInt(n))
+        ) as CoefficientExponent;
+
+        return new Decimal(rounded);
     }
 
     #emitExponential(): string {
