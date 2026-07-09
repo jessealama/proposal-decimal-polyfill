@@ -572,19 +572,24 @@ export class Decimal {
             throw new RangeError("Argument must be an integer");
         }
 
-        let s = this.abs().#emitExponential();
-
-        let [lhs, rhsWithEsign] = s.split(/[.]/);
-
-        let [rhs, exp] = rhsWithEsign.split(/[eE]/);
-
         let p = this.isNegative() ? "-" : "";
 
-        if (rhs.length <= n) {
-            return p + lhs + "." + rhs + "0".repeat(n - rhs.length) + "e" + exp;
+        if (this.isZero()) {
+            return p + "0." + "0".repeat(n) + "e+0";
         }
 
-        return p + lhs + "." + rhs.substring(0, n) + "e" + exp;
+        let m = this.abs().mantissa();
+        let e = this.exponent();
+
+        let rounded = m.round(n);
+
+        if (rounded.exponent() === 1) {
+            // Rounding carried the mantissa out of [1, 10).
+            rounded = rounded.scale10(-1);
+            e += 1;
+        }
+
+        return p + rounded.toFixed({ digits: n }) + formatExponent(e);
     }
 
     #isInteger(): boolean {
