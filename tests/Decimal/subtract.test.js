@@ -62,8 +62,14 @@ describe("subtract", () => {
     describe("zero", () => {
         let d = new Decimal("42.65");
         let zero = POSITIVE_ZERO;
+        let minusZero = NEGATIVE_ZERO;
         test("difference is zero", () => {
             expect(d.subtract(d).toString()).toStrictEqual("0");
+        });
+        test("exact cancellation is minus zero when rounding toward negative", () => {
+            expect(
+                d.subtract(d, { roundingMode: "floor" }).toString()
+            ).toStrictEqual("-0");
         });
         test("subtracting zero", () => {
             expect(d.subtract(zero).toString()).toStrictEqual("42.65");
@@ -71,12 +77,43 @@ describe("subtract", () => {
         test("subtracting zero", () => {
             expect(zero.subtract(d).toString()).toStrictEqual("-42.65");
         });
+        test("zero minus zero", () => {
+            expect(zero.subtract(zero).toString()).toStrictEqual("0");
+        });
+        test("minus zero minus minus zero", () => {
+            expect(minusZero.subtract(minusZero).toString()).toStrictEqual("0");
+        });
+        test("like-signed zeros are minus zero when rounding toward negative", () => {
+            expect(
+                zero.subtract(zero, { roundingMode: "floor" }).toString()
+            ).toStrictEqual("-0");
+            expect(
+                minusZero
+                    .subtract(minusZero, { roundingMode: "floor" })
+                    .toString()
+            ).toStrictEqual("-0");
+        });
     });
     describe("minus zero", () => {
         let x = new Decimal("42.54");
+        let zero = POSITIVE_ZERO;
         let minusZero = NEGATIVE_ZERO;
         test("subtracting minus zero", () => {
             expect(x.subtract(minusZero).toString()).toStrictEqual("42.54");
+        });
+        test("zero minus minus zero", () => {
+            expect(zero.subtract(minusZero).toString()).toStrictEqual("0");
+        });
+        test("minus zero minus zero", () => {
+            expect(minusZero.subtract(zero).toString()).toStrictEqual("-0");
+        });
+        test("x minus negated x keeps the sign of x even when rounding toward negative", () => {
+            expect(
+                zero.subtract(minusZero, { roundingMode: "floor" }).toString()
+            ).toStrictEqual("0");
+            expect(
+                minusZero.subtract(zero, { roundingMode: "floor" }).toString()
+            ).toStrictEqual("-0");
         });
     });
 
@@ -252,13 +289,13 @@ describe("subtract", () => {
 
             test("subtraction resulting in underflow", () => {
                 const tiny = new Decimal("1E-6180");
-                // Both underflow to zero, result is -0 because second operand determines sign
-                expect(tiny.subtract(tiny).toString()).toStrictEqual("-0");
+                // Both underflow to zero on construction, and 0 - 0 = 0
+                expect(tiny.subtract(tiny).toString()).toStrictEqual("0");
 
-                // Different tiny values - both underflow to 0, so 0 - 0 = -0
+                // Different tiny values - both underflow to 0, so 0 - 0 = 0
                 const tiny1 = new Decimal("2E-6180");
                 const tiny2 = new Decimal("1E-6180");
-                expect(tiny1.subtract(tiny2).toString()).toStrictEqual("-0");
+                expect(tiny1.subtract(tiny2).toString()).toStrictEqual("0");
             });
         });
 
