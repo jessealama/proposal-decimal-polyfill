@@ -445,6 +445,13 @@ export class CoefficientExponent {
         targetExponent: number,
         mode: RoundingMode
     ): CoefficientExponent {
+        // Zero is a multiple of every 10^t; without this check it would
+        // fall into the all-digits-below-target path, where ceil rounds
+        // away from zero and would produce 10^t.
+        if (this.isZero()) {
+            return this;
+        }
+
         if (this._exponent >= targetExponent) {
             return this;
         }
