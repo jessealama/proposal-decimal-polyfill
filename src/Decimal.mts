@@ -617,10 +617,7 @@ export class Decimal {
             return 0n;
         }
 
-        // The coefficient is normalized (no trailing zeros), so an integer
-        // necessarily has a non-negative exponent.
-        let scaled = v.coefficient * 10n ** BigInt(v.exponent);
-        return v.isNegative ? -scaled : scaled;
+        return v.toBigInt();
     }
 
     /**
