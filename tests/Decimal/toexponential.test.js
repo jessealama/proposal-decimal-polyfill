@@ -56,15 +56,15 @@ describe("toExponential", () => {
         expectDecimal128(decimalD.toExponential({ digits: 5 }), "1.23456e+2");
     });
     test("possibly round non-integer part (2)", () => {
-        expectDecimal128(decimalD.toExponential({ digits: 4 }), "1.2345e+2");
+        expectDecimal128(decimalD.toExponential({ digits: 4 }), "1.2346e+2");
     });
-    test("same number of digits as available means no change", () => {
-        expectDecimal128(decimalD.toExponential({ digits: 3 }), "1.234e+2");
+    test("fewer digits requested than available rounds (1)", () => {
+        expectDecimal128(decimalD.toExponential({ digits: 3 }), "1.235e+2");
     });
-    test("cutoff if number has more digits than requested (1)", () => {
+    test("fewer digits requested than available rounds (2)", () => {
         expectDecimal128(decimalD.toExponential({ digits: 2 }), "1.23e+2");
     });
-    test("cutoff if number has more digits than requested (2)", () => {
+    test("fewer digits requested than available rounds (3)", () => {
         expectDecimal128(decimalD.toExponential({ digits: 1 }), "1.2e+2");
     });
     test("zero decimal places throws", () => {
@@ -90,8 +90,48 @@ describe("toExponential", () => {
         let negD = decimalD.negate();
         test("integer part", () => {
             expect(negD.toExponential({ digits: 3 }).toString()).toStrictEqual(
-                "-1.234e+2"
+                "-1.235e+2"
             );
+        });
+    });
+
+    // Excess mantissa digits are rounded (half-even, like toFixed and
+    // toPrecision), not truncated.
+    describe("rounding, not truncation", () => {
+        test("rounds up when the first dropped digit is large", () => {
+            expect(
+                new Decimal("1.789").toExponential({ digits: 1 })
+            ).toStrictEqual("1.8e+0");
+        });
+        test("tie rounds to even (down)", () => {
+            expect(
+                new Decimal("1.25").toExponential({ digits: 1 })
+            ).toStrictEqual("1.2e+0");
+        });
+        test("tie rounds to even (up)", () => {
+            expect(
+                new Decimal("1.35").toExponential({ digits: 1 })
+            ).toStrictEqual("1.4e+0");
+        });
+        test("tie at a later digit rounds to even", () => {
+            expect(
+                new Decimal("1.005").toExponential({ digits: 2 })
+            ).toStrictEqual("1.00e+0");
+        });
+        test("carry renormalizes the mantissa", () => {
+            expect(
+                new Decimal("9.99").toExponential({ digits: 1 })
+            ).toStrictEqual("1.0e+1");
+        });
+        test("negative carry renormalizes the mantissa", () => {
+            expect(
+                new Decimal("-9.99").toExponential({ digits: 1 })
+            ).toStrictEqual("-1.0e+1");
+        });
+        test("negative exponent", () => {
+            expect(
+                new Decimal("0.0001999").toExponential({ digits: 2 })
+            ).toStrictEqual("2.00e-4");
         });
     });
     test("one", () => {
