@@ -63,4 +63,25 @@ describe("toBigInt", () => {
             expect(new Decimal("-123").toBigInt()).toStrictEqual(-123n);
         });
     });
+    describe("large integers", () => {
+        test("10^21 (where toString switches to exponential notation)", () => {
+            expect(new Decimal(10n ** 21n).toBigInt()).toStrictEqual(
+                10n ** 21n
+            );
+        });
+        test("-10^21", () => {
+            expect(new Decimal(-(10n ** 21n)).toBigInt()).toStrictEqual(
+                -(10n ** 21n)
+            );
+        });
+        test("full 34-digit coefficient scaled far above 10^21", () => {
+            let big = BigInt("9".repeat(34)) * 10n ** 100n;
+            expect(new Decimal(big).toBigInt()).toStrictEqual(big);
+        });
+        test("largest power of ten in the Decimal128 range", () => {
+            expect(new Decimal("1e6144").toBigInt()).toStrictEqual(
+                10n ** 6144n
+            );
+        });
+    });
 });

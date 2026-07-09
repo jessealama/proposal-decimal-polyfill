@@ -611,7 +611,13 @@ export class Decimal {
             );
         }
 
-        return BigInt(this.toString());
+        let v = this.#d as FiniteValue;
+
+        if (v === "0" || v === "-0") {
+            return 0n;
+        }
+
+        return v.toBigInt();
     }
 
     /**

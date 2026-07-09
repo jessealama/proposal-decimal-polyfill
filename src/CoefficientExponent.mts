@@ -287,6 +287,16 @@ export class CoefficientExponent {
     }
 
     /**
+     * Converts this value to a BigInt. Only valid for integers: the
+     * coefficient is normalized (no trailing zeros), so an integer
+     * necessarily has a non-negative exponent.
+     * @returns {bigint} This value as a BigInt
+     */
+    toBigInt(): bigint {
+        return this.signedCoefficientAt(0);
+    }
+
+    /**
      * Adds two CoefficientExponent values.
      * @param {CoefficientExponent} other - The value to add
      * @returns {CoefficientExponent} The sum of the two values
