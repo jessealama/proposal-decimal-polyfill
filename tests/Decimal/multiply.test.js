@@ -296,6 +296,15 @@ describe("multiply", () => {
                 expect(small1.multiply(small2).toString()).toStrictEqual("-0");
             });
 
+            test("product with digits below Etiny is rounded at Etiny", () => {
+                // The exact product is -1.0008E-6176, whose last digit sits
+                // below the Etiny quantum; rounding there gives -1E-6176.
+                const product = new Decimal("1251e-3090").multiply(
+                    new Decimal("-8e-3090")
+                );
+                expect(product.toString()).toStrictEqual("-1e-6176");
+            });
+
             test("multiply subnormal values", () => {
                 const sub1 = new Decimal("1E-6150");
                 const sub2 = new Decimal("1E+10");

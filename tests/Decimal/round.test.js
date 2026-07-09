@@ -397,6 +397,32 @@ describe("round", () => {
         });
     });
 
+    describe("halfEven ties whose even neighbor ends in a trailing zero", () => {
+        test("10.5 rounds down to 10", () => {
+            expect(
+                new Decimal("10.5").round(0, "halfEven").toString()
+            ).toStrictEqual("10");
+        });
+        test("-10.5 rounds up to -10", () => {
+            expect(
+                new Decimal("-10.5").round(0, "halfEven").toString()
+            ).toStrictEqual("-10");
+        });
+        test("1.05 rounds down to 1.0 at one decimal place", () => {
+            expect(
+                new Decimal("1.05").round(1, "halfEven").toString()
+            ).toStrictEqual("1");
+        });
+        test("10.5 rounds down to 10 under the default mode", () => {
+            expect(new Decimal("10.5").round(0).toString()).toStrictEqual("10");
+        });
+        test("30.5 rounds down to 30", () => {
+            expect(
+                new Decimal("30.5").round(0, "halfEven").toString()
+            ).toStrictEqual("30");
+        });
+    });
+
     describe("edge cases for Decimal128 limits", () => {
         describe("rounding at extreme values", () => {
             test("round maximum value", () => {
