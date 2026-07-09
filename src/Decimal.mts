@@ -31,10 +31,7 @@ const ADJUSTED_EXPONENT_MAX = 6144;
 // The smallest quantum exponent of a finite Decimal128 value (Etiny = Emin -
 // (precision - 1)). Unlike Emax, which bounds the position of the *leading*
 // significant digit, Etiny bounds the position of the *trailing* one: every
-// finite Decimal128 value is an integer multiple of 10^Etiny. Results with
-// digits below this quantum are rounded at it, so precision shrinks as the
-// leading digit approaches Etiny (gradual underflow), and values too small to
-// round to a nonzero multiple of 10^Etiny become zero.
+// finite Decimal128 value is an integer multiple of 10^Etiny.
 const TINY_EXPONENT_MIN = NORMAL_EXPONENT_MIN - (MAX_SIGNIFICANT_DIGITS - 1);
 
 type NaNValue = "NaN";
@@ -62,11 +59,9 @@ function RoundToDecimal128Domain(
 
         let d = RoundToDecimal128Domain(v.negate(), reverseRoundingMode);
 
-        /* c8 ignore start */
         if (d === "Infinity") {
             return "-Infinity";
         }
-        /* c8 ignore end */
 
         if (d === "0") {
             return "-0";
