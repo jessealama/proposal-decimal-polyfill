@@ -632,8 +632,8 @@ export class Decimal {
             return p + "0." + "0".repeat(n) + "e+0";
         }
 
-        // Round the signed mantissa so that directed modes (ceil, floor)
-        // act on the value, not its magnitude; render the absolute value.
+        // Round before taking the absolute value so that directed modes
+        // (ceil, floor) see the sign.
         let rounded = this.mantissa().round({ digits: n, roundingMode }).abs();
         let e = this.exponent();
 

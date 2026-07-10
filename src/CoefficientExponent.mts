@@ -377,6 +377,12 @@ export class CoefficientExponent {
         return this._coefficient % divisor === 0n;
     }
 
+    // Directed modes act on the value, but the digit-level rounding here
+    // works on the magnitude, so flip them for negative values.
+    #modeForMagnitude(mode: RoundingMode): RoundingMode {
+        return this._isNegative ? flipModeForNegative(mode) : mode;
+    }
+
     /**
      * Rounds to a specified number of significant digits.
      * @param {number} numSignificantDigits - The number of significant digits to keep
@@ -415,7 +421,7 @@ export class CoefficientExponent {
             );
 
             const roundUp = shouldRoundAwayFromZero(
-                mode,
+                this.#modeForMagnitude(mode),
                 () => fraction.cmp(halfUnit),
                 () => quotient % 2n === 0n
             );
@@ -434,9 +440,7 @@ export class CoefficientExponent {
 
     /**
      * Rounds to the given exponent (quantum): the result is an integer
-     * multiple of 10^targetExponent. Like roundToSignificantDigits, the
-     * rounding mode is applied to the magnitude; callers handle sign by
-     * flipping the mode for negative values.
+     * multiple of 10^targetExponent.
      * @param {number} targetExponent - The exponent to round at
      * @param {RoundingMode} mode - The rounding mode to use
      * @returns {CoefficientExponent} The rounded value
@@ -474,7 +478,7 @@ export class CoefficientExponent {
         // comparing against half a unit compares two coefficients of the
         // same length.
         const roundUp = shouldRoundAwayFromZero(
-            mode,
+            this.#modeForMagnitude(mode),
             () => {
                 if (digitsToRemove > currentDigits) {
                     return -1;
@@ -505,13 +509,7 @@ export class CoefficientExponent {
         numFractionalDigits: number,
         mode: RoundingMode
     ): CoefficientExponent {
-        // Keeping numFractionalDigits fractional digits is rounding at
-        // exponent -numFractionalDigits; roundToExponent applies the mode
-        // to the magnitude, so flip it here for negative values.
-        const adjustedMode = this._isNegative
-            ? flipModeForNegative(mode)
-            : mode;
-        return this.roundToExponent(-numFractionalDigits, adjustedMode);
+        return this.roundToExponent(-numFractionalDigits, mode);
     }
 
     /**
@@ -522,12 +520,7 @@ export class CoefficientExponent {
      * @throws {RangeError} If digits is not positive or not an integer
      */
     toPrecision(digits: number, mode: RoundingMode): string {
-        // roundToSignificantDigits applies the mode to the magnitude, so
-        // flip directed modes for negative values (as round does above).
-        const adjustedMode = this._isNegative
-            ? flipModeForNegative(mode)
-            : mode;
-        const rounded = this.roundToSignificantDigits(digits, adjustedMode);
+        const rounded = this.roundToSignificantDigits(digits, mode);
 
         // Calculate the effective exponent (where decimal point would be after the first digit)
         const coeffStr = rounded._coefficient.toString();
