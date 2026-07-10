@@ -67,11 +67,8 @@ describe("toExponential", () => {
     test("fewer digits requested than available rounds (3)", () => {
         expectDecimal128(decimalD.toExponential({ digits: 1 }), "1.2e+2");
     });
-    test("zero decimal places throws", () => {
-        expect(() => decimalD.toExponential({ digits: 0 })).toThrow(RangeError);
-        expect(() => decimalD.toExponential({ digits: 0 })).toThrow(
-            "Argument must be positive"
-        );
+    test("zero decimal places rounds the mantissa to an integer", () => {
+        expect(decimalD.toExponential({ digits: 0 })).toStrictEqual("1e+2");
     });
     test("negative number of decimal places", () => {
         expect(() => decimalD.toExponential({ digits: -1 })).toThrow(
@@ -83,7 +80,7 @@ describe("toExponential", () => {
             RangeError
         );
         expect(() => decimalD.toExponential({ digits: 1.5 })).toThrow(
-            "Argument must be an integer"
+            "digits must be an integer"
         );
     });
     describe("negative", () => {
@@ -235,5 +232,73 @@ describe("toExponential", () => {
                 "-1.5e-6160"
             );
         });
+    });
+});
+
+describe("digits: 0 (Number precedent)", () => {
+    test("rounds mantissa to an integer", () => {
+        expect(new Decimal("1.25").toExponential({ digits: 0 })).toStrictEqual(
+            "1e+0"
+        );
+    });
+    test("zero", () => {
+        expect(new Decimal("0").toExponential({ digits: 0 })).toStrictEqual(
+            "0e+0"
+        );
+    });
+    test("carry out of the mantissa range", () => {
+        expect(new Decimal("9.9").toExponential({ digits: 0 })).toStrictEqual(
+            "1e+1"
+        );
+    });
+});
+
+describe("roundingMode", () => {
+    test("default is halfEven", () => {
+        expect(
+            new Decimal("1.25e5").toExponential({ digits: 1 })
+        ).toStrictEqual("1.2e+5");
+    });
+    test("halfExpand", () => {
+        expect(
+            new Decimal("1.25e5").toExponential({
+                digits: 1,
+                roundingMode: "halfExpand",
+            })
+        ).toStrictEqual("1.3e+5");
+    });
+    test("ceil on a negative value rounds toward zero", () => {
+        expect(
+            new Decimal("-1.29e5").toExponential({
+                digits: 1,
+                roundingMode: "ceil",
+            })
+        ).toStrictEqual("-1.2e+5");
+    });
+    test("floor on a negative value rounds away from zero", () => {
+        expect(
+            new Decimal("-1.21e5").toExponential({
+                digits: 1,
+                roundingMode: "floor",
+            })
+        ).toStrictEqual("-1.3e+5");
+    });
+    test("carry after directed rounding", () => {
+        expect(
+            new Decimal("9.99").toExponential({
+                digits: 1,
+                roundingMode: "ceil",
+            })
+        ).toStrictEqual("1.0e+1");
+    });
+    test("invalid roundingMode throws RangeError", () => {
+        expect(() =>
+            new Decimal("1.25").toExponential({ roundingMode: "bogus" })
+        ).toThrow(RangeError);
+    });
+    test("options are validated even for NaN receivers", () => {
+        expect(() => new Decimal("NaN").toExponential("junk")).toThrow(
+            TypeError
+        );
     });
 });

@@ -591,16 +591,25 @@ export class Decimal {
      *
      * @param {Object} [opts] Optional configuration object
      * @param {number} [opts.digits] The number of digits after the decimal point in the mantissa.
-     *   Must be a positive integer.
+     *   Must be a non-negative integer. If omitted, uses as many digits as needed.
+     * @param {RoundingMode} [opts.roundingMode] The rounding mode to use if the mantissa
+     *   has more fractional digits than requested. Defaults to "halfEven".
      * @returns {string} The string representation in exponential notation
-     * @throws {TypeError} If opts is not an object
-     * @throws {RangeError} If digits is not a positive integer
+     * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
+     * @throws {RangeError} If digits is negative, not an integer, or too large, or roundingMode is invalid
      *
      * @ensures{honorsRequestedDigits} forall (x: number) (n: nat),
      *   Number.isFinite(x) →
      *     new Decimal(x).toExponential({ digits: 1 + (n % 30) }).split("e")[0].split(".")[1].length === 1 + (n % 30)
      */
-    toExponential(opts?: { digits?: number }): string {
+    toExponential(opts?: {
+        digits?: number;
+        roundingMode?: RoundingMode;
+    }): string {
+        const bag = ensureOptionsBag(opts);
+        const roundingMode = readRoundingMode(bag);
+        const n = readDigits(bag);
+
         if (this.isNaN()) {
             return "NaN";
         }
@@ -609,38 +618,24 @@ export class Decimal {
             return (this.isNegative() ? "-" : "") + "Infinity";
         }
 
-        if (undefined === opts) {
+        if (undefined === n) {
             return this.#emitExponential();
-        }
-
-        if ("object" !== typeof opts) {
-            throw new TypeError("Argument must be an object");
-        }
-
-        if (undefined === opts.digits) {
-            return this.#emitExponential();
-        }
-
-        let n = opts.digits;
-
-        if (n <= 0) {
-            throw new RangeError("Argument must be positive");
-        }
-
-        if (!Number.isInteger(n)) {
-            throw new RangeError("Argument must be an integer");
         }
 
         let p = this.isNegative() ? "-" : "";
 
         if (this.isZero()) {
+            if (n === 0) {
+                return p + "0e+0";
+            }
+
             return p + "0." + "0".repeat(n) + "e+0";
         }
 
-        let m = this.abs().mantissa();
+        // Round the signed mantissa so that directed modes (ceil, floor)
+        // act on the value, not its magnitude; render the absolute value.
+        let rounded = this.mantissa().round({ digits: n, roundingMode }).abs();
         let e = this.exponent();
-
-        let rounded = m.round({ digits: n });
 
         if (rounded.exponent() === 1) {
             // Rounding carried the mantissa out of [1, 10).
