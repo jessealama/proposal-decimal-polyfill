@@ -520,22 +520,20 @@ export class Decimal {
                 : POSITIVE_INFINITY;
         }
 
-        let rounded = this.round({ digits: n, roundingMode });
-        let roundedRendered = rounded.#emitDecimal();
+        return this.#round(n, roundingMode).#emitFixed(n);
+    }
 
-        if (roundedRendered.match(/[.]/)) {
-            let [lhs, rhs] = roundedRendered.split(/[.]/);
-            let numFractionDigits = rhs.length;
-            if (numFractionDigits <= n) {
-                return lhs + "." + rhs + "0".repeat(n - numFractionDigits);
-            }
+    // Fixed-point rendering with exactly n fractional digits; assumes the
+    // value has at most n of them.
+    #emitFixed(n: number): string {
+        const rendered = this.#emitDecimal();
+        const [lhs, rhs] = rendered.split(".");
+
+        if (undefined === rhs) {
+            return 0 === n ? rendered : rendered + "." + "0".repeat(n);
         }
 
-        if (n === 0) {
-            return roundedRendered;
-        }
-
-        return roundedRendered + "." + "0".repeat(n);
+        return lhs + "." + rhs + "0".repeat(n - rhs.length);
     }
 
     /**
@@ -634,7 +632,7 @@ export class Decimal {
 
         // Round before taking the absolute value so that directed modes
         // (ceil, floor) see the sign.
-        let rounded = this.mantissa().round({ digits: n, roundingMode }).abs();
+        let rounded = this.mantissa().#round(n, roundingMode).abs();
         let e = this.exponent();
 
         if (rounded.exponent() === 1) {
@@ -643,7 +641,7 @@ export class Decimal {
             e += 1;
         }
 
-        return p + rounded.toFixed({ digits: n }) + formatExponent(e);
+        return p + rounded.#emitFixed(n) + formatExponent(e);
     }
 
     #isInteger(): boolean {
@@ -1235,6 +1233,10 @@ export class Decimal {
         const mode = readRoundingMode(bag);
         const numFractionalDigits = readDigits(bag) ?? 0;
 
+        return this.#round(numFractionalDigits, mode);
+    }
+
+    #round(numFractionalDigits: number, mode: RoundingMode): Decimal {
         if (this.isNaN() || !this.isFinite()) {
             return this.#clone();
         }
