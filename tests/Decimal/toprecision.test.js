@@ -109,7 +109,7 @@ describe("toPrecision", () => {
                 RangeError
             );
             expect(() => d.toPrecision({ digits: -42 }).toString()).toThrow(
-                "digits must be non-negative"
+                "digits must be positive"
             );
         });
         test("zero number of digits requested", () => {

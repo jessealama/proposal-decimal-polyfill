@@ -62,7 +62,10 @@ function ensureOptionsBag(opts: unknown): OptionsBag | undefined {
     return opts as OptionsBag;
 }
 
-function readDigits(bag: OptionsBag | undefined): number | undefined {
+function readDigits(
+    bag: OptionsBag | undefined,
+    minimum: 0 | 1 = 0
+): number | undefined {
     if (undefined === bag || undefined === bag.digits) {
         return undefined;
     }
@@ -77,8 +80,12 @@ function readDigits(bag: OptionsBag | undefined): number | undefined {
         throw new RangeError("digits must be an integer");
     }
 
-    if (digits < 0) {
-        throw new RangeError("digits must be non-negative");
+    if (digits < minimum) {
+        throw new RangeError(
+            0 === minimum
+                ? "digits must be non-negative"
+                : "digits must be positive"
+        );
     }
 
     if (digits > MAX_REQUESTED_DIGITS) {
@@ -549,14 +556,10 @@ export class Decimal {
     }): string {
         const bag = ensureOptionsBag(opts);
         const roundingMode = readRoundingMode(bag);
-        const precision = readDigits(bag);
+        const precision = readDigits(bag, 1);
 
         if (undefined === precision) {
             return this.toString();
-        }
-
-        if (0 === precision) {
-            throw new RangeError("digits must be positive");
         }
 
         if (this.isNaN()) {
