@@ -6,6 +6,7 @@ import {
     POSITIVE_ZERO,
     NEGATIVE_ZERO,
 } from "./special-values.js";
+import { describeOptionsBagValidation } from "./util.js";
 
 let posZero = POSITIVE_ZERO;
 let negZero = NEGATIVE_ZERO;
@@ -430,21 +431,4 @@ describe("multiply", () => {
     });
 });
 
-describe("options bag validation", () => {
-    let a = new Decimal("1");
-    let b = new Decimal("2");
-    test("non-object options throws TypeError", () => {
-        expect(() => a.multiply(b, "ceil")).toThrow(TypeError);
-    });
-    test("non-string roundingMode throws TypeError", () => {
-        expect(() => a.multiply(b, { roundingMode: 42 })).toThrow(TypeError);
-    });
-    test("invalid roundingMode string throws RangeError", () => {
-        expect(() => a.multiply(b, { roundingMode: "bogus" })).toThrow(
-            RangeError
-        );
-    });
-    test("unknown keys are ignored", () => {
-        expect(a.multiply(b, { digits: 1 }).toString()).toStrictEqual("2");
-    });
-});
+describeOptionsBagValidation("multiply", "2");

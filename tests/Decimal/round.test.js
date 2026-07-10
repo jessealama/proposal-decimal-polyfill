@@ -74,7 +74,7 @@ describe("round", () => {
     test("negative integer", () => {
         expect(new Decimal("-42").round().toString()).toStrictEqual("-42");
     });
-    test("negative number of digits requested is truncation", () => {
+    test("negative number of digits requested throws", () => {
         expect(() => new Decimal("1.5").round({ digits: -42 })).toThrow(
             RangeError
         );

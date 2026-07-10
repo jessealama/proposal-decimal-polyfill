@@ -6,7 +6,7 @@ import {
     POSITIVE_ZERO,
     NEGATIVE_ZERO,
 } from "./special-values.js";
-import { expectDecimal128 } from "./util.js";
+import { describeOptionsBagValidation, expectDecimal128 } from "./util.js";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 let bigDigits = "9".repeat(MAX_SIGNIFICANT_DIGITS);
@@ -370,21 +370,4 @@ describe("subtract", () => {
     });
 });
 
-describe("options bag validation", () => {
-    let a = new Decimal("1");
-    let b = new Decimal("2");
-    test("non-object options throws TypeError", () => {
-        expect(() => a.subtract(b, "ceil")).toThrow(TypeError);
-    });
-    test("non-string roundingMode throws TypeError", () => {
-        expect(() => a.subtract(b, { roundingMode: 42 })).toThrow(TypeError);
-    });
-    test("invalid roundingMode string throws RangeError", () => {
-        expect(() => a.subtract(b, { roundingMode: "bogus" })).toThrow(
-            RangeError
-        );
-    });
-    test("unknown keys are ignored", () => {
-        expect(a.subtract(b, { digits: 1 }).toString()).toStrictEqual("-1");
-    });
-});
+describeOptionsBagValidation("subtract", "-1");

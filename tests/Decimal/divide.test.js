@@ -6,6 +6,7 @@ import {
     POSITIVE_ZERO,
     NEGATIVE_ZERO,
 } from "./special-values.js";
+import { describeOptionsBagValidation } from "./util.js";
 
 describe("division", () => {
     test("simple example", () => {
@@ -443,21 +444,4 @@ describe("division", () => {
     });
 });
 
-describe("options bag validation", () => {
-    let a = new Decimal("1");
-    let b = new Decimal("2");
-    test("non-object options throws TypeError", () => {
-        expect(() => a.divide(b, "ceil")).toThrow(TypeError);
-    });
-    test("non-string roundingMode throws TypeError", () => {
-        expect(() => a.divide(b, { roundingMode: 42 })).toThrow(TypeError);
-    });
-    test("invalid roundingMode string throws RangeError", () => {
-        expect(() => a.divide(b, { roundingMode: "bogus" })).toThrow(
-            RangeError
-        );
-    });
-    test("unknown keys are ignored", () => {
-        expect(a.divide(b, { digits: 1 }).toString()).toStrictEqual("0.5");
-    });
-});
+describeOptionsBagValidation("divide", "0.5");
