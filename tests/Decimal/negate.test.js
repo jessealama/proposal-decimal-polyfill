@@ -45,7 +45,7 @@ describe("negate", () => {
     });
     test("limit of digits", () => {
         expect(
-            new Decimal("-" + bigDigits).negate().toFixed({ digits: Infinity })
+            new Decimal("-" + bigDigits).negate().toFixed({ digits: 0 })
         ).toStrictEqual(bigDigits);
     });
 });

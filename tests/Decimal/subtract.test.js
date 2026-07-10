@@ -6,7 +6,7 @@ import {
     POSITIVE_ZERO,
     NEGATIVE_ZERO,
 } from "./special-values.js";
-import { expectDecimal128 } from "./util.js";
+import { describeOptionsBagValidation, expectDecimal128 } from "./util.js";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 let bigDigits = "9".repeat(MAX_SIGNIFICANT_DIGITS);
@@ -369,3 +369,5 @@ describe("subtract", () => {
         });
     });
 });
+
+describeOptionsBagValidation("subtract", "-1");

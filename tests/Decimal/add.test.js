@@ -6,6 +6,7 @@ import {
     POSITIVE_ZERO,
     NEGATIVE_ZERO,
 } from "./special-values.js";
+import { describeOptionsBagValidation } from "./util.js";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 const bigDigits = "9".repeat(MAX_SIGNIFICANT_DIGITS);
@@ -307,3 +308,5 @@ describe("addition", () => {
         });
     });
 });
+
+describeOptionsBagValidation("add", "3");

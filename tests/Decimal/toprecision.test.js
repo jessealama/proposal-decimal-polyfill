@@ -101,7 +101,7 @@ describe("toPrecision", () => {
                 RangeError
             );
             expect(() => d.toPrecision({ digits: 1.72 }).toString()).toThrow(
-                "Argument must be an integer"
+                "digits must be an integer"
             );
         });
         test("negative integer number of digits requested", () => {
@@ -109,7 +109,7 @@ describe("toPrecision", () => {
                 RangeError
             );
             expect(() => d.toPrecision({ digits: -42 }).toString()).toThrow(
-                "Argument must be positive"
+                "digits must be positive"
             );
         });
         test("zero number of digits requested", () => {
@@ -117,7 +117,7 @@ describe("toPrecision", () => {
                 RangeError
             );
             expect(() => d.toPrecision({ digits: 0 }).toString()).toThrow(
-                "Argument must be positive"
+                "digits must be positive"
             );
         });
     });
@@ -333,5 +333,63 @@ describe("toPrecision", () => {
                 });
             });
         });
+    });
+});
+
+describe("roundingMode", () => {
+    test("default is halfEven", () => {
+        expect(new Decimal("1.25").toPrecision({ digits: 2 })).toStrictEqual(
+            "1.2"
+        );
+    });
+    test("halfExpand", () => {
+        expect(
+            new Decimal("1.25").toPrecision({
+                digits: 2,
+                roundingMode: "halfExpand",
+            })
+        ).toStrictEqual("1.3");
+    });
+    test("ceil on a positive value rounds up", () => {
+        expect(
+            new Decimal("1.21").toPrecision({
+                digits: 2,
+                roundingMode: "ceil",
+            })
+        ).toStrictEqual("1.3");
+    });
+    test("ceil on a negative value rounds toward zero", () => {
+        expect(
+            new Decimal("-1.29").toPrecision({
+                digits: 2,
+                roundingMode: "ceil",
+            })
+        ).toStrictEqual("-1.2");
+    });
+    test("floor on a negative value rounds away from zero", () => {
+        expect(
+            new Decimal("-1.21").toPrecision({
+                digits: 2,
+                roundingMode: "floor",
+            })
+        ).toStrictEqual("-1.3");
+    });
+    test("trunc", () => {
+        expect(
+            new Decimal("1.29").toPrecision({
+                digits: 2,
+                roundingMode: "trunc",
+            })
+        ).toStrictEqual("1.2");
+    });
+    test("invalid roundingMode throws RangeError", () => {
+        expect(() =>
+            new Decimal("1.25").toPrecision({ roundingMode: "bogus" })
+        ).toThrow(RangeError);
+    });
+    test("roundingMode alone leaves the value at natural precision", () => {
+        expect(
+            new Decimal("1.25").toPrecision({ roundingMode: "ceil" })
+        ).toStrictEqual("1.25");
     });
 });

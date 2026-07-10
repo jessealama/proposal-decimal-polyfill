@@ -1,4 +1,5 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import { CoefficientExponent } from "../../src/CoefficientExponent.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 
@@ -9,37 +10,37 @@ describe("constructor", () => {
         });
         test("string with underscores (comprehensive)", () => {
             // Test various underscore patterns in one test
-            expect(
-                new Decimal("123_456.789").toFixed({ digits: Infinity })
-            ).toStrictEqual("123456.789");
-            expect(
-                new Decimal("123_456_789.123").toFixed({ digits: Infinity })
-            ).toStrictEqual("123456789.123");
-            expect(
-                new Decimal("123.456_789").toFixed({ digits: Infinity })
-            ).toStrictEqual("123.456789");
-            expect(
-                new Decimal("123_456.789_123").toFixed({ digits: Infinity })
-            ).toStrictEqual("123456.789123");
+            expect(new Decimal("123_456.789").toString()).toStrictEqual(
+                "123456.789"
+            );
+            expect(new Decimal("123_456_789.123").toString()).toStrictEqual(
+                "123456789.123"
+            );
+            expect(new Decimal("123.456_789").toString()).toStrictEqual(
+                "123.456789"
+            );
+            expect(new Decimal("123_456.789_123").toString()).toStrictEqual(
+                "123456.789123"
+            );
         });
         test("more significant digits than we can store", () => {
             expect(
                 new Decimal("123456789123456789123456789123456789").toFixed({
-                    digits: Infinity,
+                    digits: 0,
                 })
             ).toStrictEqual("123456789123456789123456789123456800");
         });
         test("five as last digit past limit: tie to even unchanged", () => {
             expect(
                 new Decimal("1234567890123456789012345678901234.5").toFixed({
-                    digits: Infinity,
+                    digits: 0,
                 })
             ).toStrictEqual("1234567890123456789012345678901234");
         });
         test("round up decimal digit is not nine", () => {
             expect(
                 new Decimal("1234567890123456789012345678901239.8").toFixed({
-                    digits: Infinity,
+                    digits: 0,
                 })
             ).toStrictEqual("1234567890123456789012345678901240");
         });
@@ -52,15 +53,13 @@ describe("constructor", () => {
         });
         test("large power of ten", () => {
             let s = "10000000000000000000000000000000000000000000";
-            expect(new Decimal(s).toFixed({ digits: Infinity })).toStrictEqual(
-                s
-            );
+            expect(new Decimal(s).toFixed({ digits: 0 })).toStrictEqual(s);
         });
         test("rounding at the limit of significant digits", () => {
             expect(
                 new Decimal(
                     "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "9"
-                ).toFixed({ digits: Infinity })
+                ).toString()
             ).toStrictEqual(
                 "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2"
             );
@@ -69,7 +68,7 @@ describe("constructor", () => {
             expect(
                 new Decimal(
                     "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS + 100) + "9"
-                ).toFixed({ digits: Infinity })
+                ).toString()
             ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS));
         });
         test("minus zero", () => {
@@ -101,7 +100,7 @@ describe("constructor", () => {
         test("too many significant digits get rounded", () => {
             expect(
                 new Decimal("-10000000000000000000000000000000008E5").toFixed({
-                    digits: Infinity,
+                    digits: 0,
                 })
             ).toStrictEqual("-1000000000000000000000000000000001000000");
         });
@@ -405,9 +404,7 @@ describe("constructor", () => {
         test("ceil", () => {
             let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "3";
             expect(
-                new Decimal(s, { roundingMode: "ceil" }).toFixed({
-                    digits: Infinity,
-                })
+                new Decimal(s, { roundingMode: "ceil" }).toString()
             ).toStrictEqual(
                 "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2"
             );
@@ -415,9 +412,7 @@ describe("constructor", () => {
         test("floor", () => {
             let s = "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS) + "9";
             expect(
-                new Decimal(s, { roundingMode: "floor" }).toFixed({
-                    digits: Infinity,
-                })
+                new Decimal(s, { roundingMode: "floor" }).toString()
             ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS));
         });
         test("trunc", () => {
@@ -425,9 +420,7 @@ describe("constructor", () => {
             expect(
                 new Decimal(s, {
                     roundingMode: "trunc",
-                }).toFixed({
-                    digits: Infinity,
-                })
+                }).toString()
             ).toStrictEqual("0." + "1".repeat(MAX_SIGNIFICANT_DIGITS));
         });
         describe("halfEven", () => {
@@ -437,9 +430,7 @@ describe("constructor", () => {
                 let d2 = new Decimal(s, {
                     roundingMode: "halfEven",
                 });
-                expect(d1.toFixed({ digits: Infinity })).toStrictEqual(
-                    d2.toFixed({ digits: Infinity })
-                );
+                expect(d1.toString()).toStrictEqual(d2.toString());
             });
         });
         test("halfExpand", () => {
@@ -447,10 +438,36 @@ describe("constructor", () => {
             expect(
                 new Decimal(s, {
                     roundingMode: "halfExpand",
-                }).toFixed({ digits: Infinity })
+                }).toString()
             ).toStrictEqual(
                 "0." + "1".repeat(MAX_SIGNIFICANT_DIGITS - 1) + "2"
             );
         });
+    });
+});
+
+describe("options bag validation", () => {
+    test("non-object options throws TypeError", () => {
+        expect(() => new Decimal("1.5", "ceil")).toThrow(TypeError);
+    });
+    test("non-string roundingMode throws TypeError", () => {
+        expect(() => new Decimal("1.5", { roundingMode: 42 })).toThrow(
+            TypeError
+        );
+    });
+    test("invalid roundingMode string throws RangeError", () => {
+        expect(() => new Decimal("1.5", { roundingMode: "bogus" })).toThrow(
+            RangeError
+        );
+    });
+    test("CoefficientExponent input: non-object options throws TypeError", () => {
+        let ce = new CoefficientExponent(15n, -1, false);
+        expect(() => new Decimal(ce, "ceil")).toThrow(TypeError);
+    });
+    test("CoefficientExponent input: invalid roundingMode string throws RangeError", () => {
+        let ce = new CoefficientExponent(15n, -1, false);
+        expect(() => new Decimal(ce, { roundingMode: "bogus" })).toThrow(
+            RangeError
+        );
     });
 });

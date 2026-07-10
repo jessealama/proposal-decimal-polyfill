@@ -44,6 +44,73 @@ const NAN = "NaN";
 const POSITIVE_INFINITY = "Infinity";
 const NEGATIVE_INFINITY = "-Infinity";
 
+type OptionsBag = { digits?: unknown; roundingMode?: unknown };
+
+// Comfortably above the ~6200 digits a Decimal128 value can occupy (34
+// significant digits, quantum exponents down to Etiny = -6176).
+const MAX_REQUESTED_DIGITS = 10_000;
+
+function ensureOptionsBag(opts: unknown): OptionsBag | undefined {
+    if (undefined === opts) {
+        return undefined;
+    }
+
+    if (null === opts || "object" !== typeof opts) {
+        throw new TypeError("Argument must be an object");
+    }
+
+    return opts as OptionsBag;
+}
+
+function readDigits(
+    bag: OptionsBag | undefined,
+    minimum: 0 | 1 = 0
+): number | undefined {
+    if (undefined === bag || undefined === bag.digits) {
+        return undefined;
+    }
+
+    let digits = bag.digits;
+
+    if ("number" !== typeof digits) {
+        throw new TypeError("digits must be a number");
+    }
+
+    if (!Number.isInteger(digits)) {
+        throw new RangeError("digits must be an integer");
+    }
+
+    if (digits < minimum) {
+        throw new RangeError(
+            0 === minimum
+                ? "digits must be non-negative"
+                : "digits must be positive"
+        );
+    }
+
+    if (digits > MAX_REQUESTED_DIGITS) {
+        throw new RangeError("Too many digits requested");
+    }
+
+    return digits;
+}
+
+function readRoundingMode(bag: OptionsBag | undefined): RoundingMode {
+    if (undefined === bag || undefined === bag.roundingMode) {
+        return ROUNDING_MODE_HALF_EVEN;
+    }
+
+    if ("string" !== typeof bag.roundingMode) {
+        throw new TypeError("roundingMode must be a string");
+    }
+
+    if (!ROUNDING_MODES.includes(bag.roundingMode as RoundingMode)) {
+        throw new RangeError(`Invalid rounding mode "${bag.roundingMode}"`);
+    }
+
+    return bag.roundingMode as RoundingMode;
+}
+
 function RoundToDecimal128Domain(
     v: CoefficientExponent,
     mode: RoundingMode = ROUNDING_MODE_HALF_EVEN
@@ -174,6 +241,8 @@ export class Decimal {
      * @param opts.roundingMode Specifies the rounding mode to use if rounding is needed during construction.
      *   Valid values are: "ceil", "floor", "trunc", "halfEven", "halfExpand".
      *   Defaults to "halfEven".
+     * @throws {TypeError} If opts is not an object or roundingMode is not a string
+     * @throws {RangeError} If roundingMode is not a valid rounding mode
      * @throws {SyntaxError} If the string format is invalid
      * @throws {RangeError} If the value cannot be represented as a Decimal128
      *
@@ -193,6 +262,8 @@ export class Decimal {
         let data;
         let s: string;
 
+        const mode = readRoundingMode(ensureOptionsBag(opts));
+
         // Handle CoefficientExponent directly to avoid toString() with large exponents
         if (n instanceof CoefficientExponent) {
             data = n;
@@ -205,16 +276,7 @@ export class Decimal {
                 s = n;
             }
 
-            let mode = ROUNDING_MODE_HALF_EVEN;
-            if (
-                undefined !== opts &&
-                "object" === typeof opts &&
-                opts.roundingMode !== undefined
-            ) {
-                mode = opts.roundingMode;
-            }
-
-            data = handleDecimalNotation(s, mode as RoundingMode);
+            data = handleDecimalNotation(s, mode);
         }
 
         if (data === "NaN") {
@@ -382,7 +444,7 @@ export class Decimal {
 
         let m = this.mantissa();
 
-        let mAsString = m.toFixed({ digits: Infinity });
+        let mAsString = m.#emitDecimal();
         return mAsString + formatExponent(e);
     }
 
@@ -428,37 +490,25 @@ export class Decimal {
 
     /**
      * Returns a string representation of this Decimal128 value in fixed-point notation.
+     * The result always uses plain decimal notation, never exponential.
      *
      * @param {Object} [opts] Optional configuration object
      * @param {number} [opts.digits] The number of digits to appear after the decimal point.
-     *   Must be an integer >= 0. If not specified, uses the default toString() behavior.
-     *   If Infinity, returns the full decimal representation without exponential notation.
+     *   Must be a non-negative integer. Defaults to 0.
+     * @param {RoundingMode} [opts.roundingMode] The rounding mode to use if the value
+     *   has more fractional digits than requested. Defaults to "halfEven".
      * @returns {string} The string representation in fixed-point notation
-     * @throws {TypeError} If opts is not an object
-     * @throws {RangeError} If digits is negative, NaN, or not an integer (except Infinity)
+     * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
+     * @throws {RangeError} If digits is negative, not an integer (including NaN and Infinity), or too large, or roundingMode is invalid
      *
      * @ensures{padsToRequestedDigits} forall (x: number) (n: nat),
      *   Number.isFinite(x) →
      *     (new Decimal(x).toFixed({ digits: 1 + (n % 80) }).split(".")[1] ?? "").length === 1 + (n % 80)
      */
-    toFixed(opts?: { digits?: number }): string {
-        if (undefined === opts) {
-            return this.toString();
-        }
-
-        if ("object" !== typeof opts) {
-            throw new TypeError("Argument must be an object");
-        }
-
-        if (undefined === opts.digits) {
-            return this.toString();
-        }
-
-        let n = opts.digits;
-
-        if (n < 0) {
-            throw new RangeError("Argument must be greater than or equal to 0");
-        }
+    toFixed(opts?: { digits?: number; roundingMode?: RoundingMode }): string {
+        const bag = ensureOptionsBag(opts);
+        const roundingMode = readRoundingMode(bag);
+        const n = readDigits(bag) ?? 0;
 
         if (this.isNaN()) {
             return NAN;
@@ -470,32 +520,20 @@ export class Decimal {
                 : POSITIVE_INFINITY;
         }
 
-        if (n === Infinity) {
-            return this.#emitDecimal();
+        return this.#round(n, roundingMode).#emitFixed(n);
+    }
+
+    // Fixed-point rendering with exactly n fractional digits; assumes the
+    // value has at most n of them.
+    #emitFixed(n: number): string {
+        const rendered = this.#emitDecimal();
+        const [lhs, rhs] = rendered.split(".");
+
+        if (undefined === rhs) {
+            return 0 === n ? rendered : rendered + "." + "0".repeat(n);
         }
 
-        if (!Number.isInteger(n)) {
-            throw new RangeError(
-                "Argument must be an integer or positive infinity"
-            );
-        }
-
-        let rounded = this.round(n);
-        let roundedRendered = rounded.#emitDecimal();
-
-        if (roundedRendered.match(/[.]/)) {
-            let [lhs, rhs] = roundedRendered.split(/[.]/);
-            let numFractionDigits = rhs.length;
-            if (numFractionDigits <= n) {
-                return lhs + "." + rhs + "0".repeat(n - numFractionDigits);
-            }
-        }
-
-        if (n === 0) {
-            return roundedRendered;
-        }
-
-        return roundedRendered + "." + "0".repeat(n);
+        return lhs + "." + rhs + "0".repeat(n - rhs.length);
     }
 
     /**
@@ -503,31 +541,23 @@ export class Decimal {
      *
      * @param {Object} [opts] Optional configuration object
      * @param {number} [opts.digits] The number of significant digits. Must be a positive integer.
+     *   If omitted, behaves like toString().
+     * @param {RoundingMode} [opts.roundingMode] The rounding mode to use if the value
+     *   has more significant digits than requested. Defaults to "halfEven".
      * @returns {string} The string representation with the specified precision
-     * @throws {TypeError} If opts is not an object
-     * @throws {RangeError} If digits is not a positive integer
+     * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
+     * @throws {RangeError} If digits is not a positive integer, or roundingMode is invalid
      */
-    toPrecision(opts?: { digits?: number }): string {
-        if (undefined === opts) {
+    toPrecision(opts?: {
+        digits?: number;
+        roundingMode?: RoundingMode;
+    }): string {
+        const bag = ensureOptionsBag(opts);
+        const roundingMode = readRoundingMode(bag);
+        const precision = readDigits(bag, 1);
+
+        if (undefined === precision) {
             return this.toString();
-        }
-
-        if ("object" !== typeof opts) {
-            throw new TypeError("Argument must be an object");
-        }
-
-        if (undefined === opts.digits) {
-            return this.toString();
-        }
-
-        let precision = opts.digits;
-
-        if (precision <= 0) {
-            throw new RangeError("Argument must be positive");
-        }
-
-        if (!Number.isInteger(precision)) {
-            throw new RangeError("Argument must be an integer");
         }
 
         if (this.isNaN()) {
@@ -551,7 +581,7 @@ export class Decimal {
         }
 
         let d = this.#d as CoefficientExponent;
-        return d.toPrecision(precision);
+        return d.toPrecision(precision, roundingMode);
     }
 
     /**
@@ -559,16 +589,25 @@ export class Decimal {
      *
      * @param {Object} [opts] Optional configuration object
      * @param {number} [opts.digits] The number of digits after the decimal point in the mantissa.
-     *   Must be a positive integer.
+     *   Must be a non-negative integer. If omitted, uses as many digits as needed.
+     * @param {RoundingMode} [opts.roundingMode] The rounding mode to use if the mantissa
+     *   has more fractional digits than requested. Defaults to "halfEven".
      * @returns {string} The string representation in exponential notation
-     * @throws {TypeError} If opts is not an object
-     * @throws {RangeError} If digits is not a positive integer
+     * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
+     * @throws {RangeError} If digits is negative, not an integer, or too large, or roundingMode is invalid
      *
      * @ensures{honorsRequestedDigits} forall (x: number) (n: nat),
      *   Number.isFinite(x) →
      *     new Decimal(x).toExponential({ digits: 1 + (n % 30) }).split("e")[0].split(".")[1].length === 1 + (n % 30)
      */
-    toExponential(opts?: { digits?: number }): string {
+    toExponential(opts?: {
+        digits?: number;
+        roundingMode?: RoundingMode;
+    }): string {
+        const bag = ensureOptionsBag(opts);
+        const roundingMode = readRoundingMode(bag);
+        const n = readDigits(bag);
+
         if (this.isNaN()) {
             return "NaN";
         }
@@ -577,38 +616,24 @@ export class Decimal {
             return (this.isNegative() ? "-" : "") + "Infinity";
         }
 
-        if (undefined === opts) {
+        if (undefined === n) {
             return this.#emitExponential();
-        }
-
-        if ("object" !== typeof opts) {
-            throw new TypeError("Argument must be an object");
-        }
-
-        if (undefined === opts.digits) {
-            return this.#emitExponential();
-        }
-
-        let n = opts.digits;
-
-        if (n <= 0) {
-            throw new RangeError("Argument must be positive");
-        }
-
-        if (!Number.isInteger(n)) {
-            throw new RangeError("Argument must be an integer");
         }
 
         let p = this.isNegative() ? "-" : "";
 
         if (this.isZero()) {
+            if (n === 0) {
+                return p + "0e+0";
+            }
+
             return p + "0." + "0".repeat(n) + "e+0";
         }
 
-        let m = this.abs().mantissa();
+        // Round before taking the absolute value so that directed modes
+        // (ceil, floor) see the sign.
+        let rounded = this.mantissa().#round(n, roundingMode).abs();
         let e = this.exponent();
-
-        let rounded = m.round(n);
 
         if (rounded.exponent() === 1) {
             // Rounding carried the mantissa out of [1, 10).
@@ -616,7 +641,7 @@ export class Decimal {
             e += 1;
         }
 
-        return p + rounded.toFixed({ digits: n }) + formatExponent(e);
+        return p + rounded.#emitFixed(n) + formatExponent(e);
     }
 
     #isInteger(): boolean {
@@ -879,6 +904,8 @@ export class Decimal {
      *   enumeration, such as `ROUNDING_MODE_HALF_EVEN`, `ROUNDING_MODE_TRUNCATE`,
      *   `ROUNDING_MODE_CEILING`, and `ROUNDING_MODE_FLOOR`. Defaults to
      *   `ROUNDING_MODE_HALF_EVEN`.
+     * @throws {TypeError} If opts is not an object or roundingMode is not a string
+     * @throws {RangeError} If roundingMode is not a valid rounding mode
      *
      * @ensures{commutes} forall (x y: number),
      *   new Decimal(x).add(new Decimal(y)).toString() ===
@@ -889,15 +916,7 @@ export class Decimal {
      *     new Decimal(x).add(new Decimal(x).negate()).toString() === "0"
      */
     add(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
-        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
-
-        if (
-            undefined !== opts &&
-            "object" === typeof opts &&
-            opts.roundingMode !== undefined
-        ) {
-            mode = opts.roundingMode;
-        }
+        const mode = readRoundingMode(ensureOptionsBag(opts));
 
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
@@ -959,21 +978,15 @@ export class Decimal {
      *   when performing the subtraction. Valid values are: "ceil", "floor", "trunc",
      *   "halfEven", "halfExpand". Defaults to "halfEven".
      * @returns {Decimal} A new Decimal value representing the difference
+     * @throws {TypeError} If opts is not an object or roundingMode is not a string
+     * @throws {RangeError} If roundingMode is not a valid rounding mode
      *
      * @ensures{antiCommutes} forall (x y: number),
      *   Number.isFinite(x) ∧ Number.isFinite(y) →
      *     new Decimal(x).subtract(new Decimal(y)).equals(new Decimal(y).subtract(new Decimal(x)).negate())
      */
     subtract(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
-        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
-
-        if (
-            undefined !== opts &&
-            "object" === typeof opts &&
-            opts.roundingMode !== undefined
-        ) {
-            mode = opts.roundingMode;
-        }
+        const mode = readRoundingMode(ensureOptionsBag(opts));
 
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
@@ -1038,6 +1051,8 @@ export class Decimal {
      *   when performing the multiplication. Valid values are: "ceil", "floor", "trunc",
      *   "halfEven", "halfExpand". Defaults to "halfEven".
      * @returns {Decimal} A new Decimal value representing the product
+     * @throws {TypeError} If opts is not an object or roundingMode is not a string
+     * @throws {RangeError} If roundingMode is not a valid rounding mode
      *
      * @ensures{commutes} forall (x y: number),
      *   new Decimal(x).multiply(new Decimal(y)).toString() ===
@@ -1049,15 +1064,7 @@ export class Decimal {
      *       (new Decimal(j + "e-3090").multiply(new Decimal(k + "e-3090")).significand().toString().length - 1) >= -6176
      */
     multiply(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
-        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
-
-        if (
-            undefined !== opts &&
-            "object" === typeof opts &&
-            opts.roundingMode !== undefined
-        ) {
-            mode = opts.roundingMode;
-        }
+        const mode = readRoundingMode(ensureOptionsBag(opts));
 
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
@@ -1134,6 +1141,8 @@ export class Decimal {
      *   when performing the division. Valid values are: "ceil", "floor", "trunc",
      *   "halfEven", "halfExpand". Defaults to "halfEven".
      * @returns {Decimal} A new Decimal value representing the quotient
+     * @throws {TypeError} If opts is not an object or roundingMode is not a string
+     * @throws {RangeError} If roundingMode is not a valid rounding mode
      *
      * @ensures{selfDivisionIsUnity} forall (x: number),
      *   Number.isFinite(x) ∧ x !== 0 →
@@ -1145,15 +1154,7 @@ export class Decimal {
      *       (new Decimal(k + "e-6170").divide(new Decimal("1e" + n)).significand().toString().length - 1) >= -6176
      */
     divide(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
-        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
-
-        if (
-            undefined !== opts &&
-            "object" === typeof opts &&
-            opts.roundingMode !== undefined
-        ) {
-            mode = opts.roundingMode;
-        }
+        const mode = readRoundingMode(ensureOptionsBag(opts));
 
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
@@ -1210,37 +1211,32 @@ export class Decimal {
     }
 
     /**
-     * Rounds this Decimal128 value to a specified number of decimal places.
+     * Rounds this Decimal128 value to a specified number of fractional digits.
      *
-     * @param {number} [numDecimalDigits=0] The number of decimal places to round to.
-     *   Must be a non-negative integer.
-     * @param {RoundingMode} [mode="halfEven"] The rounding mode to use.
+     * @param {Object} [opts] Optional configuration object
+     * @param {number} [opts.digits] The number of fractional digits to round to.
+     *   Must be a non-negative integer. Defaults to 0 (round to an integer).
+     * @param {RoundingMode} [opts.roundingMode] The rounding mode to use.
      *   Valid values are: "ceil", "floor", "trunc", "halfEven", "halfExpand".
-     * @returns {Decimal} A new Decimal value rounded to the specified number of decimal places
-     * @throws {RangeError} If the rounding mode is invalid
-     * @throws {RangeError} If numDecimalDigits is negative or not an integer
+     *   Defaults to "halfEven".
+     * @returns {Decimal} A new Decimal value rounded to the specified number of fractional digits
+     * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
+     * @throws {RangeError} If digits is negative, not an integer, or too large, or roundingMode is not a valid rounding mode
      *
      * @ensures{idempotent} forall (x: number) (n: nat),
      *   Number.isFinite(x) →
-     *     new Decimal(x).round(n % 50).round(n % 50).toString() ===
-     *       new Decimal(x).round(n % 50).toString()
+     *     new Decimal(x).round({ digits: n % 50 }).round({ digits: n % 50 }).toString() ===
+     *       new Decimal(x).round({ digits: n % 50 }).toString()
      */
-    round(
-        numDecimalDigits: number = 0,
-        mode: RoundingMode = ROUNDING_MODE_HALF_EVEN
-    ): Decimal {
-        if (!ROUNDING_MODES.includes(mode)) {
-            throw new RangeError(`Invalid rounding mode "${mode}"`);
-        }
+    round(opts?: { digits?: number; roundingMode?: RoundingMode }): Decimal {
+        const bag = ensureOptionsBag(opts);
+        const mode = readRoundingMode(bag);
+        const numFractionalDigits = readDigits(bag) ?? 0;
 
-        if (!Number.isInteger(numDecimalDigits) || numDecimalDigits < 0) {
-            throw new RangeError("Invalid number of decimal digits");
-        }
+        return this.#round(numFractionalDigits, mode);
+    }
 
-        if (numDecimalDigits > 1e9) {
-            throw new RangeError("Too many decimal digits requested");
-        }
-
+    #round(numFractionalDigits: number, mode: RoundingMode): Decimal {
         if (this.isNaN() || !this.isFinite()) {
             return this.#clone();
         }
@@ -1250,7 +1246,7 @@ export class Decimal {
         }
 
         let v = this.#d as CoefficientExponent;
-        let roundedV = v.round(numDecimalDigits, mode);
+        let roundedV = v.round(numFractionalDigits, mode);
 
         if (roundedV.isZero()) {
             return new Decimal(v.isNegative ? "-0" : "0");

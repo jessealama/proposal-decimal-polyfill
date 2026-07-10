@@ -5,4 +5,4 @@ let amountInUsd = new Decimal("450.27");
 let exchangeRateUsdToEur = new Decimal(1).divide(exchangeRateEurToUsd);
 
 let amountInEur = exchangeRateUsdToEur.multiply(amountInUsd);
-console.log(amountInEur.round(2).toString());
+console.log(amountInEur.round({ digits: 2 }).toString());
