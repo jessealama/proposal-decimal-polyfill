@@ -27,6 +27,8 @@ jobs:
               run: npm run build
             - name: test
               run: npm run test
+            - name: pabst properties
+              run: npm run pabst
             - name: generate coverage
               run: npm run coverage
             - name: check coverage
