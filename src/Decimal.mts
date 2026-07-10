@@ -539,31 +539,27 @@ export class Decimal {
      *
      * @param {Object} [opts] Optional configuration object
      * @param {number} [opts.digits] The number of significant digits. Must be a positive integer.
+     *   If omitted, behaves like toString().
+     * @param {RoundingMode} [opts.roundingMode] The rounding mode to use if the value
+     *   has more significant digits than requested. Defaults to "halfEven".
      * @returns {string} The string representation with the specified precision
-     * @throws {TypeError} If opts is not an object
-     * @throws {RangeError} If digits is not a positive integer
+     * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
+     * @throws {RangeError} If digits is not a positive integer, or roundingMode is invalid
      */
-    toPrecision(opts?: { digits?: number }): string {
-        if (undefined === opts) {
+    toPrecision(opts?: {
+        digits?: number;
+        roundingMode?: RoundingMode;
+    }): string {
+        const bag = ensureOptionsBag(opts);
+        const roundingMode = readRoundingMode(bag);
+        const precision = readDigits(bag);
+
+        if (undefined === precision) {
             return this.toString();
         }
 
-        if ("object" !== typeof opts) {
-            throw new TypeError("Argument must be an object");
-        }
-
-        if (undefined === opts.digits) {
-            return this.toString();
-        }
-
-        let precision = opts.digits;
-
-        if (precision <= 0) {
-            throw new RangeError("Argument must be positive");
-        }
-
-        if (!Number.isInteger(precision)) {
-            throw new RangeError("Argument must be an integer");
+        if (0 === precision) {
+            throw new RangeError("digits must be positive");
         }
 
         if (this.isNaN()) {
@@ -587,7 +583,7 @@ export class Decimal {
         }
 
         let d = this.#d as CoefficientExponent;
-        return d.toPrecision(precision);
+        return d.toPrecision(precision, roundingMode);
     }
 
     /**

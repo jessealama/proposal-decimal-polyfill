@@ -517,14 +517,17 @@ export class CoefficientExponent {
     /**
      * Formats with a specified number of significant digits.
      * @param {number} digits - The number of significant digits
+     * @param {RoundingMode} mode - The rounding mode to use
      * @returns {string} The formatted string in decimal or exponential notation
      * @throws {RangeError} If digits is not positive or not an integer
      */
-    toPrecision(digits: number): string {
-        const rounded = this.roundToSignificantDigits(
-            digits,
-            ROUNDING_MODE_HALF_EVEN
-        );
+    toPrecision(digits: number, mode: RoundingMode): string {
+        // roundToSignificantDigits applies the mode to the magnitude, so
+        // flip directed modes for negative values (as round does above).
+        const adjustedMode = this._isNegative
+            ? flipModeForNegative(mode)
+            : mode;
+        const rounded = this.roundToSignificantDigits(digits, adjustedMode);
 
         // Calculate the effective exponent (where decimal point would be after the first digit)
         const coeffStr = rounded._coefficient.toString();
