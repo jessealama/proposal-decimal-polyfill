@@ -1,4 +1,5 @@
 import { Decimal } from "../../src/Decimal.mjs";
+import { CoefficientExponent } from "../../src/CoefficientExponent.mjs";
 
 const MAX_SIGNIFICANT_DIGITS = 34;
 
@@ -456,6 +457,16 @@ describe("options bag validation", () => {
     });
     test("invalid roundingMode string throws RangeError", () => {
         expect(() => new Decimal("1.5", { roundingMode: "bogus" })).toThrow(
+            RangeError
+        );
+    });
+    test("CoefficientExponent input: non-object options throws TypeError", () => {
+        let ce = new CoefficientExponent(15n, -1, false);
+        expect(() => new Decimal(ce, "ceil")).toThrow(TypeError);
+    });
+    test("CoefficientExponent input: invalid roundingMode string throws RangeError", () => {
+        let ce = new CoefficientExponent(15n, -1, false);
+        expect(() => new Decimal(ce, { roundingMode: "bogus" })).toThrow(
             RangeError
         );
     });

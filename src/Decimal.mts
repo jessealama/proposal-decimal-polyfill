@@ -253,6 +253,8 @@ export class Decimal {
         let data;
         let s: string;
 
+        const mode = readRoundingMode(ensureOptionsBag(opts));
+
         // Handle CoefficientExponent directly to avoid toString() with large exponents
         if (n instanceof CoefficientExponent) {
             data = n;
@@ -264,8 +266,6 @@ export class Decimal {
             } else {
                 s = n;
             }
-
-            const mode = readRoundingMode(ensureOptionsBag(opts));
 
             data = handleDecimalNotation(s, mode);
         }
