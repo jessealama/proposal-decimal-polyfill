@@ -31,8 +31,11 @@ const examples = [
 ];
 
 function checkProduct(a, b, c) {
+    const fractionDigits = (c.split(".")[1] ?? "").length;
     expect(
-        new Decimal(a).multiply(new Decimal(b)).toFixed({ digits: Infinity })
+        new Decimal(a)
+            .multiply(new Decimal(b))
+            .toFixed({ digits: fractionDigits })
     ).toStrictEqual(c);
 }
 
@@ -56,21 +59,21 @@ describe("multiply", () => {
         expect(
             new Decimal("123456789123456789")
                 .multiply(new Decimal("987654321987654321"))
-                .toFixed({ digits: Infinity })
+                .toFixed({ digits: 0 })
         ).toStrictEqual("121932631356500531347203169112635300");
     });
     test("approximation needed (negative)", () => {
         expect(
             new Decimal("123456789123456789")
                 .multiply(new Decimal("-987654321987654321"))
-                .toFixed({ digits: Infinity })
+                .toFixed({ digits: 0 })
         ).toStrictEqual("-121932631356500531347203169112635300");
     });
     test("approximation needed", () => {
         expect(
             new Decimal("123456789123456789.987654321")
                 .multiply(new Decimal("987654321123456789.123456789"))
-                .toFixed({ digits: Infinity })
+                .toFixed({ digits: 0 })
         ).toStrictEqual("121932631249809479868770005427526300");
     });
     describe("zero", () => {

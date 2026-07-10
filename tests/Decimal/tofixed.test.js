@@ -43,15 +43,6 @@ describe("toFixed", () => {
     describe("to decimal places", function () {
         const d = "123.456";
         const decimalD = new Decimal(d);
-        test("no argument", () => {
-            expectDecimal128(decimalD.toFixed(), "123.456");
-        });
-        test("digits option is present but value is undefined", () => {
-            expectDecimal128(
-                decimalD.toFixed({ digits: undefined }),
-                "123.456"
-            );
-        });
         test("more digits than available means digits get added", () => {
             expectDecimal128(decimalD.toFixed({ digits: 4 }), "123.4560");
         });
@@ -79,13 +70,18 @@ describe("toFixed", () => {
         test("negative number of decimal places throws", () => {
             expect(() => decimalD.toFixed({ digits: -1 })).toThrow(RangeError);
             expect(() => decimalD.toFixed({ digits: -1 })).toThrow(
-                "Argument must be greater than or equal to 0"
+                "digits must be non-negative"
             );
         });
         test("non-integer does not take floor", () => {
             expect(() => decimalD.toFixed({ digits: 1.5 })).toThrow(RangeError);
             expect(() => decimalD.toFixed({ digits: 1.5 })).toThrow(
-                "Argument must be an integer or positive infinity"
+                "digits must be an integer"
+            );
+        });
+        test("infinite digits throws RangeError", () => {
+            expect(() => decimalD.toFixed({ digits: Infinity })).toThrow(
+                RangeError
             );
         });
         test("non-object argument", () => {
@@ -98,6 +94,77 @@ describe("toFixed", () => {
             expect(new Decimal("42").toFixed({ digits: 10 })).toStrictEqual(
                 "42.0000000000"
             );
+        });
+    });
+    describe("bare call follows Number precedent", () => {
+        test("digits defaults to 0", () => {
+            expect(new Decimal("1.25").toFixed()).toStrictEqual("1");
+        });
+        test("empty bag also defaults to 0", () => {
+            expect(new Decimal("1.75").toFixed({})).toStrictEqual("2");
+        });
+        test("digits option is present but value is undefined", () => {
+            expectDecimal128(
+                new Decimal("123.456").toFixed({ digits: undefined }),
+                "123"
+            );
+        });
+        test("large values stay in plain notation", () => {
+            expect(new Decimal("1e21").toFixed()).toStrictEqual(
+                "1000000000000000000000"
+            );
+        });
+    });
+    describe("roundingMode", () => {
+        test("default is halfEven", () => {
+            expect(new Decimal("1.25").toFixed({ digits: 1 })).toStrictEqual(
+                "1.2"
+            );
+        });
+        test("halfExpand", () => {
+            expect(
+                new Decimal("1.25").toFixed({
+                    digits: 1,
+                    roundingMode: "halfExpand",
+                })
+            ).toStrictEqual("1.3");
+        });
+        test("ceil on a positive value rounds away from zero", () => {
+            expect(
+                new Decimal("1.21").toFixed({ digits: 1, roundingMode: "ceil" })
+            ).toStrictEqual("1.3");
+        });
+        test("ceil on a negative value rounds toward zero", () => {
+            expect(
+                new Decimal("-1.29").toFixed({
+                    digits: 1,
+                    roundingMode: "ceil",
+                })
+            ).toStrictEqual("-1.2");
+        });
+        test("floor on a negative value rounds away from zero", () => {
+            expect(
+                new Decimal("-1.21").toFixed({
+                    digits: 1,
+                    roundingMode: "floor",
+                })
+            ).toStrictEqual("-1.3");
+        });
+        test("trunc drops excess digits", () => {
+            expect(
+                new Decimal("1.29").toFixed({
+                    digits: 1,
+                    roundingMode: "trunc",
+                })
+            ).toStrictEqual("1.2");
+        });
+        test("invalid roundingMode throws RangeError", () => {
+            expect(() =>
+                new Decimal("1.25").toFixed({ roundingMode: "bogus" })
+            ).toThrow(RangeError);
+        });
+        test("options are validated even for NaN receivers", () => {
+            expect(() => new Decimal("NaN").toFixed("junk")).toThrow(TypeError);
         });
     });
 });

@@ -440,7 +440,7 @@ export class Decimal {
 
         let m = this.mantissa();
 
-        let mAsString = m.toFixed({ digits: Infinity });
+        let mAsString = m.#emitDecimal();
         return mAsString + formatExponent(e);
     }
 
@@ -486,37 +486,25 @@ export class Decimal {
 
     /**
      * Returns a string representation of this Decimal128 value in fixed-point notation.
+     * The result always uses plain decimal notation, never exponential.
      *
      * @param {Object} [opts] Optional configuration object
      * @param {number} [opts.digits] The number of digits to appear after the decimal point.
-     *   Must be an integer >= 0. If not specified, uses the default toString() behavior.
-     *   If Infinity, returns the full decimal representation without exponential notation.
+     *   Must be a non-negative integer. Defaults to 0.
+     * @param {RoundingMode} [opts.roundingMode] The rounding mode to use if the value
+     *   has more fractional digits than requested. Defaults to "halfEven".
      * @returns {string} The string representation in fixed-point notation
-     * @throws {TypeError} If opts is not an object
-     * @throws {RangeError} If digits is negative, NaN, or not an integer (except Infinity)
+     * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
+     * @throws {RangeError} If digits is negative, not an integer (including NaN and Infinity), or too large, or roundingMode is invalid
      *
      * @ensures{padsToRequestedDigits} forall (x: number) (n: nat),
      *   Number.isFinite(x) →
      *     (new Decimal(x).toFixed({ digits: 1 + (n % 80) }).split(".")[1] ?? "").length === 1 + (n % 80)
      */
-    toFixed(opts?: { digits?: number }): string {
-        if (undefined === opts) {
-            return this.toString();
-        }
-
-        if ("object" !== typeof opts) {
-            throw new TypeError("Argument must be an object");
-        }
-
-        if (undefined === opts.digits) {
-            return this.toString();
-        }
-
-        let n = opts.digits;
-
-        if (n < 0) {
-            throw new RangeError("Argument must be greater than or equal to 0");
-        }
+    toFixed(opts?: { digits?: number; roundingMode?: RoundingMode }): string {
+        const bag = ensureOptionsBag(opts);
+        const roundingMode = readRoundingMode(bag);
+        const n = readDigits(bag) ?? 0;
 
         if (this.isNaN()) {
             return NAN;
@@ -528,17 +516,7 @@ export class Decimal {
                 : POSITIVE_INFINITY;
         }
 
-        if (n === Infinity) {
-            return this.#emitDecimal();
-        }
-
-        if (!Number.isInteger(n)) {
-            throw new RangeError(
-                "Argument must be an integer or positive infinity"
-            );
-        }
-
-        let rounded = this.round({ digits: n });
+        let rounded = this.round({ digits: n, roundingMode });
         let roundedRendered = rounded.#emitDecimal();
 
         if (roundedRendered.match(/[.]/)) {

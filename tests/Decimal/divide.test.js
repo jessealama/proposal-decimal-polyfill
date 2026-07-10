@@ -20,9 +20,7 @@ describe("division", () => {
     });
     test("infinite decimal representation", () => {
         expect(
-            new Decimal("0.11")
-                .divide(new Decimal("0.3"))
-                .toFixed({ digits: Infinity })
+            new Decimal("0.11").divide(new Decimal("0.3")).toString()
         ).toStrictEqual("0.3666666666666666666666666666666667");
     });
     test("many digits, few significant", () => {
@@ -34,9 +32,7 @@ describe("division", () => {
     });
     test("one third", () => {
         expect(
-            new Decimal("1")
-                .divide(new Decimal("3"))
-                .toFixed({ digits: Infinity })
+            new Decimal("1").divide(new Decimal("3")).toString()
         ).toStrictEqual("0.3333333333333333333333333333333333");
     });
     test("one tenth", () => {
@@ -172,16 +168,12 @@ describe("division", () => {
         // some examples have been tweaked because we are working with more precision in Decimal128
         test("example one", () => {
             expect(
-                new Decimal("1")
-                    .divide(new Decimal("3"))
-                    .toFixed({ digits: Infinity })
+                new Decimal("1").divide(new Decimal("3")).toString()
             ).toStrictEqual("0.3333333333333333333333333333333333");
         });
         test("example two", () => {
             expect(
-                new Decimal("2")
-                    .divide(new Decimal("3"))
-                    .toFixed({ digits: Infinity })
+                new Decimal("2").divide(new Decimal("3")).toString()
             ).toStrictEqual("0.6666666666666666666666666666666667");
         });
         test("example three", () => {
