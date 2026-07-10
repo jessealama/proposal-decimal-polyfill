@@ -232,6 +232,8 @@ export class Decimal {
      * @param opts.roundingMode Specifies the rounding mode to use if rounding is needed during construction.
      *   Valid values are: "ceil", "floor", "trunc", "halfEven", "halfExpand".
      *   Defaults to "halfEven".
+     * @throws {TypeError} If opts is not an object or roundingMode is not a string
+     * @throws {RangeError} If roundingMode is not a valid rounding mode
      * @throws {SyntaxError} If the string format is invalid
      * @throws {RangeError} If the value cannot be represented as a Decimal128
      *
@@ -263,16 +265,9 @@ export class Decimal {
                 s = n;
             }
 
-            let mode = ROUNDING_MODE_HALF_EVEN;
-            if (
-                undefined !== opts &&
-                "object" === typeof opts &&
-                opts.roundingMode !== undefined
-            ) {
-                mode = opts.roundingMode;
-            }
+            const mode = readRoundingMode(ensureOptionsBag(opts));
 
-            data = handleDecimalNotation(s, mode as RoundingMode);
+            data = handleDecimalNotation(s, mode);
         }
 
         if (data === "NaN") {
@@ -906,6 +901,8 @@ export class Decimal {
      *   enumeration, such as `ROUNDING_MODE_HALF_EVEN`, `ROUNDING_MODE_TRUNCATE`,
      *   `ROUNDING_MODE_CEILING`, and `ROUNDING_MODE_FLOOR`. Defaults to
      *   `ROUNDING_MODE_HALF_EVEN`.
+     * @throws {TypeError} If opts is not an object or roundingMode is not a string
+     * @throws {RangeError} If roundingMode is not a valid rounding mode
      *
      * @ensures{commutes} forall (x y: number),
      *   new Decimal(x).add(new Decimal(y)).toString() ===
@@ -916,15 +913,7 @@ export class Decimal {
      *     new Decimal(x).add(new Decimal(x).negate()).toString() === "0"
      */
     add(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
-        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
-
-        if (
-            undefined !== opts &&
-            "object" === typeof opts &&
-            opts.roundingMode !== undefined
-        ) {
-            mode = opts.roundingMode;
-        }
+        const mode = readRoundingMode(ensureOptionsBag(opts));
 
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
@@ -986,21 +975,15 @@ export class Decimal {
      *   when performing the subtraction. Valid values are: "ceil", "floor", "trunc",
      *   "halfEven", "halfExpand". Defaults to "halfEven".
      * @returns {Decimal} A new Decimal value representing the difference
+     * @throws {TypeError} If opts is not an object or roundingMode is not a string
+     * @throws {RangeError} If roundingMode is not a valid rounding mode
      *
      * @ensures{antiCommutes} forall (x y: number),
      *   Number.isFinite(x) ∧ Number.isFinite(y) →
      *     new Decimal(x).subtract(new Decimal(y)).equals(new Decimal(y).subtract(new Decimal(x)).negate())
      */
     subtract(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
-        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
-
-        if (
-            undefined !== opts &&
-            "object" === typeof opts &&
-            opts.roundingMode !== undefined
-        ) {
-            mode = opts.roundingMode;
-        }
+        const mode = readRoundingMode(ensureOptionsBag(opts));
 
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
@@ -1065,6 +1048,8 @@ export class Decimal {
      *   when performing the multiplication. Valid values are: "ceil", "floor", "trunc",
      *   "halfEven", "halfExpand". Defaults to "halfEven".
      * @returns {Decimal} A new Decimal value representing the product
+     * @throws {TypeError} If opts is not an object or roundingMode is not a string
+     * @throws {RangeError} If roundingMode is not a valid rounding mode
      *
      * @ensures{commutes} forall (x y: number),
      *   new Decimal(x).multiply(new Decimal(y)).toString() ===
@@ -1076,15 +1061,7 @@ export class Decimal {
      *       (new Decimal(j + "e-3090").multiply(new Decimal(k + "e-3090")).significand().toString().length - 1) >= -6176
      */
     multiply(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
-        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
-
-        if (
-            undefined !== opts &&
-            "object" === typeof opts &&
-            opts.roundingMode !== undefined
-        ) {
-            mode = opts.roundingMode;
-        }
+        const mode = readRoundingMode(ensureOptionsBag(opts));
 
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);
@@ -1161,6 +1138,8 @@ export class Decimal {
      *   when performing the division. Valid values are: "ceil", "floor", "trunc",
      *   "halfEven", "halfExpand". Defaults to "halfEven".
      * @returns {Decimal} A new Decimal value representing the quotient
+     * @throws {TypeError} If opts is not an object or roundingMode is not a string
+     * @throws {RangeError} If roundingMode is not a valid rounding mode
      *
      * @ensures{selfDivisionIsUnity} forall (x: number),
      *   Number.isFinite(x) ∧ x !== 0 →
@@ -1172,15 +1151,7 @@ export class Decimal {
      *       (new Decimal(k + "e-6170").divide(new Decimal("1e" + n)).significand().toString().length - 1) >= -6176
      */
     divide(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
-        let mode: RoundingMode = ROUNDING_MODE_HALF_EVEN;
-
-        if (
-            undefined !== opts &&
-            "object" === typeof opts &&
-            opts.roundingMode !== undefined
-        ) {
-            mode = opts.roundingMode;
-        }
+        const mode = readRoundingMode(ensureOptionsBag(opts));
 
         if (this.isNaN() || x.isNaN()) {
             return new Decimal(NAN);

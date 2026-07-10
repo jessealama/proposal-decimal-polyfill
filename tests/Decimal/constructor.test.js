@@ -444,3 +444,19 @@ describe("constructor", () => {
         });
     });
 });
+
+describe("options bag validation", () => {
+    test("non-object options throws TypeError", () => {
+        expect(() => new Decimal("1.5", "ceil")).toThrow(TypeError);
+    });
+    test("non-string roundingMode throws TypeError", () => {
+        expect(() => new Decimal("1.5", { roundingMode: 42 })).toThrow(
+            TypeError
+        );
+    });
+    test("invalid roundingMode string throws RangeError", () => {
+        expect(() => new Decimal("1.5", { roundingMode: "bogus" })).toThrow(
+            RangeError
+        );
+    });
+});
