@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses date-based versioning (YYYYMMDD.MAJOR.MINOR).
 
+## [20260710.0.0] - 2026-07-10
+
+### Changed
+
+- `round` takes an options bag (`{ digits, roundingMode }`) instead of
+  positional arguments (#40)
+- `toFixed`, `toPrecision`, and `toExponential` accept the same options
+  bag; `toFixed` defaults `digits` to 0, following
+  `Number.prototype.toFixed`, and `toExponential` accepts `digits: 0`
+- `toFixed` no longer accepts `digits: Infinity`
+- Options bags are validated strictly everywhere they are accepted
+  (constructor, arithmetic, rounding, formatting): TypeError for a
+  non-object bag or wrongly-typed option, RangeError for invalid values,
+  even when the receiver is NaN or infinite; unknown keys are ignored
+- At most 10000 digits may be requested via the `digits` option
+
+### Fixed
+
+- Sums and differences that cancel exactly follow the IEEE 754 rule for
+  the sign of a zero result (#115)
+- Rounding an exact zero keeps it at zero under directed rounding modes
+  (#116)
+- `toExponential` with `digits` requested no longer crashes on
+  single-digit mantissas, and rounds excess digits instead of truncating
+  them (#114)
+- `scale10` results are rounded to the Decimal128 domain (#113)
+- `toBigInt` converts from the internal representation rather than
+  parsing `toString()` output (#112)
+- `remainder` is computed exactly instead of via a rounded quotient
+  (#104)
+- Results in the subnormal range are quantized at Etiny (gradual
+  underflow) (#107)
+
 ## [20260708.0.0] - 2026-07-08
 
 ### Changed
