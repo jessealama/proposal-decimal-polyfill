@@ -95,6 +95,19 @@ describe("toFixed", () => {
                 "42.0000000000"
             );
         });
+        test("maximum number of digits works", () => {
+            expect(new Decimal("1").toFixed({ digits: 10000 })).toStrictEqual(
+                "1." + "0".repeat(10000)
+            );
+        });
+        test("too many digits requested throws", () => {
+            expect(() => decimalD.toFixed({ digits: 10001 })).toThrow(
+                RangeError
+            );
+            expect(() => decimalD.toFixed({ digits: 10001 })).toThrow(
+                "Too many digits requested"
+            );
+        });
     });
     describe("bare call follows Number precedent", () => {
         test("digits defaults to 0", () => {

@@ -676,8 +676,7 @@ describe("round", () => {
         describe("rounding with extreme decimal places", () => {
             test("round to very large number of decimal places", () => {
                 const val = new Decimal("1.23456789");
-                // Rounding to 1000000 decimal places
-                expect(val.round({ digits: 1000000 }).toString()).toStrictEqual(
+                expect(val.round({ digits: 9999 }).toString()).toStrictEqual(
                     "1.23456789"
                 );
             });
@@ -694,8 +693,7 @@ describe("round", () => {
 
             test("round with maximum allowed decimal places", () => {
                 const val = new Decimal("1.5");
-                // Test with very large but valid number
-                expect(val.round({ digits: 1e9 }).toString()).toStrictEqual(
+                expect(val.round({ digits: 10000 }).toString()).toStrictEqual(
                     "1.5"
                 );
             });
@@ -802,7 +800,7 @@ describe("options bag validation", () => {
         expect(() => d.round({ digits: -1 })).toThrow(RangeError);
     });
     test("too many digits throws RangeError", () => {
-        expect(() => d.round({ digits: 1e9 + 1 })).toThrow(RangeError);
+        expect(() => d.round({ digits: 10001 })).toThrow(RangeError);
     });
     test("non-string roundingMode throws TypeError", () => {
         expect(() => d.round({ roundingMode: 42 })).toThrow(TypeError);

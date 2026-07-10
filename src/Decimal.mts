@@ -46,7 +46,9 @@ const NEGATIVE_INFINITY = "-Infinity";
 
 type OptionsBag = { digits?: unknown; roundingMode?: unknown };
 
-const MAX_REQUESTED_DIGITS = 1_000_000_000;
+// Comfortably above the ~6200 digits a Decimal128 value can occupy (34
+// significant digits, quantum exponents down to Etiny = -6176).
+const MAX_REQUESTED_DIGITS = 10_000;
 
 function ensureOptionsBag(opts: unknown): OptionsBag | undefined {
     if (undefined === opts) {

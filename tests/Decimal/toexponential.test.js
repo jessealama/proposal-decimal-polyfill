@@ -83,6 +83,16 @@ describe("toExponential", () => {
             "digits must be an integer"
         );
     });
+    test("maximum number of digits works", () => {
+        expect(new Decimal("0").toExponential({ digits: 10000 })).toStrictEqual(
+            "0." + "0".repeat(10000) + "e+0"
+        );
+    });
+    test("too many digits requested throws", () => {
+        expect(() => decimalD.toExponential({ digits: 10001 })).toThrow(
+            "Too many digits requested"
+        );
+    });
     describe("negative", () => {
         let negD = decimalD.negate();
         test("integer part", () => {
