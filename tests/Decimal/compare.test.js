@@ -26,6 +26,23 @@ describe("compare", () => {
         let a = new Decimal("-123.456");
         expect(a.compare(a)).toStrictEqual(0);
     });
+    test("two distinct negative numbers", () => {
+        expect(new Decimal("-5").compare(new Decimal("-10"))).toStrictEqual(1);
+        expect(new Decimal("-10").compare(new Decimal("-5"))).toStrictEqual(-1);
+    });
+    test("two distinct negative numbers with different exponents", () => {
+        expect(new Decimal("-1.5").compare(new Decimal("-2.5"))).toStrictEqual(
+            1
+        );
+        expect(
+            new Decimal("-0.01").compare(new Decimal("-0.001"))
+        ).toStrictEqual(-1);
+    });
+    test("two distinct negative numbers at the bottom of the exponent range", () => {
+        expect(
+            new Decimal("-5e-324").compare(new Decimal("-1e-323"))
+        ).toStrictEqual(1);
+    });
     test("integer part is the same, decimal part is not", () => {
         let a = new Decimal("42.678");
         let b = new Decimal("42.6789");
