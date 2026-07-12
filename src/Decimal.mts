@@ -333,7 +333,7 @@ export class Decimal {
      *
      * @returns {boolean} True if this value is zero, false otherwise (including NaN and infinities)
      *
-     * @ensures{capturesExactlyTheZeroDoubles} forall (x: number),
+     * @ensures{capturesExactlyTheZeroFloats} forall (x: number),
      *   new Decimal(x).isZero() ↔ x === 0
      */
     public isZero(): boolean {
@@ -706,7 +706,7 @@ export class Decimal {
      *
      * @returns {number} The JavaScript number representation of this value
      *
-     * @ensures{roundTripsDoubles} forall (x: number),
+     * @ensures{roundTripsFloats} forall (x: number),
      *   new Decimal(x).toNumber() ≡ x
      */
     toNumber(): number {
@@ -1414,7 +1414,7 @@ export class Decimal {
      * @returns {boolean} True if this is a normal number, false otherwise
      * @throws {RangeError} If this value is NaN, infinite, or zero
      *
-     * @ensures{holdsForEveryNonzeroDouble} forall (x: number),
+     * @ensures{holdsForEveryNonzeroFloat} forall (x: number),
      *   Number.isFinite(x) ∧ x !== 0 → new Decimal(x).isNormal()
      */
     isNormal(): boolean {
