@@ -332,6 +332,9 @@ export class Decimal {
      * Checks if this Decimal128 value is zero (either +0 or -0).
      *
      * @returns {boolean} True if this value is zero, false otherwise (including NaN and infinities)
+     *
+     * @ensures{capturesExactlyTheZeroFloats} forall (x: number),
+     *   new Decimal(x).isZero() ↔ x === 0
      */
     public isZero(): boolean {
         if (this.isNaN()) {
@@ -463,6 +466,9 @@ export class Decimal {
      * and exponential notation otherwise.
      *
      * @returns {string} The string representation of this value
+     *
+     * @ensures{parsesBackToTheSameString} forall (x: number),
+     *   new Decimal(new Decimal(x).toString()).toString() === new Decimal(x).toString()
      */
     toString(): string {
         if (this.isNaN()) {
@@ -501,9 +507,9 @@ export class Decimal {
      * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
      * @throws {RangeError} If digits is negative, not an integer (including NaN and Infinity), or too large, or roundingMode is invalid
      *
-     * @ensures{padsToRequestedDigits} forall (x: number) (n: nat),
+     * @ensures{padsToRequestedDigits} forall (x: number) (n: nat ∈ [1, 80]),
      *   Number.isFinite(x) →
-     *     (new Decimal(x).toFixed({ digits: 1 + (n % 80) }).split(".")[1] ?? "").length === 1 + (n % 80)
+     *     (new Decimal(x).toFixed({ digits: n }).split(".")[1] ?? "").length === n
      */
     toFixed(opts?: { digits?: number; roundingMode?: RoundingMode }): string {
         const bag = ensureOptionsBag(opts);
@@ -547,6 +553,10 @@ export class Decimal {
      * @returns {string} The string representation with the specified precision
      * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
      * @throws {RangeError} If digits is not a positive integer, or roundingMode is invalid
+     *
+     * @ensures{boundsSignificantDigits} forall (x: number) (n: nat ∈ [1, 34]),
+     *   Number.isFinite(x) →
+     *     new Decimal(new Decimal(x).toPrecision({ digits: n })).significand().toString().length <= n
      */
     toPrecision(opts?: {
         digits?: number;
@@ -596,9 +606,9 @@ export class Decimal {
      * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
      * @throws {RangeError} If digits is negative, not an integer, or too large, or roundingMode is invalid
      *
-     * @ensures{honorsRequestedDigits} forall (x: number) (n: nat),
+     * @ensures{honorsRequestedDigits} forall (x: number) (n: nat ∈ [1, 30]),
      *   Number.isFinite(x) →
-     *     new Decimal(x).toExponential({ digits: 1 + (n % 30) }).split("e")[0].split(".")[1].length === 1 + (n % 30)
+     *     new Decimal(x).toExponential({ digits: n }).split("e")[0].split(".")[1].length === n
      */
     toExponential(opts?: {
         digits?: number;
@@ -663,9 +673,8 @@ export class Decimal {
      * @throws {RangeError} If this value is infinite
      * @throws {RangeError} If this value has a fractional part
      *
-     * @ensures{roundTripsSmallBigInts} forall (x: bigint),
-     *   new Decimal(x % 10000000000000000000000000000000000n).toBigInt() ===
-     *     x % 10000000000000000000000000000000000n
+     * @ensures{roundTripsSmallBigInts} forall (x: bigint ∈ [-9999999999999999999999999999999999n, 9999999999999999999999999999999999n]),
+     *   new Decimal(x).toBigInt() === x
      */
     toBigInt(): bigint {
         if (this.isNaN()) {
@@ -697,8 +706,8 @@ export class Decimal {
      *
      * @returns {number} The JavaScript number representation of this value
      *
-     * @ensures{roundTripsDoubles} forall (x: number),
-     *   Object.is(new Decimal(x).toNumber(), x)
+     * @ensures{roundTripsFloats} forall (x: number),
+     *   new Decimal(x).toNumber() ≡ x
      */
     toNumber(): number {
         if (this.isNaN()) {
@@ -810,6 +819,10 @@ export class Decimal {
      *
      * @param {Decimal} other The value to compare with
      * @returns {boolean} True if the values are not mathematically equal, false if equal or if either is NaN
+     *
+     * @ensures{agreesWithNumberInequality} forall (x y: number),
+     *   ¬Number.isNaN(x) ∧ ¬Number.isNaN(y) →
+     *     (new Decimal(x).notEquals(new Decimal(y)) ↔ x !== y)
      */
     notEquals(other: Decimal): boolean {
         if (this.isNaN() || other.isNaN()) {
@@ -824,6 +837,9 @@ export class Decimal {
      *
      * @param {Decimal} x The value to compare with
      * @returns {boolean} True if this < x, false otherwise (including when either value is NaN)
+     *
+     * @ensures{agreesWithNumberOrder} forall (x y: number),
+     *   new Decimal(x).lessThan(new Decimal(y)) ↔ x < y
      */
     lessThan(x: Decimal): boolean {
         return this.compare(x) === -1;
@@ -834,6 +850,10 @@ export class Decimal {
      *
      * @param {Decimal} x The value to compare with
      * @returns {boolean} True if this <= x, false otherwise (including when either value is NaN)
+     *
+     * @ensures{disjoinsLessThanAndEquals} forall (x y: number),
+     *   new Decimal(x).lessThanOrEqual(new Decimal(y)) ↔
+     *     (new Decimal(x).lessThan(new Decimal(y)) ∨ new Decimal(x).equals(new Decimal(y)))
      */
     lessThanOrEqual(x: Decimal): boolean {
         // No explicit NaN guard is needed (cf. lessThan): compare() returns NaN
@@ -849,6 +869,9 @@ export class Decimal {
      *
      * @param {Decimal} x The value to compare with
      * @returns {boolean} True if this > x, false otherwise (including when either value is NaN)
+     *
+     * @ensures{mirrorsLessThan} forall (x y: number),
+     *   new Decimal(x).greaterThan(new Decimal(y)) ↔ new Decimal(y).lessThan(new Decimal(x))
      */
     greaterThan(x: Decimal): boolean {
         return this.compare(x) === 1;
@@ -859,6 +882,9 @@ export class Decimal {
      *
      * @param {Decimal} x The value to compare with
      * @returns {boolean} True if this >= x, false otherwise (including when either value is NaN)
+     *
+     * @ensures{agreesWithNumberOrder} forall (x y: number),
+     *   new Decimal(x).greaterThanOrEqual(new Decimal(y)) ↔ x >= y
      */
     greaterThanOrEqual(x: Decimal): boolean {
         // No explicit NaN guard is needed (cf. greaterThan): compare() returns
@@ -873,6 +899,12 @@ export class Decimal {
      * Returns the absolute value of this Decimal128 value.
      *
      * @returns {Decimal} A new Decimal value that is the absolute value of this value
+     *
+     * @ensures{neverNegative} forall (x: number),
+     *   ¬new Decimal(x).abs().isNegative()
+     *
+     * @ensures{invariantUnderNegation} forall (x: number),
+     *   new Decimal(x).negate().abs().toString() === new Decimal(x).abs().toString()
      */
     abs(): Decimal {
         if (this.isNaN()) {
@@ -984,6 +1016,10 @@ export class Decimal {
      * @ensures{antiCommutes} forall (x y: number),
      *   Number.isFinite(x) ∧ Number.isFinite(y) →
      *     new Decimal(x).subtract(new Decimal(y)).equals(new Decimal(y).subtract(new Decimal(x)).negate())
+     *
+     * @ensures{exactCancellationIsPositiveZero} forall (x: number),
+     *   Number.isFinite(x) →
+     *     new Decimal(x).subtract(new Decimal(x)).toString() === "0"
      */
     subtract(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
         const mode = readRoundingMode(ensureOptionsBag(opts));
@@ -1223,10 +1259,19 @@ export class Decimal {
      * @throws {TypeError} If opts is not an object, digits is not a number, or roundingMode is not a string
      * @throws {RangeError} If digits is negative, not an integer, or too large, or roundingMode is not a valid rounding mode
      *
-     * @ensures{idempotent} forall (x: number) (n: nat),
+     * @ensures{idempotent} forall (x: number) (n: nat ∈ [0, 49]),
      *   Number.isFinite(x) →
-     *     new Decimal(x).round({ digits: n % 50 }).round({ digits: n % 50 }).toString() ===
-     *       new Decimal(x).round({ digits: n % 50 }).toString()
+     *     new Decimal(x).round({ digits: n }).round({ digits: n }).toString() ===
+     *       new Decimal(x).round({ digits: n }).toString()
+     *
+     * @ensures{ceilIsFloorNegated} forall (x: number) (n: nat ∈ [0, 34]),
+     *   Number.isFinite(x) →
+     *     new Decimal(x).negate().round({ digits: n, roundingMode: "floor" }).negate().toString() ===
+     *       new Decimal(x).round({ digits: n, roundingMode: "ceil" }).toString()
+     *
+     * @ensures{truncNeverGrowsMagnitude} forall (x: number) (n: nat ∈ [0, 34]),
+     *   Number.isFinite(x) →
+     *     new Decimal(x).round({ digits: n, roundingMode: "trunc" }).abs().lessThanOrEqual(new Decimal(x).abs())
      */
     round(opts?: { digits?: number; roundingMode?: RoundingMode }): Decimal {
         const bag = ensureOptionsBag(opts);
@@ -1259,6 +1304,9 @@ export class Decimal {
      * Returns the negation of this Decimal128 value.
      *
      * @returns {Decimal} A new Decimal value with the opposite sign
+     *
+     * @ensures{involution} forall (x: number),
+     *   new Decimal(x).negate().negate().toString() === new Decimal(x).toString()
      */
     negate(): Decimal {
         if (this.isNaN()) {
@@ -1365,6 +1413,9 @@ export class Decimal {
      *
      * @returns {boolean} True if this is a normal number, false otherwise
      * @throws {RangeError} If this value is NaN, infinite, or zero
+     *
+     * @ensures{holdsForEveryNonzeroFloat} forall (x: number),
+     *   Number.isFinite(x) ∧ x !== 0 → new Decimal(x).isNormal()
      */
     isNormal(): boolean {
         if (this.isNaN()) {
@@ -1399,6 +1450,9 @@ export class Decimal {
      *
      * @returns {boolean} True if this is a subnormal number, false if normal or zero
      * @throws {RangeError} If this value is NaN or infinite
+     *
+     * @ensures{holdsBelowTheNormalThreshold} forall (k: int ∈ [1, 9999]) (n: nat ∈ [6148, 6176]),
+     *   new Decimal(k + "e-" + n).isSubnormal()
      */
     isSubnormal(): boolean {
         if (this.isNaN()) {
@@ -1438,6 +1492,10 @@ export class Decimal {
      *
      * @returns {number} The exponent value
      * @throws {RangeError} If this value is NaN or infinite
+     *
+     * @ensures{positionsTheMantissa} forall (x: number),
+     *   Number.isFinite(x) ∧ x !== 0 →
+     *     new Decimal(x).mantissa().scale10(new Decimal(x).exponent()).equals(new Decimal(x))
      */
     exponent(): number {
         if (this.isNaN()) {
