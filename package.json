@@ -24,7 +24,7 @@
         "coverage": "npx c8 npx jest",
         "build": "mkdir -p dist && esbuild src/Decimal.mjs --bundle --format=esm --outfile=dist/Decimal.mjs",
         "mutation": "stryker run",
-        "pabst": "pabst test src/Decimal.mts"
+        "pabst": "pabst test"
     },
     "prettier": {
         "trailingComma": "es5",
@@ -57,7 +57,7 @@
     },
     "homepage": "https://github.com/jessealama/proposal-decimal-polyfill#readme",
     "devDependencies": {
-        "@jessealama/pabst": "^0.6.0",
+        "@jessealama/pabst": "^0.8.0",
         "@stryker-mutator/core": "^9.6.1",
         "bignumber.js": "^11.0.0",
         "c8": "^11.0.0",
