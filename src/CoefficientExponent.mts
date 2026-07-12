@@ -224,6 +224,11 @@ export class CoefficientExponent {
             return 1;
         }
 
+        if (this._isNegative) {
+            // Both negative: the larger magnitude is the smaller value.
+            return other.compareMagnitude(this);
+        }
+
         return this.compareMagnitude(other);
     }
 
