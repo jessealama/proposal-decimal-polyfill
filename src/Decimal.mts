@@ -958,13 +958,14 @@ export class Decimal {
      * @throws {RangeError} If roundingMode is not a valid rounding mode
      *
      * @ensures{commutes} forall (x y: number) {
-     *   new Decimal(x).add(new Decimal(y)).toString() ===
-     *     new Decimal(y).add(new Decimal(x)).toString()
+     *   ¬new Decimal(x).add(new Decimal(y)).isNaN() →
+     *     new Decimal(x).add(new Decimal(y)).equals(new Decimal(y).add(new Decimal(x)))
      * }
      *
      * @ensures{exactCancellationIsPositiveZero} forall (x: number) {
      *   Number.isFinite(x) →
-     *     new Decimal(x).add(new Decimal(x).negate()).toString() === "0"
+     *     new Decimal(x).add(new Decimal(x).negate()).isZero() ∧
+     *     ¬new Decimal(x).add(new Decimal(x).negate()).isNegative()
      * }
      */
     add(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
@@ -1040,7 +1041,8 @@ export class Decimal {
      *
      * @ensures{exactCancellationIsPositiveZero} forall (x: number) {
      *   Number.isFinite(x) →
-     *     new Decimal(x).subtract(new Decimal(x)).toString() === "0"
+     *     new Decimal(x).subtract(new Decimal(x)).isZero() ∧
+     *     ¬new Decimal(x).subtract(new Decimal(x)).isNegative()
      * }
      */
     subtract(x: Decimal, opts?: { roundingMode?: RoundingMode }): Decimal {
@@ -1113,8 +1115,8 @@ export class Decimal {
      * @throws {RangeError} If roundingMode is not a valid rounding mode
      *
      * @ensures{commutes} forall (x y: number) {
-     *   new Decimal(x).multiply(new Decimal(y)).toString() ===
-     *     new Decimal(y).multiply(new Decimal(x)).toString()
+     *   ¬new Decimal(x).multiply(new Decimal(y)).isNaN() →
+     *     new Decimal(x).multiply(new Decimal(y)).equals(new Decimal(y).multiply(new Decimal(x)))
      * }
      *
      * @ensures{keepsQuantumAboveEtiny} forall (j k: int) {
